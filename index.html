@@ -347,7 +347,9 @@ curl http://localhost:8080/get</code></pre>
 <h3>2. Effects belong in the function type</h3>
 
 <pre><code><span class="tok-kw">export async fn</span> <span class="tok-fn">handle</span>(request: Request) -&gt; Result&lt;Response, ErrorCode&gt;
-    <span class="tok-kw">with</span> MonotonicClock {</code></pre>
+    <span class="tok-kw">with</span> MonotonicClock {
+    <span class="tok-com">// ...build the response, then write the body and trailers...</span>
+}</code></pre>
 
 <p>
   The <code>with</code> clause lists the capabilities this function uses.
@@ -415,13 +417,27 @@ curl http://localhost:8080/get</code></pre>
 <h3>6. <code>match</code> as an expression, even on strings</h3>
 
 <pre><code><span class="tok-kw">match</span> path {
-    <span class="tok-str">"/"</span>            =&gt; { content_type = <span class="tok-str">"text/html; charset=utf-8"</span>; body_str = HOMEPAGE; },
-    <span class="tok-str">"/get"</span>         =&gt; { <span class="tok-com">/* ... */</span> },
-    <span class="tok-str">"/post"</span>        =&gt; { <span class="tok-com">/* ... */</span> },
-    <span class="tok-str">"/headers"</span>     =&gt; { <span class="tok-com">/* ... */</span> },
-    <span class="tok-str">"/ip"</span>          =&gt; { <span class="tok-com">/* ... */</span> },
-    <span class="tok-str">"/user-agent"</span>  =&gt; { <span class="tok-com">/* ... */</span> },
-    _              =&gt; { <span class="tok-com">/* dynamic routes: /status/:code, /base64/:val, ... */</span> },
+    <span class="tok-str">"/"</span> =&gt; {
+        content_type = <span class="tok-str">"text/html; charset=utf-8"</span>;
+        body_str = HOMEPAGE;
+    },
+    <span class="tok-str">"/get"</span> =&gt; {
+        <span class="tok-kw">let</span> [s, b, a] = <span class="tok-fn">echo_if_method</span>(request, method, Method::Get,
+                                       <span class="tok-str">"GET"</span>, false, url, path, args);
+        status = s; body_str = b; allow = a;
+    },
+    <span class="tok-str">"/headers"</span> =&gt; {
+        body_str = json::<span class="tok-fn">to_string_pretty</span>(&amp;HeadersResponse {
+            headers: <span class="tok-fn">headers_to_map</span>(&amp;h),
+        }).<span class="tok-fn">unwrap</span>();
+    },
+    <span class="tok-com">// /post, /put, /patch, /delete — same shape as /get</span>
+    <span class="tok-com">// /ip, /user-agent       — small JSON responses</span>
+    _ =&gt; {
+        <span class="tok-com">// dynamic routes: /status/:code, /base64/:val, /anything</span>
+        <span class="tok-kw">let</span> [s, c, b] = <span class="tok-fn">handle_fallback</span>(request, method, url, path, args);
+        status = s; content_type = c; body_str = b;
+    },
 }</code></pre>
 
 <p>
