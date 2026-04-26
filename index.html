@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Wado Programming Language</title>
+<meta name="description" content="Wado: type-safe like Rust, familiar like TypeScript, compiled to clean Wasm. Wasm in plain sight." />
+<meta property="og:title" content="The Wado Programming Language" />
+<meta property="og:description" content="Type-safe like Rust, familiar like TypeScript, compiled to clean Wasm. Wasm in plain sight." />
+<meta property="og:image" content="https://wado-lang.github.io/assets/wado-512.png" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://wado-lang.github.io/" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" type="image/png" href="assets/wado-512.png" />
+<link rel="apple-touch-icon" href="assets/wado-512.png" />
+<style>
+  :root {
+    --paper: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #3d3a33;
+    --ink-faint: #777268;
+    --rule: #e4ddd0;
+    --code-bg: #f6f3ec;
+    --accent: #7a1c1c; /* 朱 — vermillion seal */
+    --max: 720px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  body {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP",
+                 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 17px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  main {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 4.5rem 1.5rem 6rem;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 2rem 0 1rem;
+  }
+
+  .hero img {
+    width: 180px;
+    height: 180px;
+    display: block;
+    margin: 0 auto 1.25rem;
+    image-rendering: -webkit-optimize-contrast;
+  }
+
+  .hero h1 {
+    font-size: 2.4rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.25;
+    margin: 0.25rem 0 0.6rem;
+    color: var(--ink);
+  }
+
+  .hero .tagline {
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+    margin: 0 0 0.4rem;
+    font-weight: 600;
+  }
+
+  .hero .lede {
+    color: var(--ink-soft);
+    margin: 0 auto 1.75rem;
+    max-width: 36rem;
+  }
+
+  .hero .links {
+    display: flex;
+    gap: 1.25rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+  }
+
+  .hero .links a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 1px;
+  }
+  .hero .links a:hover { opacity: 0.75; }
+
+  hr.rule {
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin: 3.5rem auto;
+    width: 60%;
+  }
+
+  h2 {
+    font-size: 1.55rem;
+    font-weight: 600;
+    margin: 2.5rem 0 1rem;
+    letter-spacing: 0.02em;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 1.75rem 0 0.5rem;
+    color: var(--ink-soft);
+  }
+
+  p { margin: 0.85rem 0; }
+
+  a { color: var(--accent); }
+  a:hover { opacity: 0.75; }
+
+  code, pre {
+    font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas,
+                 "Liberation Mono", monospace;
+    font-size: 0.92em;
+  }
+
+  p code, li code, td code {
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border-left: 3px solid var(--rule);
+    padding: 1rem 1.15rem;
+    overflow-x: auto;
+    line-height: 1.55;
+    margin: 1.1rem 0;
+    border-radius: 2px;
+  }
+  pre code { background: transparent; padding: 0; }
+
+  /* tiny syntax tinting */
+  .tok-com { color: #6b665b; font-style: italic; }
+  .tok-kw  { color: #7a1c1c; }
+  .tok-str { color: #2f5a2f; }
+  .tok-fn  { color: #1a1a1a; font-weight: 600; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    font-size: 0.95rem;
+  }
+  th, td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+  }
+  th { font-weight: 600; color: var(--ink-soft); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  ul { padding-left: 1.25rem; }
+  li { margin: 0.3rem 0; }
+
+  blockquote {
+    margin: 1rem 0;
+    padding: 0.1rem 1rem;
+    border-left: 3px solid var(--rule);
+    color: var(--ink-soft);
+  }
+
+  footer {
+    margin-top: 5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-faint);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  footer a { color: var(--ink-faint); }
+  footer .seal {
+    display: inline-block;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    padding: 0.15em 0.45em;
+    margin-right: 0.5em;
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 540px) {
+    body { font-size: 16px; }
+    main { padding: 2.5rem 1.1rem 4rem; }
+    .hero h1 { font-size: 1.75rem; }
+    .hero img { width: 140px; height: 140px; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<section class="hero">
+  <img src="assets/wado-512.png" alt="Wado logo" width="180" height="180" />
+  <h1>The Wado Programming Language</h1>
+  <p class="tagline">Type-safe, high-level WebAssembly.</p>
+  <p class="lede">
+    Type-safe like Rust, familiar like TypeScript, compiled to clean Wasm.
+    Wasm in plain sight.
+  </p>
+  <p class="links">
+    <a href="https://github.com/wado-lang/wado">View on GitHub →</a>
+    <a href="https://github.com/wado-lang/wado/blob/main/docs/spec.md">Language Spec</a>
+    <a href="https://github.com/wado-lang/wado/blob/main/docs/cheatsheet.md">Cheatsheet</a>
+  </p>
+</section>
+
+<hr class="rule" />
+
+<h2>A First Look</h2>
+
+<pre><code><span class="tok-com">#!/usr/bin/env wado run</span>
+<span class="tok-com">// Hello World in Wado</span>
+
+<span class="tok-kw">use</span> { println, Stdout } <span class="tok-kw">from</span> <span class="tok-str">"core:cli"</span>;
+
+<span class="tok-kw">export fn</span> <span class="tok-fn">run</span>() <span class="tok-kw">with</span> Stdout {
+    <span class="tok-fn">println</span>(<span class="tok-str">"Hello, world!"</span>);
+}
+</code></pre>
+
+<p>
+  A few lines, but a lot is on display: a <strong>shebang</strong> that makes
+  the file directly executable as a one-file script, ES&nbsp;module–style
+  imports from a namespaced standard library (<code>core:cli</code>), an
+  <code>export</code> keyword that declares the entrypoint of the
+  <code>wasi:cli/command</code> world, and a <code>with Stdout</code> clause
+  that makes the side effect part of the function's type.
+</p>
+
+<pre><code>./hello.wado          <span class="tok-com"># or: wado run hello.wado</span></code></pre>
+
+<p>
+  The compiled <code>.wasm</code> for this program is
+  <strong>1,773&nbsp;bytes</strong> — smaller than the same program written in
+  C, Zig, Moonbit, or Rust.
+</p>
+
+<hr class="rule" />
+
+<h2>Why Wado?</h2>
+
+<p>
+  Existing Wasm-targeting languages bundle their own memory management runtime
+  into every <code>.wasm</code> file. The result is bloated binaries even for
+  trivial programs:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Program</th>
+      <th class="num">Wado</th>
+      <th class="num">Rust (wasm32-wasip1)</th>
+      <th class="num">ratio</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>hello_world</code></td>      <td class="num">1,773 B</td>  <td class="num">40,115 B</td>   <td class="num">22.6×</td></tr>
+    <tr><td><code>pi_approx</code></td>        <td class="num">8,982 B</td>  <td class="num">59,496 B</td>   <td class="num">6.6×</td></tr>
+    <tr><td><code>zlib</code> (gzip)</td>      <td class="num">18,935 B</td> <td class="num">88,563 B</td>   <td class="num">4.7×</td></tr>
+    <tr><td><code>sqlite_highlight</code></td> <td class="num">622 KB</td>   <td class="num">3,481 KB</td>   <td class="num">5.6×</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Wado takes a different approach. By targeting <strong>Wasm GC</strong>, the
+  garbage collector is provided by the host runtime itself — so it doesn't have
+  to ship inside the module. The output is a thin shell of pure logic.
+</p>
+
+<p>
+  The timing matters too. With the <strong>Wasm Component Model</strong> and
+  <strong>WASI&nbsp;P3</strong> maturing, Wado is designed for this new era from
+  the ground up — no legacy baggage, no retrofitting.
+</p>
+
+<hr class="rule" />
+
+<h2>Design Principles</h2>
+
+<h3>Wasm in plain sight</h3>
+<p>
+  No macros. The code you read is the code that runs. This makes Wado
+  predictable to read, predictable to debug, and predictable to optimize — the
+  WAT output is something you can reason about by looking at the source.
+</p>
+
+<h3>Readable without context switching</h3>
+<p>
+  Explicit over implicit. No implicit type conversions, no function
+  overloading, no hidden dependencies. You shouldn't need to jump to other
+  files to understand what a function does.
+</p>
+
+<h3>Type-safe by design</h3>
+<p>
+  Strong static typing with no escape hatches like <code>any</code>. This
+  prevents the defensive programming patterns (excessive <code>try-catch</code>,
+  runtime type checks) that tend to creep into dynamically-typed codebases.
+</p>
+
+<h3>No exception unwinding</h3>
+<p>
+  Errors are values: <code>Result&lt;T, E&gt;</code> and
+  <code>Option&lt;T&gt;</code>. Control flow is local and visible. Stack
+  unwinding doesn't exist as a language feature.
+</p>
+
+<h3>Minimal binary size</h3>
+<p>
+  By leveraging Wasm GC instead of bundling a runtime, Wado produces compact
+  <code>.wasm</code> files. This is the core motivation of the language.
+</p>
+
+<hr class="rule" />
+
+<h2>Designed for Agentic Coding</h2>
+
+<p>
+  The Wado compiler is <strong>100% agentic-coded</strong> — every line of
+  <code>wado-compiler</code> was written by an AI agent — and the same is true
+  of most of the Wado code in the repository. The human handles language
+  design and project management; the agents do the rest.
+</p>
+
+<p>This isn't just a curiosity; it shaped the language itself:</p>
+
+<ul>
+  <li>
+    <strong>Agents excel at volume but struggle with ambiguity.</strong>
+    Implicit behaviors get multiplied across a codebase. Explicit, predictable
+    semantics work better — so Wado has no implicit conversions, no
+    overloading, no macros.
+  </li>
+  <li>
+    <strong>Agents tend toward defensive programming.</strong> Without type
+    safety, they pepper code with runtime type checks and nested error
+    handling. Strong static types, with no <code>any</code> escape hatch,
+    eliminate the need.
+  </li>
+  <li>
+    <strong>Exceptions break agent reasoning.</strong> Non-local control flow
+    is hard to predict. <code>Result&lt;T, E&gt;</code> keeps every failure
+    path visible at the call site.
+  </li>
+</ul>
+
+<p>
+  The result is a language where common agentic-coding pitfalls are
+  eliminated by design, not by convention.
+</p>
+
+<hr class="rule" />
+
+<h2>Try It in 60 Seconds</h2>
+
+<p>Wado isn't on a package registry yet — for now, build from source.</p>
+
+<pre><code>git clone https://github.com/wado-lang/wado.git
+cd wado
+cargo build --release</code></pre>
+
+<p>Run the hello-world example:</p>
+
+<pre><code>cargo run --bin wado -- run example/hello.wado</code></pre>
+
+<p>For an editor experience, the repo also includes a VS&nbsp;Code extension under <code>wado-vscode/</code>.</p>
+
+<hr class="rule" />
+
+<h2>Status &amp; Roadmap</h2>
+
+<p>
+  Wado is <strong>experimental</strong>. The core language — syntax, static
+  typing, generics, closures, modules, traits, pattern matching, the effect
+  system — is implemented and functional. It is already usable for its
+  original purpose: embedding small, type-safe Wasm modules into JavaScript
+  projects where binary size matters.
+</p>
+
+<p>
+  That said, Wado's design points further into the future. Three things in the
+  broader Wasm ecosystem need to land before Wado can be what it's meant to
+  be:
+</p>
+
+<ul>
+  <li>
+    <strong>Browser support for the Wasm Component Model.</strong> Today, Wado
+    components run on wasmtime. Once browsers ship CM, the same
+    <code>.wasm</code> will run unchanged on the web.
+  </li>
+  <li>
+    <strong>WASI&nbsp;1.0.</strong> WASI&nbsp;P3 is the current
+    release-candidate milestone; WASI&nbsp;1.0 is the next. Wado tracks the
+    spec closely.
+  </li>
+  <li>
+    <strong>Wasm Component Model × Wasm GC integration.</strong> GC types are
+    not yet exchangeable across CM boundaries. Once they are, Wado's value
+    semantics will compose naturally with any CM-targeting language.
+  </li>
+</ul>
+
+<p>When these land, Wado's era begins.</p>
+
+<hr class="rule" />
+
+<h2>Resources</h2>
+
+<ul>
+  <li><a href="https://github.com/wado-lang/wado/blob/main/docs/cheatsheet.md">Cheatsheet</a> — Quick syntax reference</li>
+  <li><a href="https://github.com/wado-lang/wado/blob/main/docs/spec.md">Language Specification</a> — Full language reference</li>
+  <li><a href="https://github.com/wado-lang/wado/blob/main/docs/compiler.md">Compiler Internals</a> — How the compiler works</li>
+  <li><a href="https://github.com/wado-lang/wado/tree/main/docs">Wado Evolution Proposals</a> — Design documents (<code>wep-*.md</code>)</li>
+  <li><a href="https://wado-lang.github.io/wado/benchmarks/runtime/">Runtime performance dashboard</a></li>
+  <li><a href="https://wado-lang.github.io/wado/benchmarks/wasm-size/">Wasm binary size dashboard</a></li>
+  <li><a href="https://github.com/wado-lang/wado">Repository</a> — Source, issues, releases</li>
+</ul>
+
+<footer>
+  <p>
+    <span class="seal">和</span>
+    MIT License · Copyright © 2026 FUJI Goro (a.k.a. gfx)
+  </p>
+  <p><a href="https://github.com/wado-lang/wado">github.com/wado-lang/wado</a></p>
+</footer>
+
+</main>
+</body>
+</html>
