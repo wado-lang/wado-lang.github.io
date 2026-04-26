@@ -3,7 +3,7 @@
 # Tasks below shell out to git, which mise will resolve from PATH.
 
 [tasks.fetch]
-description = "Shallow-clone wado-lang/wado and refresh local assets"
+description = "Shallow-clone wado-lang/wado, refresh local assets, transparentize the logo"
 run = """
 set -euo pipefail
 TMPDIR=".tmp/wado"
@@ -17,8 +17,13 @@ mkdir -p assets
 cp "$TMPDIR/wado-512.png"  assets/wado-512.png
 cp "$TMPDIR/wado-1024.png" assets/wado-1024.png
 
+# Upstream PNGs ship with a near-white background (~#fcfcfc) that shows
+# as a faint square against the site's pure-white page. Strip it so the
+# brushstroke sits on transparent.
+python3 scripts/transparentize-logo.py assets/wado-512.png assets/wado-1024.png
+
 echo
-echo "Fetched assets:"
+echo "Fetched and transparentized assets:"
 ls -la assets/
 """
 
