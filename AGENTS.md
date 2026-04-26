@@ -11,7 +11,7 @@ Defined in `mise.toml`. The repo must be trusted once per machine
 
 | Task           | What it does                                                    |
 | -------------- | --------------------------------------------------------------- |
-| `mise run fetch` | Shallow-clones `wado-lang/wado` into `.tmp/wado` and copies `wado-512.png` / `wado-1024.png` into `assets/`. Re-run when the upstream logo changes. |
+| `mise run fetch` | Shallow-clones `wado-lang/wado` into `.tmp/wado`, copies `wado-512.png` / `wado-1024.png` into `assets/`, and runs `scripts/transparentize-logo.py` on them. Re-run when the upstream logo changes. Requires Python with Pillow installed. |
 | `mise run serve` | Serves the site at <http://localhost:8000> via `python3 -m http.server`. Foreground process — Ctrl-C to stop. |
 | `mise run clean` | Removes `.tmp/`.                                                |
 
