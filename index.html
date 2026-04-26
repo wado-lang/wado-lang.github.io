@@ -63,10 +63,11 @@
   }
 
   .hero h1 {
-    font-size: 3.2rem;
+    font-size: 2.4rem;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    margin: 0.25rem 0 0.5rem;
+    letter-spacing: 0.02em;
+    line-height: 1.25;
+    margin: 0.25rem 0 0.6rem;
     color: var(--ink);
   }
 
@@ -200,7 +201,7 @@
   @media (max-width: 540px) {
     body { font-size: 16px; }
     main { padding: 2.5rem 1.1rem 4rem; }
-    .hero h1 { font-size: 2.4rem; }
+    .hero h1 { font-size: 1.75rem; }
     .hero img { width: 140px; height: 140px; }
   }
 </style>
@@ -210,7 +211,7 @@
 
 <section class="hero">
   <img src="assets/wado-512.png" alt="Wado logo" width="180" height="180" />
-  <h1>Wado</h1>
+  <h1>The Wado Programming Language</h1>
   <p class="tagline">Type-safe, high-level WebAssembly.</p>
   <p class="lede">
     Type-safe like Rust, familiar like TypeScript, compiled to clean Wasm.
@@ -227,7 +228,8 @@
 
 <h2>A First Look</h2>
 
-<pre><code><span class="tok-com">// Hello World in Wado</span>
+<pre><code><span class="tok-com">#!/usr/bin/env wado run</span>
+<span class="tok-com">// Hello World in Wado</span>
 
 <span class="tok-kw">use</span> { println, Stdout } <span class="tok-kw">from</span> <span class="tok-str">"core:cli"</span>;
 
@@ -237,14 +239,15 @@
 </code></pre>
 
 <p>
-  Seven lines, but a lot is on display: ES&nbsp;module–style imports from a
-  namespaced standard library (<code>core:cli</code>), an <code>export</code>
-  keyword that declares the entrypoint of the <code>wasi:cli/command</code>
-  world, and a <code>with Stdout</code> clause that makes the side effect part
-  of the function's type.
+  A few lines, but a lot is on display: a <strong>shebang</strong> that makes
+  the file directly executable as a one-file script, ES&nbsp;module–style
+  imports from a namespaced standard library (<code>core:cli</code>), an
+  <code>export</code> keyword that declares the entrypoint of the
+  <code>wasi:cli/command</code> world, and a <code>with Stdout</code> clause
+  that makes the side effect part of the function's type.
 </p>
 
-<pre><code>wado run example/hello.wado</code></pre>
+<pre><code>./hello.wado          <span class="tok-com"># or: wado run hello.wado</span></code></pre>
 
 <p>
   The compiled <code>.wasm</code> for this program is
