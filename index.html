@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Wado — Type-safe, high-level WebAssembly</title>
+<title>The Wado Programming Language</title>
 <meta name="description" content="Wado: type-safe like Rust, familiar like TypeScript, compiled to clean Wasm. Wasm in plain sight." />
-<meta property="og:title" content="Wado — Type-safe, high-level WebAssembly" />
+<meta property="og:title" content="The Wado Programming Language" />
 <meta property="og:description" content="Type-safe like Rust, familiar like TypeScript, compiled to clean Wasm. Wasm in plain sight." />
 <meta property="og:image" content="https://wado-lang.github.io/assets/wado-512.png" />
 <meta property="og:type" content="website" />
@@ -15,13 +15,12 @@
 <link rel="apple-touch-icon" href="assets/wado-512.png" />
 <style>
   :root {
-    --paper: #faf6ec;
-    --paper-shade: #f3ecdb;
+    --paper: #ffffff;
     --ink: #1a1a1a;
     --ink-soft: #3d3a33;
-    --ink-faint: #6b665b;
-    --rule: #d8cfb8;
-    --code-bg: #f1ead7;
+    --ink-faint: #777268;
+    --rule: #e4ddd0;
+    --code-bg: #f6f3ec;
     --accent: #7a1c1c; /* 朱 — vermillion seal */
     --max: 720px;
   }
@@ -42,12 +41,6 @@
     line-height: 1.75;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Faint paper grain via two layered radial gradients. */
-    background-image:
-      radial-gradient(rgba(120, 100, 60, 0.045) 1px, transparent 1px),
-      radial-gradient(rgba(120, 100, 60, 0.035) 1px, transparent 1px);
-    background-size: 3px 3px, 7px 7px;
-    background-position: 0 0, 1px 2px;
   }
 
   main {
@@ -67,8 +60,6 @@
     display: block;
     margin: 0 auto 1.25rem;
     image-rendering: -webkit-optimize-contrast;
-    /* The logo PNG ships on a white square; blend it onto the paper. */
-    mix-blend-mode: multiply;
   }
 
   .hero h1 {
