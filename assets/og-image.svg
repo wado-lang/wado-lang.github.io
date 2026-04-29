@@ -41,12 +41,12 @@
     Type-safe like Rust, familiar like TypeScript, compiled to clean Wasm.
   </text>
 
-  <!-- Bottom accent: wado-lang.github.io -->
+  <!-- Bottom accent: wado-lang.org -->
   <text x="600" y="568"
         font-family="'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace"
         font-size="18"
         fill="#7a1c1c" text-anchor="middle" letter-spacing="1">
-    wado-lang.github.io
+    wado-lang.org
   </text>
 
 </svg>
