@@ -635,12 +635,12 @@ body_tx.<span class="tok-fn">drop</span>();</code></pre>
 ASSET="wado-$(uname -s | tr A-Z a-z)-$(uname -m).tar.gz"
 
 curl -fsSLO "$BASE/$ASSET"
-curl -fsSLO "$BASE/SHA256SUMS.txt"
 
+SUMS=$(curl -fsSL "$BASE/SHA256SUMS.txt")
 if command -v shasum &gt;/dev/null; then
-  shasum -a 256 --ignore-missing -c SHA256SUMS.txt
+  echo "$SUMS" | shasum -a 256 --ignore-missing -c -
 else
-  sha256sum --ignore-missing -c SHA256SUMS.txt
+  echo "$SUMS" | sha256sum --ignore-missing -c -
 fi
 
 tar xzf "$ASSET"
