@@ -1,2 +1,11 @@
 .tmp/
 .DS_Store
+
+# Artifacts left behind by the "Try It in 60 Seconds" quickstart when run at
+# the repo root (download, extracted dir, and the hello program). The checksum
+# list is piped from stdin, so it never touches disk.
+# Root-anchored so they don't shadow assets/wado-*.png.
+/wado-*.tar.gz
+/wado-*.zip
+/wado-*/
+/hello.wado
