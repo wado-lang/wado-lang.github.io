@@ -143,6 +143,7 @@
   }
 
   pre {
+    position: relative;
     background: var(--code-bg);
     border-left: 3px solid var(--rule);
     padding: 1rem 1.15rem;
@@ -152,6 +153,31 @@
     border-radius: 2px;
   }
   pre code { background: transparent; padding: 0; }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas,
+                 "Liberation Mono", monospace;
+    font-size: 0.7rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    padding: 0.4em 0.6em;
+    color: var(--ink-faint);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  pre:hover .copy-btn,
+  pre:focus-within .copy-btn { opacity: 1; }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--accent); border-color: var(--accent); opacity: 1; }
+  /* Touch devices have no hover — keep the button faintly visible. */
+  @media (hover: none) { .copy-btn { opacity: 0.55; } }
 
   /* tiny syntax tinting */
   .tok-com { color: #6b665b; font-style: italic; }
@@ -267,7 +293,7 @@
   that makes the side effect part of the function's type.
 </p>
 
-<pre><code>cargo run --bin wado -- run hello.wado</code></pre>
+<pre><code>wado run hello.wado</code></pre>
 
 <p>
   The compiled <code>.wasm</code> for this program is
@@ -328,7 +354,7 @@
 
 <p>Run it:</p>
 
-<pre><code>cargo run --bin wado -- serve example/http-bin.wado
+<pre><code>wado serve example/http-bin.wado
 <span class="tok-com"># in another terminal:</span>
 curl http://localhost:8080/get</code></pre>
 
@@ -598,15 +624,58 @@ body_tx.<span class="tok-fn">drop</span>();</code></pre>
 
 <h2>Try It in 60 Seconds</h2>
 
-<p>Wado isn't on a package registry yet — for now, build from source.</p>
+<p>
+  Grab the latest prebuilt binary and verify it against the published
+  checksums. The archive name is derived from <code>uname</code>, so this block
+  works as-is on macOS (Apple&nbsp;Silicon) and Linux (<code>x86_64</code>,
+  <code>aarch64</code>) — copy the whole thing:
+</p>
 
-<pre><code>git clone https://github.com/wado-lang/wado.git
-cd wado
-cargo build --release</code></pre>
+<pre class="copyable"><code>BASE=https://github.com/wado-lang/wado/releases/latest/download
+ASSET="wado-$(uname -s | tr A-Z a-z)-$(uname -m).tar.gz"
 
-<p>Run the hello-world example:</p>
+curl -fsSLO "$BASE/$ASSET"
+curl -fsSLO "$BASE/SHA256SUMS.txt"
 
-<pre><code>cargo run --bin wado -- run example/hello.wado</code></pre>
+if command -v shasum &gt;/dev/null; then
+  shasum -a 256 --ignore-missing -c SHA256SUMS.txt
+else
+  sha256sum --ignore-missing -c SHA256SUMS.txt
+fi
+
+tar xzf "$ASSET"
+mkdir -p ~/bin
+install -m 755 "${ASSET%.tar.gz}/wado" ~/bin/wado</code></pre>
+
+<p>
+  This installs <code>wado</code> into <code>~/bin</code> — make sure that
+  directory is on your <code>PATH</code>.
+</p>
+
+<p>
+  Windows builds (<code>x86_64</code>, <code>aarch64</code>) are on the
+  <a href="https://github.com/wado-lang/wado/releases/latest">latest release page</a>,
+  alongside the same <code>SHA256SUMS.txt</code> for verification.
+</p>
+
+<p>Then write a hello-world program and run it:</p>
+
+<pre class="copyable"><code>cat &gt; hello.wado &lt;&lt;'EOF'
+#!/usr/bin/env wado run
+use { println, Stdout } from "core:cli";
+
+export fn run() with Stdout {
+    println("Hello, world!");
+}
+EOF
+
+wado run hello.wado</code></pre>
+
+<p>
+  Prefer to build from source? With a Rust toolchain installed,
+  <code>cargo install --git https://github.com/wado-lang/wado wado-cli</code>
+  builds the current <code>main</code> branch.
+</p>
 
 <p>For an editor experience, the repo also includes a VS&nbsp;Code extension under <code>wado-vscode/</code>.</p>
 
@@ -671,5 +740,47 @@ cargo build --release</code></pre>
 </footer>
 
 </main>
+
+<script>
+  (function () {
+    function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+      }
+      return new Promise(function (resolve, reject) {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); resolve(); }
+        catch (e) { reject(e); }
+        document.body.removeChild(ta);
+      });
+    }
+
+    document.querySelectorAll("pre.copyable").forEach(function (pre) {
+      var code = pre.querySelector("code");
+      if (!code) return;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+      btn.setAttribute("aria-label", "Copy code to clipboard");
+      btn.addEventListener("click", function () {
+        copyText(code.textContent).then(function () {
+          btn.textContent = "Copied";
+          btn.classList.add("copied");
+          setTimeout(function () {
+            btn.textContent = "Copy";
+            btn.classList.remove("copied");
+          }, 1500);
+        });
+      });
+      pre.appendChild(btn);
+    });
+  })();
+</script>
 </body>
 </html>
