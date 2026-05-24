@@ -636,11 +636,10 @@ ASSET="wado-$(uname -s | tr A-Z a-z)-$(uname -m).tar.gz"
 
 curl -fsSLO "$BASE/$ASSET"
 
-SUMS=$(curl -fsSL "$BASE/SHA256SUMS.txt")
 if command -v shasum &gt;/dev/null; then
-  echo "$SUMS" | shasum -a 256 --ignore-missing -c -
+  curl -fsSL "$BASE/SHA256SUMS.txt" | shasum -a 256 --ignore-missing -c -
 else
-  echo "$SUMS" | sha256sum --ignore-missing -c -
+  curl -fsSL "$BASE/SHA256SUMS.txt" | sha256sum --ignore-missing -c -
 fi
 
 tar xzf "$ASSET"
