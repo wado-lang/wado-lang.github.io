@@ -6,25 +6,21 @@ test "render_page emits a full page and escapes the title" {
         slug: "hello",
         title: "Hi & Co",
         date: "2026-07-05",
+        author: "FUJI Goro",
         body_html: "<p>x</p>",
         index: true,
     };
-    let expected = "<!doctype html>
-<html>
-<head>
-<meta charset=\"utf-8\" />
-<title>Hi &amp; Co</title>
-</head>
-<body>
-<article>
-<h1>Hi &amp; Co</h1>
-<time>2026-07-05</time>
-<p>x</p>
-</article>
-</body>
-</html>
-";
-    assert render_page(&post) == expected;
+    let html = render_page(&post);
+    assert html.starts_with("<!doctype html>");
+    assert html.contains("<meta name=\"viewport\"");
+    assert html.contains("<title>Hi &amp; Co</title>");
+    assert html.contains("<h1>Hi &amp; Co</h1>");
+    assert html.contains("<span class=\"author\">FUJI Goro</span>");
+    assert html.contains("<time>2026-07-05</time>");
+    assert html.contains("<p>x</p>");
+    assert html.contains("class=\"masthead\"");
+    assert html.contains("<footer>");
+    assert html.ends_with("</html>\n");
 }
 
 test "render_page adds a noindex meta for unlisted posts" {
@@ -32,6 +28,7 @@ test "render_page adds a noindex meta for unlisted posts" {
         slug: "draft",
         title: "Draft",
         date: "d",
+        author: "FUJI Goro",
         body_html: "<p>y</p>",
         index: false,
     };
@@ -40,23 +37,21 @@ test "render_page adds a noindex meta for unlisted posts" {
 
 test "render_index lists published posts newest-first and omits unlisted" {
     let posts: List<Post> = [
-        Post { slug: "b", title: "B", date: "2026-02-01", body_html: "", index: true },
-        Post { slug: "a", title: "A", date: "2026-03-01", body_html: "", index: true },
-        Post { slug: "d", title: "Draft", date: "2026-04-01", body_html: "", index: false },
+        Post { slug: "b", title: "B", date: "2026-02-01", author: "FUJI Goro", body_html: "", index: true },
+        Post { slug: "a", title: "A", date: "2026-03-01", author: "FUJI Goro", body_html: "", index: true },
+        Post { slug: "d", title: "Draft", date: "2026-04-01", author: "FUJI Goro", body_html: "", index: false },
     ];
-    let expected = "<!doctype html>
-<html>
-<head>
-<meta charset=\"utf-8\" />
-<title>Blog</title>
-</head>
-<body>
-<ul>
-<li><a href=\"a.html\">A</a> <time>2026-03-01</time></li>
-<li><a href=\"b.html\">B</a> <time>2026-02-01</time></li>
-</ul>
-</body>
-</html>
-";
-    assert render_index(&posts) == expected;
+    let html = render_index(&posts);
+    assert html.contains("<h1 class=\"page-title\">The Wado Blog</h1>");
+
+    let a_pos = html.find("a.html");
+    let b_pos = html.find("b.html");
+    if let Some(a) = a_pos {
+        if let Some(b) = b_pos {
+            assert a < b;
+        }
+    }
+    assert a_pos matches { Some(_) };
+    assert b_pos matches { Some(_) };
+    assert !html.contains("Draft");
 }

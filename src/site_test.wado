@@ -3,8 +3,8 @@ use { Post } from "./post.wado";
 
 test "build_site emits a page per post plus an index" {
     let posts: List<Post> = [
-        Post { slug: "hello", title: "Hello", date: "2026-03-01", body_html: "<p>hi</p>", index: true },
-        Post { slug: "wip", title: "WIP", date: "2026-04-01", body_html: "<p>wip</p>", index: false },
+        Post { slug: "hello", title: "Hello", date: "2026-03-01", author: "FUJI Goro", body_html: "<p>hi</p>", index: true },
+        Post { slug: "wip", title: "WIP", date: "2026-04-01", author: "FUJI Goro", body_html: "<p>wip</p>", index: false },
     ];
     let files = build_site(&posts);
     assert files.len() == 3;

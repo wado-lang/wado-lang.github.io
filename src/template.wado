@@ -1,19 +1,51 @@
 //! HTML templates built from the language's template literals plus Marl's HTML
-//! escaping helpers.
+//! escaping helpers. The visual design mirrors the landing page (calligraphic
+//! ink-on-paper, vermillion seal accent); the stylesheet is inlined from
+//! `style.css` at compile time.
 
 use { escape_text, escape_attr } from "../.tmp/wado/package-marl/src/lib.wado";
 use { Post } from "./post.wado";
 
-/// The shared document head, up to and including the opening `<body>`.
+global STYLE: String = #include_str("./style.css");
+
+/// The shared document head, up to and including the masthead inside `<main>`.
 fn page_head(title: String, noindex: bool) -> String {
     let mut out = String::new();
-    out.push_str(&"<!doctype html>\n<html>\n<head>\n");
+    out.push_str(&"<!doctype html>\n<html lang=\"en\">\n<head>\n");
     out.push_str(&`<meta charset="utf-8" />\n`);
+    out.push_str(&`<meta name="viewport" content="width=device-width, initial-scale=1" />\n`);
     out.push_str(&`<title>{escape_text(&title)}</title>\n`);
     if noindex {
         out.push_str(&`<meta name="robots" content="noindex, nofollow" />\n`);
     }
-    out.push_str(&"</head>\n<body>\n");
+    out.push_str(&`<link rel="icon" type="image/png" href="/assets/wado-512.png" />\n`);
+    out.push_str(&"<style>\n");
+    out.push_str(&STYLE);
+    out.push_str(&"</style>\n");
+    out.push_str(&"</head>\n<body>\n<main>\n");
+    out.push_str(&masthead());
+    return out;
+}
+
+/// Logo linking home, shared by every page.
+fn masthead() -> String {
+    let mut out = String::new();
+    out.push_str(&`<header class="masthead">`);
+    out.push_str(&`<a class="brand" href="/" aria-label="Wado home">`);
+    out.push_str(&`<img src="/assets/wado-512.png" alt="" width="52" height="52" />`);
+    out.push_str(&`<span class="brand-name">Wado</span></a>`);
+    out.push_str(&`</header>\n`);
+    return out;
+}
+
+/// Seal, license line, and the closing tags, shared by every page.
+fn page_foot() -> String {
+    let mut out = String::new();
+    out.push_str(&`<footer>\n`);
+    out.push_str(&`<p><span class="seal" aria-hidden="true"><img src="/assets/wado-512.png" alt="" /></span>`);
+    out.push_str(&`MIT License · Copyright © 2026 FUJI Goro (a.k.a. gfx)</p>\n`);
+    out.push_str(&`<p><a href="https://github.com/wado-lang/wado">github.com/wado-lang/wado</a></p>\n`);
+    out.push_str(&`</footer>\n</main>\n</body>\n</html>\n`);
     return out;
 }
 
@@ -21,10 +53,13 @@ pub fn render_page(post: &Post) -> String {
     let mut out = page_head(post.title, !post.index);
     out.push_str(&"<article>\n");
     out.push_str(&`<h1>{escape_text(&post.title)}</h1>\n`);
-    out.push_str(&`<time>{escape_text(&post.date)}</time>\n`);
+    out.push_str(
+        &`<p class="post-meta"><span class="author">{escape_text(&post.author)}</span> · <time>{escape_text(&post.date)}</time></p>\n`,
+    );
     out.push_str(&post.body_html);
     out.push('\n');
-    out.push_str(&"</article>\n</body>\n</html>\n");
+    out.push_str(&"</article>\n");
+    out.push_str(&page_foot());
     return out;
 }
 
@@ -37,14 +72,16 @@ pub fn render_index(posts: &List<Post>) -> String {
     }
     published.sort_by(|a: &Post, b: &Post| b.date.cmp(&a.date));
 
-    let mut out = page_head("Blog", false);
-    out.push_str(&"<ul>\n");
+    let mut out = page_head("The Wado Blog", false);
+    out.push_str(&`<h1 class="page-title">The Wado Blog</h1>\n`);
+    out.push_str(&`<ul class="post-list">\n`);
     for let p of published {
         let href = `{p.slug}.html`;
         out.push_str(
-            &`<li><a href="{escape_attr(&href)}">{escape_text(&p.title)}</a> <time>{escape_text(&p.date)}</time></li>\n`,
+            &`<li><a href="{escape_attr(&href)}">{escape_text(&p.title)}</a><time>{escape_text(&p.date)}</time></li>\n`,
         );
     }
-    out.push_str(&"</ul>\n</body>\n</html>\n");
+    out.push_str(&"</ul>\n");
+    out.push_str(&page_foot());
     return out;
 }
