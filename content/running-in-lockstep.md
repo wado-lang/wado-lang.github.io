@@ -59,25 +59,39 @@ now." The Component Model is already in production — but a formal 1.0 still ne
 work across five fronts: ABI, browser support, implementation simplification,
 ecosystem, and WIT expressivity.
 
-Two of those matter here. First, the **ABI**. In [our first
-post](/blog/hello.html) I called WASI 0.3's async ABI heavy — a whiff of
-second-system syndrome — and I still do. One part is genuinely improving: today's
-convention leans on `cabi_realloc`, which fragments the heap, and 1.0 replaces it
-with a *lazy ABI* built on opaque handles — no eager allocation, zero-copy
-forwarding between components, and non-breaking (optional in a 0.3.x release,
-default at 1.0). A language that tracks the spec gets leaner boundaries for free.
+The ABI is where I keep the reservations from [the first
+post](/blog/hello.html). Today's calling convention runs on `cabi_realloc`, and
+the trouble isn't only heap fragmentation — it's the churn. Values crossing a
+component boundary drive a relentless stream of small allocations and frees, and
+the overhead is real. Worse, it forces every guest to bring a serious allocator
+of its own. Being a Wasm-GC language buys Wado nothing here: the host's collector
+manages GC objects, but the canonical ABI lives in linear memory, so we still had
+to write a full free-list allocator — bins, coalescing, splitting, the works — in
+[`allocator.wado`](https://github.com/wado-lang/wado/blob/main/wado-compiler/lib/core/allocator.wado).
+A garbage-collected language shipping its own `malloc`, whose throughput then
+rate-limits the boundary, is exactly the kind of thing that makes me mutter
+"second-system syndrome."
 
-But allocation was never the hard part. The async machinery itself — the shape
-you have to implement and keep in your head — is as intricate as ever, and none
-of the 1.0 work makes it *simpler*. My second-system-syndrome verdict stands, and
-it's aimed at WASI 0.3 as it ships today: the realloc overhead gets trimmed, the
-tremendous complexity does not.
+I had hoped Component Model 1.0 would dissolve this by integrating the Component
+Model with Wasm GC — letting GC objects cross boundaries directly, so the
+linear-memory allocator wouldn't be needed at all. It isn't on the list. That's
+the omission I'm most disappointed by.
 
-Second, the framing: **Component Model 1.0 and WASI 1.0 are distinct
-milestones.** The article reaches for a microkernel analogy — the Component Model
-is the computational substrate; WASI is the system layer (networking, storage,
-clocks) on top. WASI 1.0 waits on CM 1.0. There isn't one finish line; there are
-two, stacked.
+There is a new model in flight — the *lazy ABI*, built on opaque handles that
+avoid eager allocation, non-breaking (optional in a 0.3.x release, default at
+1.0). It could change this picture. But there's nothing to benchmark yet, so I'll
+stay neutral: promising on paper, unproven in practice. And the async machinery
+those handles serve is as intricate as ever — nothing on the 1.0 track makes it
+*simpler*.
+
+One more piece of framing worth keeping straight: **Component Model 1.0 and WASI
+1.0 are distinct milestones** — the Component Model is the computational
+substrate, WASI the system layer on top, and WASI 1.0 waits on CM 1.0. Two finish
+lines, stacked.
+
+My read hasn't moved since the first post: the Component Model and WASI are
+wonderful — genuinely. But they aren't magic, and the second-system-syndrome
+smell hasn't cleared.
 
 ## So what does a language built for this look like?
 
