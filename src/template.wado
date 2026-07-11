@@ -7,17 +7,53 @@ use { escape_text, escape_attr } from "../.tmp/wado/package-marl/src/lib.wado";
 use { Post } from "./post.wado";
 
 global STYLE: String = #include_str("./style.css");
+global SITE_NAME: String = "The Wado Blog";
+global BLOG_URL: String = "https://wado-lang.org/blog";
+global OG_IMAGE: String = "https://wado-lang.org/assets/og-image.svg";
+
+/// Per-page metadata driving the document head (SEO + Open Graph / Twitter).
+struct PageMeta {
+    title: String,
+    description: String,
+    canonical: String,
+    og_type: String,
+    published: String = "",
+    author: String = "",
+    noindex: bool = false,
+}
 
 /// The shared document head, up to and including the masthead inside `<main>`.
-fn page_head(title: String, noindex: bool) -> String {
+fn page_head(meta: &PageMeta) -> String {
+    let title = escape_attr(&meta.title);
+    let desc = escape_attr(&meta.description);
+    let url = escape_attr(&meta.canonical);
+
     let mut out = String::new();
     out.push_str(&"<!doctype html>\n<html lang=\"en\">\n<head>\n");
     out.push_str(&`<meta charset="utf-8" />\n`);
     out.push_str(&`<meta name="viewport" content="width=device-width, initial-scale=1" />\n`);
-    out.push_str(&`<title>{escape_text(&title)}</title>\n`);
-    if noindex {
+    out.push_str(&`<title>{escape_text(&meta.title)}</title>\n`);
+    out.push_str(&`<meta name="description" content="{desc}" />\n`);
+    out.push_str(&`<link rel="canonical" href="{url}" />\n`);
+    if meta.noindex {
         out.push_str(&`<meta name="robots" content="noindex, nofollow" />\n`);
     }
+    out.push_str(&`<meta property="og:type" content="{escape_attr(&meta.og_type)}" />\n`);
+    out.push_str(&`<meta property="og:site_name" content="{escape_attr(&SITE_NAME)}" />\n`);
+    out.push_str(&`<meta property="og:title" content="{title}" />\n`);
+    out.push_str(&`<meta property="og:description" content="{desc}" />\n`);
+    out.push_str(&`<meta property="og:url" content="{url}" />\n`);
+    out.push_str(&`<meta property="og:image" content="{OG_IMAGE}" />\n`);
+    if !meta.published.is_empty() {
+        out.push_str(&`<meta property="article:published_time" content="{escape_attr(&meta.published)}" />\n`);
+    }
+    if !meta.author.is_empty() {
+        out.push_str(&`<meta property="article:author" content="{escape_attr(&meta.author)}" />\n`);
+    }
+    out.push_str(&`<meta name="twitter:card" content="summary_large_image" />\n`);
+    out.push_str(&`<meta name="twitter:title" content="{title}" />\n`);
+    out.push_str(&`<meta name="twitter:description" content="{desc}" />\n`);
+    out.push_str(&`<meta name="twitter:image" content="{OG_IMAGE}" />\n`);
     out.push_str(&`<link rel="icon" type="image/png" href="/assets/wado-512.png" />\n`);
     out.push_str(&"<style>\n");
     out.push_str(&STYLE);
@@ -50,7 +86,17 @@ fn page_foot() -> String {
 }
 
 pub fn render_page(post: &Post) -> String {
-    let mut out = page_head(post.title, !post.index);
+    let description = if post.description.is_empty() { post.title } else { post.description };
+    let meta = PageMeta {
+        title: post.title,
+        description,
+        canonical: `{BLOG_URL}/{post.slug}.html`,
+        og_type: "article",
+        published: post.date,
+        author: post.author,
+        noindex: !post.index,
+    };
+    let mut out = page_head(&meta);
     out.push_str(&"<article>\n");
     out.push_str(&`<h1>{escape_text(&post.title)}</h1>\n`);
     out.push_str(
@@ -72,7 +118,13 @@ pub fn render_index(posts: &List<Post>) -> String {
     }
     published.sort_by(|a: &Post, b: &Post| b.date.cmp(&a.date));
 
-    let mut out = page_head("The Wado Blog", false);
+    let meta = PageMeta {
+        title: SITE_NAME,
+        description: "Notes from the Wado programming language project.",
+        canonical: `{BLOG_URL}/`,
+        og_type: "website",
+    };
+    let mut out = page_head(&meta);
     out.push_str(&`<h1 class="page-title">The Wado Blog</h1>\n`);
     out.push_str(&`<ul class="post-list">\n`);
     for let p of published {

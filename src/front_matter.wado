@@ -7,6 +7,7 @@ pub struct FrontMatter {
     pub title: String,
     pub date: String,
     pub author: String = "FUJI Goro",
+    pub description: String = "",
     pub tags: List<String> = [],
     pub index: bool = true,
 }
