@@ -182,9 +182,25 @@ footer .seal img {
   height: 100%;
 }
 
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+th, td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+th { font-weight: 600; color: var(--ink-soft); }
+
 @media (max-width: 540px) {
   body { font-size: 16px; }
   main { padding: 1.75rem 1.1rem 3.5rem; }
   .brand img { width: 44px; height: 44px; }
   h2 { font-size: 1.35rem; }
+  table { font-size: 0.82rem; }
+  th, td { padding: 0.4rem 0.5rem; }
 }
