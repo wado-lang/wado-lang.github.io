@@ -6,6 +6,7 @@ test "render_page emits a full page and escapes the title" {
         slug: "hello",
         title: "Hi & Co",
         date: "2026-07-05",
+        author: "FUJI Goro",
         body_html: "<p>x</p>",
         index: true,
     };
@@ -14,6 +15,7 @@ test "render_page emits a full page and escapes the title" {
     assert html.contains("<meta name=\"viewport\"");
     assert html.contains("<title>Hi &amp; Co</title>");
     assert html.contains("<h1>Hi &amp; Co</h1>");
+    assert html.contains("<span class=\"author\">FUJI Goro</span>");
     assert html.contains("<time>2026-07-05</time>");
     assert html.contains("<p>x</p>");
     assert html.contains("class=\"masthead\"");
@@ -26,6 +28,7 @@ test "render_page adds a noindex meta for unlisted posts" {
         slug: "draft",
         title: "Draft",
         date: "d",
+        author: "FUJI Goro",
         body_html: "<p>y</p>",
         index: false,
     };
@@ -34,9 +37,9 @@ test "render_page adds a noindex meta for unlisted posts" {
 
 test "render_index lists published posts newest-first and omits unlisted" {
     let posts: List<Post> = [
-        Post { slug: "b", title: "B", date: "2026-02-01", body_html: "", index: true },
-        Post { slug: "a", title: "A", date: "2026-03-01", body_html: "", index: true },
-        Post { slug: "d", title: "Draft", date: "2026-04-01", body_html: "", index: false },
+        Post { slug: "b", title: "B", date: "2026-02-01", author: "FUJI Goro", body_html: "", index: true },
+        Post { slug: "a", title: "A", date: "2026-03-01", author: "FUJI Goro", body_html: "", index: true },
+        Post { slug: "d", title: "Draft", date: "2026-04-01", author: "FUJI Goro", body_html: "", index: false },
     ];
     let html = render_index(&posts);
     assert html.contains("<h1 class=\"page-title\">The Wado Blog</h1>");

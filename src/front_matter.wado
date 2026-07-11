@@ -6,6 +6,7 @@ use { Deserialize } from "core:serde";
 pub struct FrontMatter {
     pub title: String,
     pub date: String,
+    pub author: String = "FUJI Goro",
     pub tags: List<String> = [],
     pub index: bool = true,
 }

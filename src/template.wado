@@ -53,7 +53,9 @@ pub fn render_page(post: &Post) -> String {
     let mut out = page_head(post.title, !post.index);
     out.push_str(&"<article>\n");
     out.push_str(&`<h1>{escape_text(&post.title)}</h1>\n`);
-    out.push_str(&`<time>{escape_text(&post.date)}</time>\n`);
+    out.push_str(
+        &`<p class="post-meta"><span class="author">{escape_text(&post.author)}</span> · <time>{escape_text(&post.date)}</time></p>\n`,
+    );
     out.push_str(&post.body_html);
     out.push('\n');
     out.push_str(&"</article>\n");
