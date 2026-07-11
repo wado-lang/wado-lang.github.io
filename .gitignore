@@ -1,6 +1,11 @@
 .tmp/
 .DS_Store
 
+# Sheaf output (generated from content/ by `mise run blog-build`) and the
+# compiled Wasm dropped by `wado run`.
+/_site/
+/build/
+
 # Artifacts left behind by the "Try It in 60 Seconds" quickstart when run at
 # the repo root (download, extracted dir, and the hello program). The checksum
 # list is piped from stdin, so it never touches disk.

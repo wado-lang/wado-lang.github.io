@@ -1,0 +1,10 @@
+[package]
+name = "sheaf"
+version = "0.1.0"
+description = "Sheaf — the static blog generator (CMS) for wado-lang.github.io, written in Wado"
+repository = "https://github.com/wado-lang/wado-lang.github.io"
+license = "MIT"
+authors = ["FUJI Goro <g.psy.va@gmail.com>"]
+
+[world]
+"wasi:cli/command" = "src/main.wado"
