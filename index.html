@@ -241,14 +241,53 @@
     .hero h1 { font-size: 2.2rem; letter-spacing: 0.04em; }
   }
 
+  .topnav { border-bottom: 1px solid var(--rule); }
+  .topnav .inner {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topnav .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .topnav .brand img { width: 28px; height: 28px; display: block; }
+  .topnav .brand-name { font-weight: 600; letter-spacing: 0.06em; }
+  .topnav nav { display: flex; gap: 1.5rem; }
+  .topnav nav a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+  .topnav nav a:hover { color: var(--accent); }
+
   @media (max-width: 540px) {
     body { font-size: 16px; }
     main { padding: 2.5rem 1.1rem 4rem; }
     .hero img { width: 140px; height: 140px; }
+    .topnav .inner { padding: 0.7rem 1.1rem; }
+    .topnav nav { gap: 1.15rem; }
   }
 </style>
 </head>
 <body>
+<header class="topnav">
+  <div class="inner">
+    <a class="brand" href="/" aria-label="Wado home">
+      <span class="brand-name">Wado</span>
+    </a>
+    <nav>
+      <a href="/blog/">Blog</a>
+      <a href="https://github.com/wado-lang/wado">Repository</a>
+    </nav>
+  </div>
+</header>
 <main>
 
 <section class="hero">
