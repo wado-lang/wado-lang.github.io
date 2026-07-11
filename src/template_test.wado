@@ -7,6 +7,7 @@ test "render_page emits a full page and escapes the title" {
         title: "Hi & Co",
         date: "2026-07-05",
         author: "FUJI Goro",
+        description: "An intro to Wado",
         body_html: "<p>x</p>",
         index: true,
     };
@@ -23,12 +24,47 @@ test "render_page emits a full page and escapes the title" {
     assert html.ends_with("</html>\n");
 }
 
+test "render_page emits Open Graph and Twitter metadata" {
+    let post = Post {
+        slug: "hello",
+        title: "Hi & Co",
+        date: "2026-07-05",
+        author: "FUJI Goro",
+        description: "An intro to Wado",
+        body_html: "<p>x</p>",
+        index: true,
+    };
+    let html = render_page(&post);
+    assert html.contains("<meta property=\"og:type\" content=\"article\" />");
+    assert html.contains("<meta property=\"og:title\" content=\"Hi &amp; Co\" />");
+    assert html.contains("<meta property=\"og:description\" content=\"An intro to Wado\" />");
+    assert html.contains("<meta property=\"og:url\" content=\"https://wado-lang.org/blog/hello.html\" />");
+    assert html.contains("<meta property=\"og:image\" content=\"https://wado-lang.org/assets/og-image.svg\" />");
+    assert html.contains("<meta property=\"article:published_time\" content=\"2026-07-05\" />");
+    assert html.contains("<meta name=\"twitter:card\" content=\"summary_large_image\" />");
+    assert html.contains("<link rel=\"canonical\" href=\"https://wado-lang.org/blog/hello.html\" />");
+}
+
+test "render_page falls back to the title when no description is set" {
+    let post = Post {
+        slug: "hello",
+        title: "Just a Title",
+        date: "2026-07-05",
+        author: "FUJI Goro",
+        description: "",
+        body_html: "<p>x</p>",
+        index: true,
+    };
+    assert render_page(&post).contains("<meta property=\"og:description\" content=\"Just a Title\" />");
+}
+
 test "render_page adds a noindex meta for unlisted posts" {
     let post = Post {
         slug: "draft",
         title: "Draft",
         date: "d",
         author: "FUJI Goro",
+        description: "",
         body_html: "<p>y</p>",
         index: false,
     };
@@ -37,12 +73,14 @@ test "render_page adds a noindex meta for unlisted posts" {
 
 test "render_index lists published posts newest-first and omits unlisted" {
     let posts: List<Post> = [
-        Post { slug: "b", title: "B", date: "2026-02-01", author: "FUJI Goro", body_html: "", index: true },
-        Post { slug: "a", title: "A", date: "2026-03-01", author: "FUJI Goro", body_html: "", index: true },
-        Post { slug: "d", title: "Draft", date: "2026-04-01", author: "FUJI Goro", body_html: "", index: false },
+        Post { slug: "b", title: "B", date: "2026-02-01", author: "FUJI Goro", description: "", body_html: "", index: true },
+        Post { slug: "a", title: "A", date: "2026-03-01", author: "FUJI Goro", description: "", body_html: "", index: true },
+        Post { slug: "d", title: "Draft", date: "2026-04-01", author: "FUJI Goro", description: "", body_html: "", index: false },
     ];
     let html = render_index(&posts);
     assert html.contains("<h1 class=\"page-title\">The Wado Blog</h1>");
+    assert html.contains("<meta property=\"og:type\" content=\"website\" />");
+    assert html.contains("<meta property=\"og:url\" content=\"https://wado-lang.org/blog/\" />");
 
     let a_pos = html.find("a.html");
     let b_pos = html.find("b.html");
