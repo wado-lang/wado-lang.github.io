@@ -1,9 +1,19 @@
 [tools]
-# No language toolchain required for the static site itself.
-# Tasks below shell out to git, which mise will resolve from PATH.
+# The Wado toolchain (release binary from GitHub Releases), used by the
+# blog-* tasks. The static landing page itself needs no toolchain.
+"ubi:wado-lang/wado" = { version = "latest", exe = "wado" }
+
+[tasks.fetch-wado]
+description = "Shallow-clone wado-lang/wado into .tmp/wado if absent (Marl sources, logo)"
+run = """
+set -euo pipefail
+if [ ! -d .tmp/wado ]; then
+  git clone --depth 1 https://github.com/wado-lang/wado.git .tmp/wado
+fi
+"""
 
 [tasks.fetch]
-description = "Shallow-clone wado-lang/wado, refresh local assets, transparentize the logo"
+description = "Re-clone wado-lang/wado, refresh local assets, transparentize the logo"
 run = """
 set -euo pipefail
 TMPDIR=".tmp/wado"
@@ -27,9 +37,19 @@ echo "Fetched and transparentized assets:"
 ls -la assets/
 """
 
+[tasks.blog-build]
+depends = ["fetch-wado"]
+description = "Generate the blog: content/*.md -> _site/ via Sheaf"
+run = "wado run ."
+
+[tasks.blog-test]
+depends = ["fetch-wado"]
+description = "Run Sheaf's Wado tests"
+run = "wado test"
+
 [tasks.clean]
-description = "Remove the shallow clone under .tmp"
-run = "rm -rf .tmp"
+description = "Remove the shallow clone under .tmp and the generated _site"
+run = "rm -rf .tmp _site"
 
 [tasks.serve]
 description = "Serve the landing page on http://localhost:8000"
