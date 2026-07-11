@@ -61,9 +61,8 @@ ecosystem, and WIT expressivity. And it's really two milestones, not one: the
 Component Model is the computational substrate, WASI the system layer on top, and
 WASI 1.0 waits on CM 1.0.
 
-On the ABI I still have the reservations I raised in [the first
-post](/blog/hello.html). Today's calling convention runs on `cabi_realloc`, and
-the trouble isn't only heap fragmentation — it's the churn. Every value crossing
+The ABI is the real sticking point. Today's calling convention runs on
+`cabi_realloc`, and the trouble isn't only heap fragmentation — it's the churn. Every value crossing
 a component boundary drives a stream of small allocations and frees, and the
 overhead is real. Worse, it forces each guest to bring a serious allocator of its
 own. Being a Wasm-GC language buys Wado nothing here: the host's collector manages
@@ -73,19 +72,19 @@ a full free-list allocator — bins, coalescing, splitting, the works — in
 A garbage-collected language shipping its own `malloc`, whose throughput then
 rate-limits the boundary, is a lot of friction to still be carrying.
 
-I'd hoped Component Model 1.0 would dissolve this by integrating the Component
-Model with Wasm GC — letting GC objects cross boundaries directly, so the
-linear-memory allocator wouldn't be needed at all. It isn't on the list, and
-that's the omission I'm most disappointed by.
+The clean fix would be Component Model 1.0 integrating the Component Model with
+Wasm GC — letting GC objects cross boundaries directly, so the linear-memory
+allocator wouldn't be needed at all. It isn't on the 1.0 list — the biggest
+letdown in the whole roadmap.
 
 There is a new model in flight — the *lazy ABI*, built on opaque handles that
 avoid eager allocation, non-breaking (optional in a 0.3.x release, default at
-1.0). It could change this picture, but there's nothing to benchmark yet, so I'll
-stay neutral: promising on paper, unproven in practice. The async machinery around
-it is as intricate as ever, too — nothing on the 1.0 track makes it *simpler*.
+1.0). It could change this picture, but there's nothing to benchmark yet:
+promising on paper, unproven in practice. The async machinery around it is as
+intricate as ever, too — nothing on the 1.0 track makes it *simpler*.
 
-My read hasn't changed: the Component Model and WASI are wonderful — genuinely.
-But they aren't magic, and the second-system-syndrome smell hasn't cleared.
+The Component Model and WASI are wonderful — genuinely. But they aren't magic,
+and the second-system-syndrome smell hasn't cleared.
 
 ## So what does a language built for this look like?
 
@@ -156,15 +155,14 @@ ErrorCode> with Client`. `Client` is a WASI interface. But `with` isn't HTTP
 plumbing; it's Wado's **effect system**. The same `interface` construct is a WASI
 interface, a Component Model import/export, *and* a user-defined effect — one of
 our examples declares `interface Log { ... }` and calls it "the subscriber, as an
-effect." So when the first post said effects are how the WASI surface shows up in
-the type system, that wasn't a metaphor.
+effect." Effects aren't a metaphor for the WASI surface; they *are* it.
 
 It runs both directions. Wado doesn't only *consume* WIT — the compiler
 synthesizes WIT from your declarations and bundles it into the component, so any
 other CM language can bind against a Wado component. And when both ends are Wado,
 it skips the canonical ABI and shares Wasm GC types directly — no allocator dance.
-That's the cross-boundary GC I wanted from 1.0; today it only works
-Wado-to-Wado.
+That's the cross-boundary GC the Component Model still lacks across languages;
+today it only works Wado-to-Wado.
 
 ## Try it yourself
 
