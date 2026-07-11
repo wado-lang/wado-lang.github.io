@@ -8,10 +8,10 @@
 ---
 
 Welcome to the Wado blog. Wado is a statically-typed, garbage-collected
-language with the comforts you'd expect — generics, traits, exhaustive
-pattern matching. But it is built for exactly one target: WebAssembly, and
-specifically the Component Model and WASI 0.3. That single constraint shapes
-everything about the language, and it's what this first post is really about.
+language with the comforts you'd expect — generics, traits, exhaustive pattern
+matching. But it targets exactly one platform: WebAssembly's Component Model
+and WASI 0.3. That constraint shapes everything, and it's what this first post
+is about.
 
 Let's start with the traditional greeting:
 
@@ -23,108 +23,97 @@ export fn run() with Stdout {
 }
 ```
 
-Nothing surprising — until you look at the signature. `export fn run()`,
-fine. But `with Stdout`? Printing a line has to be *declared in the type*?
-Hold that thought; we'll come back to it.
+Nothing surprising — except `with Stdout`. Printing a line has to be *declared
+in the type*? Hold that thought; we'll come back to it.
 
 ## Built for the Component Model and WASI 0.3
 
-Everyone knows WebAssembly: a fast, sandboxed compilation target. But core
-Wasm is deliberately spartan. It has numbers, linear memory, and functions —
-and that's all. No strings, no records, no lists. Two modules written in two
-different languages have no standard way to hand each other a string, let
-alone a list of structs. For years we all papered over this with ad-hoc
-conventions layered onto raw memory.
+Everyone knows WebAssembly: a fast, sandboxed compilation target. But core Wasm
+is spartan — numbers, linear memory, functions, and nothing else. No strings,
+no records, no lists. Two modules in different languages have no standard way
+to pass a string, let alone a list of structs; for years we papered over this
+with ad-hoc conventions on raw memory.
 
-The Component Model (CM) fixes that. It adds a language-neutral type system on
-top of Wasm — `string`, `list`, `record`, `variant`, `enum`, `flags`,
-`resource` — so components compose across language boundaries through real,
-typed interfaces.
+The Component Model (CM) fixes that: a language-neutral type system on top of
+Wasm — `string`, `list`, `record`, `variant`, `enum`, `flags`, `resource` — so
+components compose across languages through real, typed interfaces.
 
-The clearest way to picture it is *nanoservices*. Microservices gave you
-language-independent units talking over a standardized protocol. The Component
-Model gives you the same idea, except the boundary is a Wasm call instead of a
-network hop, and the grain is far finer. A component is a sealed unit behind a
-typed interface, and you wire components together the same way whether you're
-in a browser or on a server.
+Picture it as *nanoservices*. Microservices are language-independent units
+talking over a standardized protocol; the Component Model is the same idea, but
+the boundary is a Wasm call instead of a network hop, at a far finer grain. A
+component is a sealed unit behind a typed interface — wired up the same way in a
+browser or on a server.
 
 WASI 0.3 is the standard library written in that vocabulary — filesystems,
-sockets, HTTP, clocks — every one of them defined as a Component Model
-interface. Its headline feature is first-class async, built on futures and
-streams.
+sockets, HTTP, clocks, each a Component Model interface — with first-class
+async, built on futures and streams, as its headline feature.
 
 It's a genuinely exciting stack. It is not, however, magic.
 
-*The ABI has a cost.* It's far cheaper than serializing to JSON, but crossing
-a component boundary still means marshalling values in and out. Carve a
-trivial piece of logic into its own component and the boundary can easily cost
-more than the logic itself — the same trap core Wasm always had, just one
-level up. Composition is a tool, not a free lunch.
+*The ABI has a cost.* Far cheaper than JSON, but crossing a component boundary
+still marshals values in and out. Carve a trivial piece of logic into its own
+component and the boundary can cost more than the logic — the same trap core
+Wasm had, one level up. Composition is a tool, not a free lunch.
 
-*It isn't in browsers yet.* The Component Model is still a draft, so that's
-fair enough — but "runs everywhere" comes with an asterisk today.
+*It isn't in browsers yet.* The CM is still a draft, so that's fair — but "runs
+everywhere" carries an asterisk today.
 
-*WASI 0.3's async ABI is complicated.* The design is powerful, but the
-machinery is heavy and the overhead is proportional to that complexity.
-There's a faint whiff of second-system syndrome about it.
+*WASI 0.3's async ABI is complicated.* Powerful, but heavy, with overhead
+proportional to the complexity — a faint whiff of second-system syndrome.
 
-So: a wonderful foundation, with real and non-trivial drawbacks. Wado bet on
-it anyway — with eyes open. The wager is that if you design a language to *fit
-this shape* from the start, instead of bolting Wasm on as one backend among
-many and generating glue to reach the Component Model, you get onto this
-future far more directly. Wado's type system *is* the Component Model's type
-system: the split into `variant` (sum types with payloads), `enum` (bare
-discriminants), and `flags` (bitsets) exists precisely because those are the
-Component Model's type kinds. Wado didn't inherit that three-way split from
-Rust — it grew it to match the platform.
+So: a wonderful foundation with real drawbacks. Wado bet on it anyway, with
+eyes open. The wager: design a language to *fit this shape* from the start —
+rather than bolting Wasm on as one backend among many and generating glue to
+reach the CM — and you get onto this future far more directly. Wado's type
+system *is* the CM's: the split into `variant` (sum types with payloads),
+`enum` (bare discriminants), and `flags` (bitsets) exists because those are the
+CM's type kinds. Wado didn't inherit that three-way split from Rust; it grew it
+to match the platform.
 
 ## The reveal
 
-Which brings us back to that `with Stdout`.
+Which brings us back to `with Stdout`.
 
-`Stdout` is not a Wado invention. It's `wasi:cli`'s standard-output interface,
-straight from WASI. And here is the design decision that fuses the language to
-the platform: **Wado models every WASI interface and resource as an effect.**
-Printing touches the outside world, so it surfaces in the type — `with
-Stdout` — exactly like any other effect. Effects aren't a
-functional-programming flourish grafted onto the language; they *are* how the
-WASI surface appears in Wado's type system. The platform's boundaries and the
-language's effects are one and the same.
+`Stdout` isn't a Wado invention — it's `wasi:cli`'s standard-output interface,
+straight from WASI. Here's the decision that fuses language to platform:
+**Wado models every WASI interface and resource as an effect.** Printing
+touches the outside world, so it surfaces in the type, exactly like any other
+effect. Effects aren't a functional-programming flourish grafted on; they *are*
+how the WASI surface appears in Wado's type system. The platform's boundaries
+and the language's effects are the same thing.
 
 ## No borrow checker, just GC
 
 Wado is not Rust, even if it rhymes. No lifetimes, no borrow checker, no
-ownership, no `unsafe`, no macros. Memory is handled by Wasm's garbage
-collector. Values have value semantics: assigning or passing a value
-deep-copies it, and only references (`&T`, `&mut T`) share. It's a calmer
-model to write in — you reason about what your code *means*, not about who
-owns what.
+ownership, no `unsafe`, no macros — memory is the Wasm garbage collector's job.
+Values have value semantics: assigning or passing deep-copies, and only
+references (`&T`, `&mut T`) share. A calmer model — you reason about what your
+code *means*, not who owns what.
 
-The obvious worry is performance. GC plus copy-on-assign sounds slow. In
-practice, aggressive optimization claws most of it back: some Wado programs
-run about as fast as Rust, some are meaningfully slower, but it's rarely the
-disaster the description suggests. And the Wasm it emits is *small* — often
-dramatically smaller than the equivalent Rust binary, which matters when your
-modules are nanoservices you compose and ship. (There's a whole benchmark post
-hiding in that sentence. Another day.)
+The obvious worry is performance: GC plus copy-on-assign sounds slow. In
+practice, aggressive optimization claws most of it back — some Wado programs
+run about as fast as Rust, some meaningfully slower, but rarely the disaster it
+sounds like. And the Wasm it emits is *small*, often dramatically smaller than
+the equivalent Rust binary — which matters when your modules are nanoservices
+you compose and ship. (A whole benchmark post hides in that sentence. Another
+day.)
 
 ## There's more
 
-This is a tour, not a manual, so just briefly: Wado has effect *handlers* (you
-can handle those effects, not merely declare them), power-assert-style
-assertions that can never be disabled, exhaustive pattern matching via
-`match`, `if let`, and a `matches` operator, and template strings with typed
-formatting. The `docs/spec.md` in the main repo has the full story.
+Briefly, since this is a tour and not a manual: Wado has effect *handlers* (you
+can handle those effects, not just declare them), power-assert-style assertions
+that can't be disabled, exhaustive pattern matching via `match`, `if let`, and
+a `matches` operator, and template strings with typed formatting. The
+`docs/spec.md` in the main repo has the full story.
 
 ## This blog runs on Wado
 
-One last thing. The blog you're reading is generated by Wado. The static site
-generator behind it — *Sheaf* — is a Wado program, and this very page was
-rendered by *Marl*, Wado's own Markdown processor. No server, no database:
-Markdown files go in, HTML comes out, Wado all the way from front matter to
-footer.
+One last thing: this blog is generated by Wado. The static site generator
+behind it, *Sheaf*, is a Wado program, and this page was rendered by *Marl*,
+Wado's own Markdown processor. No server, no database — Markdown in, HTML out,
+Wado from front matter to footer.
 
 Bootstrapping a blog in your own language is a small thing. But it's the kind
-of small thing that only works if the language actually does.
+of small thing that only works if the language does.
 
 Hello, Wado. More soon.
