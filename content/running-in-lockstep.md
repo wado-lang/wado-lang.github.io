@@ -3,7 +3,7 @@
     "title": "Running in Lockstep: Wado, WASI 0.3, and the Road to Component Model 1.0",
     "date": "2026-07-12",
     "author": "FUJI Goro",
-    "description": "WASI 0.3 just shipped and the road to Component Model 1.0 is drawn. For a language built for exactly this platform, here's what changed — and how Wado's syntax is WIT's vocabulary, checked by running a real handler.",
+    "description": "WASI 0.3 just shipped and the road to Component Model 1.0 is drawn. For a language built for exactly this platform, here's what changed — and why Wado's syntax is just WIT's vocabulary.",
     "tags": [],
     "index": true
 }
@@ -57,41 +57,35 @@ Python, and C are in progress.
 The companion article is blunt in the best way: "We can start using this stuff
 now." The Component Model is already in production — but a formal 1.0 still needs
 work across five fronts: ABI, browser support, implementation simplification,
-ecosystem, and WIT expressivity.
+ecosystem, and WIT expressivity. And it's really two milestones, not one: the
+Component Model is the computational substrate, WASI the system layer on top, and
+WASI 1.0 waits on CM 1.0.
 
-The ABI is where I keep the reservations from [the first
+On the ABI I still have the reservations I raised in [the first
 post](/blog/hello.html). Today's calling convention runs on `cabi_realloc`, and
-the trouble isn't only heap fragmentation — it's the churn. Values crossing a
-component boundary drive a relentless stream of small allocations and frees, and
-the overhead is real. Worse, it forces every guest to bring a serious allocator
-of its own. Being a Wasm-GC language buys Wado nothing here: the host's collector
-manages GC objects, but the canonical ABI lives in linear memory, so we still had
-to write a full free-list allocator — bins, coalescing, splitting, the works — in
+the trouble isn't only heap fragmentation — it's the churn. Every value crossing
+a component boundary drives a stream of small allocations and frees, and the
+overhead is real. Worse, it forces each guest to bring a serious allocator of its
+own. Being a Wasm-GC language buys Wado nothing here: the host's collector manages
+GC objects, but the canonical ABI lives in linear memory, so we still had to write
+a full free-list allocator — bins, coalescing, splitting, the works — in
 [`allocator.wado`](https://github.com/wado-lang/wado/blob/main/wado-compiler/lib/core/allocator.wado).
 A garbage-collected language shipping its own `malloc`, whose throughput then
-rate-limits the boundary, is exactly the kind of thing that makes me mutter
-"second-system syndrome."
+rate-limits the boundary, is a lot of friction to still be carrying.
 
-I had hoped Component Model 1.0 would dissolve this by integrating the Component
+I'd hoped Component Model 1.0 would dissolve this by integrating the Component
 Model with Wasm GC — letting GC objects cross boundaries directly, so the
-linear-memory allocator wouldn't be needed at all. It isn't on the list. That's
-the omission I'm most disappointed by.
+linear-memory allocator wouldn't be needed at all. It isn't on the list, and
+that's the omission I'm most disappointed by.
 
 There is a new model in flight — the *lazy ABI*, built on opaque handles that
 avoid eager allocation, non-breaking (optional in a 0.3.x release, default at
-1.0). It could change this picture. But there's nothing to benchmark yet, so I'll
-stay neutral: promising on paper, unproven in practice. And the async machinery
-those handles serve is as intricate as ever — nothing on the 1.0 track makes it
-*simpler*.
+1.0). It could change this picture, but there's nothing to benchmark yet, so I'll
+stay neutral: promising on paper, unproven in practice. The async machinery around
+it is as intricate as ever, too — nothing on the 1.0 track makes it *simpler*.
 
-One more piece of framing worth keeping straight: **Component Model 1.0 and WASI
-1.0 are distinct milestones** — the Component Model is the computational
-substrate, WASI the system layer on top, and WASI 1.0 waits on CM 1.0. Two finish
-lines, stacked.
-
-My read hasn't moved since the first post: the Component Model and WASI are
-wonderful — genuinely. But they aren't magic, and the second-system-syndrome
-smell hasn't cleared.
+My read hasn't changed: the Component Model and WASI are wonderful — genuinely.
+But they aren't magic, and the second-system-syndrome smell hasn't cleared.
 
 ## So what does a language built for this look like?
 
@@ -168,9 +162,9 @@ the type system, that wasn't a metaphor.
 It runs both directions. Wado doesn't only *consume* WIT — the compiler
 synthesizes WIT from your declarations and bundles it into the component, so any
 other CM language can bind against a Wado component. And when both ends are Wado,
-it skips the canonical ABI and shares Wasm GC types directly — where last time's
-tiny-binary story meets the roadmap, since GC across component boundaries is one
-of the things still being finished.
+it skips the canonical ABI and shares Wasm GC types directly — no allocator dance.
+That's the cross-boundary GC I wanted from 1.0; today it only works
+Wado-to-Wado.
 
 ## Try it yourself
 
