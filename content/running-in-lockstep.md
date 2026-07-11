@@ -61,12 +61,17 @@ ecosystem, and WIT expressivity.
 
 Two of those matter here. First, the **ABI**. In [our first
 post](/blog/hello.html) I called WASI 0.3's async ABI heavy — a whiff of
-second-system syndrome. The platform agrees: today's convention leans on
-`cabi_realloc`, which fragments the heap, and 1.0 replaces it with a *lazy ABI*
-built on opaque handles — no eager allocation, zero-copy forwarding between
-components. It ships optional in a 0.3.x release, becomes the default at 1.0, and
-is designed to be non-breaking. A language that tracks the spec gets leaner
-boundaries later without changing a line of source.
+second-system syndrome — and I still do. One part is genuinely improving: today's
+convention leans on `cabi_realloc`, which fragments the heap, and 1.0 replaces it
+with a *lazy ABI* built on opaque handles — no eager allocation, zero-copy
+forwarding between components, and non-breaking (optional in a 0.3.x release,
+default at 1.0). A language that tracks the spec gets leaner boundaries for free.
+
+But allocation was never the hard part. The async machinery itself — the shape
+you have to implement and keep in your head — is as intricate as ever, and none
+of the 1.0 work makes it *simpler*. My second-system-syndrome verdict stands, and
+it's aimed at WASI 0.3 as it ships today: the realloc overhead gets trimmed, the
+tremendous complexity does not.
 
 Second, the framing: **Component Model 1.0 and WASI 1.0 are distinct
 milestones.** The article reaches for a microkernel analogy — the Component Model
