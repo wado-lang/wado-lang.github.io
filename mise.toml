@@ -1,7 +1,5 @@
 [tools]
-# The Wado toolchain (release binary from GitHub Releases), used by the
-# blog-* tasks. The static landing page itself needs no toolchain.
-"ubi:wado-lang/wado" = { version = "latest", exe = "wado" }
+"github:wado-lang/wado" = { version = "latest", exe = "wado" }
 
 [tasks.fetch-wado]
 description = "Shallow-clone wado-lang/wado into .tmp/wado if absent (Marl sources, logo)"
