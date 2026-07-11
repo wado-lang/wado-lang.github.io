@@ -4,6 +4,7 @@
 [tasks.fetch-wado]
 description = "Shallow-clone wado-lang/wado into .tmp/wado if absent (Marl sources, logo)"
 run = """
+#!/usr/bin/env bash
 set -euo pipefail
 if [ ! -d .tmp/wado ]; then
   git clone --depth 1 https://github.com/wado-lang/wado.git .tmp/wado
@@ -13,6 +14,7 @@ fi
 [tasks.fetch]
 description = "Re-clone wado-lang/wado, refresh local assets, transparentize the logo"
 run = """
+#!/usr/bin/env bash
 set -euo pipefail
 TMPDIR=".tmp/wado"
 REPO="https://github.com/wado-lang/wado.git"
