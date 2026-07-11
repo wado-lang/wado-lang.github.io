@@ -1,5 +1,5 @@
 [tools]
-"github:wado-lang/wado" = { version = "latest", exe = "wado" }
+"github:wado-lang/wado" = { version = "0.0.11", exe = "wado" }
 
 [tasks.fetch-wado]
 description = "Shallow-clone wado-lang/wado into .tmp/wado if absent (Marl sources, logo)"
