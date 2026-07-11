@@ -3,7 +3,7 @@
     "title": "Hello, Wado!",
     "date": "2026-07-11",
     "author": "FUJI Goro",
-    "description": "Wado is a statically-typed, GC'd language built for one platform: WebAssembly's Component Model and WASI 0.3. A first look at what that means — and an honest take on the stack.",
+    "description": "Wado is a statically-typed, GC'd language built for one platform: WebAssembly's Component Model and WASI 0.3. A first look at what that means — and where the stack still falls short.",
     "tags": [],
     "index": true
 }

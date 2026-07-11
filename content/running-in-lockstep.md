@@ -52,7 +52,7 @@ This isn't a preview. Wasmtime 46 ships WASI 0.3.0 with Component Model async on
 by default; `jco` runs it in JavaScript today; guest toolchains for Rust, Go,
 Python, and C are in progress.
 
-## The road to 1.0 — and an honest note
+## The road to 1.0 — and what it doesn't fix
 
 The companion article is blunt in the best way: "We can start using this stuff
 now." The Component Model is already in production — but a formal 1.0 still needs
