@@ -57,8 +57,25 @@ The specification, briefly:
   construction: raw HTML is escaped rather than passed through, and link
   destinations are scheme-filtered.
 
-Deployment of `_site/` to GitHub Pages is not wired up yet; the generated
-output is local-only for now.
+Deployment: a push to `main` runs `.github/workflows/deploy.yml`, which builds
+the blog and publishes the whole site to GitHub Pages — the landing page at the
+root, the blog under `/blog/`.
+
+## Writing posts
+
+House style for `content/*.md`:
+
+- **Voice.** Write as "we" and "Wado" — the collective project voice. No
+  first-person singular ("I", "my").
+- **No meta.** Don't narrate the writing or cross-reference the drafting process
+  ("as the last post said", "our view hasn't changed"). State the point and move
+  on.
+- **Accurate and concise, but not stiff.** Plain, direct sentences with a casual
+  edge. Cut filler; keep the personality.
+- **Verify before asserting.** Present something as fact only after checking it
+  yourself — run the code, read the source, confirm the number. If it's
+  unverified, leave it out or flag it.
+- **Never use the word "honest"** (or "honestly"). Say the thing plainly.
 
 ## Taking screenshots
 
