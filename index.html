@@ -304,9 +304,10 @@
   </p>
   <p class="links">
     <a href="https://github.com/wado-lang/wado">View on GitHub</a>
-  </p><p>
-    <a href="https://github.com/wado-lang/wado/blob/main/docs/spec.md">Language Spec</a>
-    <a href="https://github.com/wado-lang/wado/blob/main/docs/cheatsheet.md">Cheatsheet</a>
+  </p>
+  <p class="links">
+    <a href="/docs/spec.html">Language Spec</a>
+    <a href="/docs/cheatsheet.html">Cheatsheet</a>
   </p>
 </section>
 
@@ -339,6 +340,12 @@
   The compiled <code>.wasm</code> for this program is
   <strong>1,773&nbsp;bytes</strong> — smaller than the same program written in
   C, Zig, Moonbit, or Rust.
+</p>
+
+<p>
+  See it on something real:
+  <a href="/blog/http-service-tour.html">a tour of Wado through an HTTP service</a>
+  walks a single-file httpbin clone, feature by feature.
 </p>
 
 <hr class="rule" />
@@ -381,211 +388,6 @@
 
 <hr class="rule" />
 
-<h2>A Real Example: an HTTP Service</h2>
-
-<p>
-  This section tours
-  <a href="https://github.com/wado-lang/wado/blob/main/example/http-bin.wado"><code>example/http-bin.wado</code></a>
-  — a single-file httpbin clone implementing <code>/get</code>,
-  <code>/post</code>, <code>/headers</code>, <code>/status/:code</code>,
-  <code>/base64/:val</code>, and more, served via the Component Model
-  <code>wasi:http/service</code> world.
-</p>
-
-<p>Run it:</p>
-
-<pre><code>wado serve example/http-bin.wado
-<span class="tok-com"># in another terminal:</span>
-curl http://localhost:8080/get</code></pre>
-
-<p>
-  Eleven snippets follow, each highlighting something Wado does well.
-</p>
-
-<h3>1. One-file scripts, with the standard library and WASI in scope</h3>
-
-<p>
-  A Wado file can be made directly executable with a shebang — one-file
-  scripts are first-class:
-</p>
-
-<pre><code><span class="tok-com">#!/usr/bin/env wado serve</span></code></pre>
-
-<p>
-  The stdlib is namespaced (<code>core:*</code> for the language runtime,
-  <code>wasi:*</code> for WASI worlds) and imported the way ES modules are:
-</p>
-
-<pre><code><span class="tok-kw">use</span> { Request, Response, Method, Scheme, ErrorCode } <span class="tok-kw">from</span> <span class="tok-str">"wasi:http"</span>;
-<span class="tok-kw">use</span> { MonotonicClock } <span class="tok-kw">from</span> <span class="tok-str">"wasi:clocks"</span>;
-<span class="tok-kw">use</span> { TreeMap } <span class="tok-kw">from</span> <span class="tok-str">"core:collections"</span>;
-<span class="tok-kw">use</span> { decode } <span class="tok-kw">from</span> <span class="tok-str">"core:base64"</span>;
-<span class="tok-kw">use</span> { Serialize } <span class="tok-kw">from</span> <span class="tok-str">"core:serde"</span>;
-<span class="tok-kw">use</span> { Url } <span class="tok-kw">from</span> <span class="tok-str">"core:url"</span>;
-<span class="tok-kw">use</span> json <span class="tok-kw">from</span> <span class="tok-str">"core:json"</span>;</code></pre>
-
-<p>
-  Notice that <code>wasi:http</code> and <code>wasi:clocks</code> are imported
-  the same way as <code>core:json</code> — WASI worlds are simply modules.
-</p>
-
-<h3>2. Effects belong in the function type</h3>
-
-<pre><code><span class="tok-kw">export async fn</span> <span class="tok-fn">handle</span>(request: Request) -&gt; Result&lt;Response, ErrorCode&gt;
-    <span class="tok-kw">with</span> MonotonicClock {</code></pre>
-
-<p>
-  The <code>with</code> clause lists the capabilities this function uses.
-  <code>MonotonicClock</code> here is a WASI capability, not a global; the
-  runtime grants it on entry. Pure functions have no <code>with</code> clause,
-  and you can tell at a glance.
-</p>
-
-<p>
-  <code>async fn</code> declares a Component Model–level async function, which
-  the host can suspend and resume across the canonical ABI.
-</p>
-
-<h3>3. Auto-derived JSON, one line</h3>
-
-<pre><code><span class="tok-kw">struct</span> RequestInfo {
-    method: String,
-    path: String,
-    args: TreeMap&lt;String, String&gt;,
-    headers: TreeMap&lt;String, String&gt;,
-    origin: String,
-    url: String,
-    data: Option&lt;String&gt;,
-}
-<span class="tok-kw">impl</span> Serialize <span class="tok-kw">for</span> RequestInfo;</code></pre>
-
-<p>
-  The single line <code>impl Serialize for RequestInfo;</code> derives the
-  serializer. There is no separate macro and no schema file — the struct's
-  field types are the schema.
-</p>
-
-<h3>4. Exhaustive pattern matching over variants</h3>
-
-<pre><code><span class="tok-kw">fn</span> <span class="tok-fn">scheme_name</span>(s: Option&lt;Scheme&gt;) -&gt; String {
-    <span class="tok-kw">return match</span> s {
-        Some(Http)        =&gt; <span class="tok-str">"http"</span>,
-        Some(Https)       =&gt; <span class="tok-str">"https"</span>,
-        Some(Other(name)) =&gt; name,
-        None              =&gt; <span class="tok-str">"http"</span>,
-    };
-}</code></pre>
-
-<p>
-  <code>Scheme</code> is a variant (a sum type with payloads) imported straight
-  from <code>wasi:http</code>. The compiler verifies that every case is
-  covered, including the nested <code>Other(name)</code> payload that carries a
-  custom scheme string.
-</p>
-
-<h3>5. Declarative naming for the wire format</h3>
-
-<pre><code><span class="tok-com">#[serde(rename_all = "kebab-case")]</span>
-<span class="tok-kw">struct</span> UserAgentResponse {
-    user_agent: Option&lt;String&gt;,
-}
-<span class="tok-kw">impl</span> Serialize <span class="tok-kw">for</span> UserAgentResponse;</code></pre>
-
-<p>
-  The Rust-style attribute renames <code>user_agent</code> to
-  <code>user-agent</code> on the wire. Idiomatic Wado naming on the inside,
-  idiomatic JSON on the outside.
-</p>
-
-<h3>6. <code>match</code> as an expression, even on strings</h3>
-
-<pre><code><span class="tok-kw">match</span> path {
-    <span class="tok-str">"/"</span>            =&gt; { content_type = <span class="tok-str">"text/html; charset=utf-8"</span>; body_str = HOMEPAGE; },
-    <span class="tok-str">"/get"</span>         =&gt; { <span class="tok-com">/* ... */</span> },
-    <span class="tok-str">"/post"</span>        =&gt; { <span class="tok-com">/* ... */</span> },
-    <span class="tok-str">"/headers"</span>     =&gt; { <span class="tok-com">/* ... */</span> },
-    <span class="tok-str">"/ip"</span>          =&gt; { <span class="tok-com">/* ... */</span> },
-    <span class="tok-str">"/user-agent"</span>  =&gt; { <span class="tok-com">/* ... */</span> },
-    _              =&gt; { <span class="tok-com">/* dynamic routes: /status/:code, /base64/:val, ... */</span> },
-}</code></pre>
-
-<p>
-  <code>match</code> is an expression and works on string literals as well as
-  variants. The wildcard arm dispatches the dynamic routes through a separate
-  function.
-</p>
-
-<h3>7. Template strings with format specifiers</h3>
-
-<pre><code>trailers.<span class="tok-fn">append</span>(
-    <span class="tok-str">"server-timing"</span>,
-    <span class="tok-str">`app;dur={elapsed_ms:0.3f}`</span>.<span class="tok-fn">as_bytes</span>() <span class="tok-kw">as</span> FieldValue,
-);</code></pre>
-
-<p>
-  Backtick strings interpolate expressions like TypeScript, but the
-  <code>:0.3f</code> format specifier is checked at compile time against the
-  value's <code>Display</code> impl. The result is <code>app;dur=12.345</code>.
-</p>
-
-<h3>8. Tuples are first-class return values</h3>
-
-<pre><code><span class="tok-kw">fn</span> <span class="tok-fn">echo_if_method</span>(<span class="tok-com">/* ... */</span>) -&gt; [StatusCode, String, Option&lt;String&gt;] {
-    <span class="tok-com">/* ... */</span>
-    <span class="tok-kw">return</span> [200, <span class="tok-fn">build_request_json</span>(<span class="tok-com">/* ... */</span>), null];
-}
-
-<span class="tok-kw">let</span> [s, b, a] = <span class="tok-fn">echo_if_method</span>(request, method, Method::Get, <span class="tok-str">"GET"</span>, false, url, path, args);</code></pre>
-
-<p>
-  Tuple literal syntax (<code>[a, b, c]</code>) is the same in types,
-  expressions, and patterns. There is no third syntax for "multiple return
-  values" — there's just tuples and destructuring.
-</p>
-
-<h3>9. <code>task return</code>: hand off the response, then keep working</h3>
-
-<pre><code><span class="tok-kw">task return</span> Result::Ok(response);
-
-body_tx.<span class="tok-fn">write</span>(body_str.<span class="tok-fn">as_bytes</span>());
-body_tx.<span class="tok-fn">drop</span>();</code></pre>
-
-<p>
-  In a Component Model <code>async fn</code>, <code>task return</code> delivers
-  the result to the caller without ending the function. The handler can then
-  continue streaming the body, write trailers, and emit access logs — all
-  after the response status is already on the wire.
-</p>
-
-<h3>10. Compile-time file inclusion</h3>
-
-<pre><code><span class="tok-kw">global</span> HOMEPAGE: String = <span class="tok-fn">#include_str</span>(<span class="tok-str">"./http-bin-index.html"</span>);</code></pre>
-
-<p>
-  The HTML for <code>/</code> lives in a separate file for editing comfort,
-  but ends up baked into the <code>.wasm</code> as a constant. There is no
-  filesystem read at runtime, and no separate asset to ship.
-</p>
-
-<h3>11. <code>if let</code> with guards</h3>
-
-<pre><code><span class="tok-kw">if let</span> Some(a) = request.<span class="tok-fn">get_authority</span>() &amp;&amp; !a.<span class="tok-fn">is_empty</span>() {
-    <span class="tok-kw">return</span> a;
-}</code></pre>
-
-<p>
-  Pattern binding and a boolean guard combine in a single condition. The bound
-  name <code>a</code> is in scope for both the guard and the body.
-</p>
-
-<p>
-  The full source is at
-  <a href="https://github.com/wado-lang/wado/blob/main/example/http-bin.wado"><code>example/http-bin.wado</code></a>
-  (~345 lines).
-</p>
-
-<hr class="rule" />
-
 <h2>Design Principles</h2>
 
 <h3>Wasm in plain sight</h3>
@@ -616,49 +418,34 @@ body_tx.<span class="tok-fn">drop</span>();</code></pre>
   unwinding doesn't exist as a language feature.
 </p>
 
-<h3>Minimal binary size</h3>
-<p>
-  By leveraging Wasm GC instead of bundling a runtime, Wado produces compact
-  <code>.wasm</code> files. This is the core motivation of the language.
-</p>
-
 <hr class="rule" />
 
 <h2>Designed for Agentic Coding</h2>
 
 <p>
   The Wado compiler is <strong>100% agentic-coded</strong> — every line of
-  <code>wado-compiler</code> was written by an AI agent — and the same is true
-  of most of the Wado code in the repository. The human handles language
-  design and project management; the agents do the rest.
+  <code>wado-compiler</code> was written by an AI agent, as is most of the Wado
+  in the repository. The human handles language design and direction; the agents
+  do the rest. That shaped the language itself:
 </p>
-
-<p>This isn't just a curiosity; it shaped the language itself:</p>
 
 <ul>
   <li>
-    <strong>Agents excel at volume but struggle with ambiguity.</strong>
-    Implicit behaviors get multiplied across a codebase. Explicit, predictable
-    semantics work better — so Wado has no implicit conversions, no
-    overloading, no macros.
+    <strong>Ambiguity multiplies.</strong> Implicit behavior spreads across a
+    codebase, so Wado has none — no implicit conversions, no overloading, no
+    macros.
   </li>
   <li>
-    <strong>Agents tend toward defensive programming.</strong> Without type
-    safety, they pepper code with runtime type checks and nested error
-    handling. Strong static types, with no <code>any</code> escape hatch,
-    eliminate the need.
+    <strong>Agents get defensive.</strong> Without type safety they pile on
+    runtime checks and nested error handling; strong static types, with no
+    <code>any</code> escape hatch, remove the reason to.
   </li>
   <li>
-    <strong>Exceptions break agent reasoning.</strong> Non-local control flow
-    is hard to predict. <code>Result&lt;T, E&gt;</code> keeps every failure
-    path visible at the call site.
+    <strong>Exceptions break reasoning.</strong> Non-local control flow is hard
+    to predict, so failures are values — <code>Result&lt;T, E&gt;</code>, visible
+    at the call site.
   </li>
 </ul>
-
-<p>
-  The result is a language where common agentic-coding pitfalls are
-  eliminated by design, not by convention.
-</p>
 
 <hr class="rule" />
 
