@@ -327,8 +327,8 @@
 </p>
 
 <p>
-  The compiled <code>.wasm</code> is <strong>1,773&nbsp;bytes</strong> — smaller
-  than the same program in C, Zig, Moonbit, or Rust.
+  It compiles to a small, self-contained <code>.wasm</code> — nothing ships
+  alongside it.
 </p>
 
 <p>
@@ -339,59 +339,19 @@
 
 <hr class="rule" />
 
-<h2>Why Wado?</h2>
+<h2>Why Wado</h2>
 
 <p>
-  Existing Wasm-targeting languages bundle their own memory management runtime
-  into every <code>.wasm</code> file. The result is bloated binaries even for
-  trivial programs:
-</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Program</th>
-      <th class="num">Wado</th>
-      <th class="num">Rust (wasm32-wasip1)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td><code>hello_world</code></td>      <td class="num">1,773 B</td>  <td class="num">40,115 B</td></tr>
-    <tr><td><code>pi_approx</code></td>        <td class="num">8,982 B</td>  <td class="num">59,496 B</td></tr>
-    <tr><td><code>zlib</code> (gzip)</td>      <td class="num">18,935 B</td> <td class="num">88,563 B</td></tr>
-    <tr><td><code>sqlite_highlight</code></td> <td class="num">622 KB</td>   <td class="num">3,481 KB</td></tr>
-  </tbody>
-</table>
-
-<p>
-  Wado takes a different approach. By targeting <strong>Wasm GC</strong>, the
-  garbage collector is provided by the host runtime itself — so it doesn't have
-  to ship inside the module. The output is a thin shell of pure logic.
-</p>
-
-<p>
-  The timing matters too. With the <strong>Wasm Component Model</strong> and
-  <strong>WASI&nbsp;P3</strong> maturing, Wado is designed for this new era from
-  the ground up — no legacy baggage, no retrofitting.
-</p>
-
-<hr class="rule" />
-
-<h2>Design Principles</h2>
-
-<p>
-  These principles aren't arbitrary. The Wado compiler is
-  <strong>100% agentic-coded</strong> — every line of <code>wado-compiler</code>
-  was written by an AI agent, as is most of the Wado in the repository. The human
-  handles language design and direction; the agents do the rest. Agents are fast
-  but literal, so the language leans on being explicit and predictable:
+  Wado targets exactly one platform: WebAssembly's Component Model and WASI.
+  That focus shapes the whole language — its type system <em>is</em> the
+  Component Model's, down to the split into <code>variant</code>,
+  <code>enum</code>, and <code>flags</code>.
 </p>
 
 <ul>
-  <li><strong>Wasm in plain sight</strong> — no macros; the code you read is the code that runs, so the WAT stays something you can reason about.</li>
-  <li><strong>Explicit over implicit</strong> — no implicit conversions, no overloading, no hidden dependencies. Implicit behavior multiplies across a codebase — and across an agent's edits — so there is none.</li>
-  <li><strong>Type-safe, no escape hatches</strong> — strong static typing with no <code>any</code>. Without it, code drifts toward defensive <code>try-catch</code> and runtime checks; the types remove the reason to.</li>
-  <li><strong>Errors are values</strong> — <code>Result&lt;T, E&gt;</code> and <code>Option&lt;T&gt;</code> keep control flow local and visible. Non-local unwinding is hard to predict, so there is none.</li>
+  <li><strong>Small by construction</strong> — targeting Wasm GC means the host provides the garbage collector, so no memory-management runtime ships inside the module. Binaries stay lean; the <a href="https://wado-lang.org/wado/benchmarks/wasm-size/">wasm-size dashboard</a> tracks the current numbers.</li>
+  <li><strong>Effects in the type</strong> — every WASI capability a function touches (like the <code>with Stdout</code> above) shows up in its signature. The platform's boundaries and the language's effects are one and the same.</li>
+  <li><strong>Explicit and predictable</strong> — no macros, no implicit conversions, no <code>any</code>; the code you read is the code that runs, and errors are values (<code>Result</code> / <code>Option</code>), not exceptions. The compiler is <strong>100% agentic-coded</strong> — a language agents can work in has to be this legible.</li>
 </ul>
 
 <hr class="rule" />
@@ -488,6 +448,8 @@ wado run hello.wado</code></pre>
   <li><a href="https://wado-lang.org/wado/benchmarks/runtime/">Runtime performance dashboard</a></li>
   <li><a href="https://wado-lang.org/wado/benchmarks/wasm-size/">Wasm binary size dashboard</a></li>
   <li><a href="https://github.com/wado-lang/wado">Repository</a> — Source, issues, releases</li>
+  <li><a href="https://component-model.bytecodealliance.org/">Component Model</a> — the platform Wado targets (Bytecode Alliance)</li>
+  <li><a href="https://wasi.dev/">WASI</a> — the system interface Wado builds on</li>
 </ul>
 
 <footer>
