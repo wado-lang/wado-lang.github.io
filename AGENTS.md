@@ -65,17 +65,17 @@ root, the blog under `/blog/`.
 
 House style for `content/*.md`:
 
-- **Voice.** Write as "we" and "Wado" — the collective project voice. No
+- Voice — write as "we" and "Wado", the collective project voice. No
   first-person singular ("I", "my").
-- **No meta.** Don't narrate the writing or cross-reference the drafting process
+- No meta — don't narrate the writing or cross-reference the drafting process
   ("as the last post said", "our view hasn't changed"). State the point and move
   on.
-- **Accurate and concise, but not stiff.** Plain, direct sentences with a casual
+- Accurate and concise, but not stiff — plain, direct sentences with a casual
   edge. Cut filler; keep the personality.
-- **Verify before asserting.** Present something as fact only after checking it
-  yourself — run the code, read the source, confirm the number. If it's
+- Verify before asserting — present something as fact only after checking it
+  yourself: run the code, read the source, confirm the number. If it's
   unverified, leave it out or flag it.
-- **Never use the word "honest"** (or "honestly"). Say the thing plainly.
+- Never use the word "honest" (or "honestly") — say the thing plainly.
 
 ## Taking screenshots
 
