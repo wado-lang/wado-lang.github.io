@@ -71,8 +71,9 @@ rendered through the same Marl + template + stylesheet as the blog, into
   cross-links within `/docs/`. Absolute URLs and other schemes are left alone;
   links to the two excluded files point at their GitHub source instead.
 - The docs index (`/docs/`) groups pages into guides, standard library, WEPs,
-  and research notes. Marl does not emit heading `id`s yet, so in-page
-  `#anchor` links don't resolve — fix that upstream in Marl if needed.
+  and research notes. Marl emits GFM heading `id`s, so in-page `#anchor` links
+  resolve. `render` also returns the heading outline (`RenderResult.headings`),
+  unused for now — available if a per-page table of contents is wanted.
 
 After generating the site, Sheaf runs an internal link check (`linkcheck.wado`)
 over the output and prints any link whose target is not a generated file. It is

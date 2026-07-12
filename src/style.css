@@ -144,9 +144,35 @@ li { margin: 0.35rem 0; }
   padding: 0;
   margin: 2rem 0 0;
 }
-.doc-list { margin: 0.75rem 0 1.5rem; }
-.doc-list li { padding: 0.55rem 0; }
-.doc-list a { font-size: 1rem; font-weight: 500; }
+/* Docs index: category label (vermillion, uppercase) over a dense link list,
+   so section headers and links read as clearly different things. */
+.doc-group {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  margin: 3rem 0 0;
+  padding-bottom: 0.45rem;
+  border-bottom: 2px solid var(--accent);
+}
+.doc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+.doc-list li { margin: 0; }
+.doc-list a {
+  display: block;
+  padding: 0.38rem 0;
+  font-size: 1.02rem;
+  font-weight: 400;
+  text-decoration: none;
+  color: var(--ink);
+  border-bottom: 1px solid var(--rule);
+}
+.doc-list a:hover { color: var(--accent); }
+.doc-list li:last-child a { border-bottom: 0; }
 .post-list li {
   padding: 1.1rem 0;
   border-bottom: 1px solid var(--rule);

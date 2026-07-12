@@ -9,7 +9,7 @@ Intro *para*.
     let doc = build_doc("spec", &src);
     assert doc.slug == "spec";
     assert doc.title == "Wado Spec";
-    assert doc.body_html.contains("<h1>Wado Spec</h1>");
+    assert doc.body_html.contains(`<h1 id="wado-spec">Wado Spec</h1>`);
     assert doc.body_html.contains("<em>para</em>");
 }
 
