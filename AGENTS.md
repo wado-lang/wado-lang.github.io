@@ -15,7 +15,7 @@ Defined in `mise.toml`. The repo must be trusted once per machine
 | -------------- | --------------------------------------------------------------- |
 | `mise run fetch-wado` | Shallow-clones `wado-lang/wado` into `.tmp/wado` if absent. The blog tasks depend on it (Marl is imported as source from the clone). |
 | `mise run fetch` | Re-clones `wado-lang/wado` into `.tmp/wado`, copies `wado-512.png` / `wado-1024.png` into `assets/`, and runs `scripts/transparentize-logo.py` on them. Re-run when the upstream logo changes. Requires Python with Pillow installed. |
-| `mise run blog-build` | Generates the blog: `content/*.md` → `_site/` via Sheaf (`wado run .`). |
+| `mise run blog-build` | Generates the blog and docs: `content/*.md` → `_site/` and the upstream `docs/*.md` → `_site/docs/` via Sheaf (`wado run .`). |
 | `mise run blog-test` | Runs Sheaf's Wado tests (`wado test`).                     |
 | `mise run serve` | Serves the site at <http://localhost:8000> via `python3 -m http.server`. Foreground process — Ctrl-C to stop. |
 | `mise run clean` | Removes `.tmp/` and `_site/`.                                   |
@@ -57,9 +57,32 @@ The specification, briefly:
   construction: raw HTML is escaped rather than passed through, and link
   destinations are scheme-filtered.
 
+### Docs
+
+Sheaf also renders the upstream Wado docs. Every `.md` under the `.tmp/wado`
+clone's `docs/` (except `AGENTS.md` / `CLAUDE.md`, the agent-facing ones) is
+rendered through the same Marl + template + stylesheet as the blog, into
+`_site/docs/` and published under `/docs/`.
+
+- No front matter: these are plain Markdown. The page title is the first
+  level-1 heading (the slug if there is none), and there is no author/date
+  byline.
+- Relative `.md` link targets are rewritten to `.html`, so the whole set
+  cross-links within `/docs/`. Absolute URLs and other schemes are left alone;
+  links to the two excluded files point at their GitHub source instead.
+- The docs index (`/docs/`) groups pages into guides, standard library, WEPs,
+  and research notes. Marl does not emit heading `id`s yet, so in-page
+  `#anchor` links don't resolve — fix that upstream in Marl if needed.
+
+After generating the site, Sheaf runs an internal link check (`linkcheck.wado`)
+over the output and prints any link whose target is not a generated file. It is
+a warning only — the build never fails on it. External URLs, `#fragment`-only
+links, and `/assets/*` are out of scope. Broken links it reports are typically
+upstream doc typos; fix those in the Wado repo.
+
 Deployment: a push to `main` runs `.github/workflows/deploy.yml`, which builds
-the blog and publishes the whole site to GitHub Pages — the landing page at the
-root, the blog under `/blog/`.
+the blog and docs and publishes the whole site to GitHub Pages — the landing
+page at the root, the blog under `/blog/`, the docs under `/docs/`.
 
 ## Writing posts
 

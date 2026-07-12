@@ -40,6 +40,8 @@ jobs:
           cp index.html CNAME dist/
           cp -r assets dist/
           cp -r _site/. dist/blog/
+          # Sheaf emits the docs subtree under _site/docs; lift it to /docs.
+          mv dist/blog/docs dist/docs
           touch dist/.nojekyll
 
       - name: Upload Pages artifact

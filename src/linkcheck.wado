@@ -1,0 +1,149 @@
+//! Internal link checker over the generated site. It reports links whose target
+//! is not among the generated files; external URLs, `#fragment`-only links, and
+//! `/assets/*` (served from the committed assets, not generated here) are out of
+//! scope. Purely a warning: it never fails the build.
+
+use { SiteFile } from "./site.wado";
+
+pub struct BrokenLink {
+    pub page: String,
+    pub target: String,
+}
+
+/// Site paths are relative to `_site` (`index.html`, `docs/spec.html`), which is
+/// deployed with the blog at `/blog/` and the docs at `/docs/`. Absolute links
+/// are mapped back into that namespace before the existence check.
+pub fn check_links(files: &List<SiteFile>) -> List<BrokenLink> {
+    let mut paths: List<String> = [];
+    for let f of files {
+        paths.push(f.path);
+    }
+
+    let mut broken: List<BrokenLink> = [];
+    for let f of files {
+        if !f.path.ends_with(".html") {
+            continue;
+        }
+        let dir = parent_dir(&f.path);
+        for let url of extract_urls(&f.content) {
+            match resolve(&dir, &url) {
+                Some(target) => {
+                    if !paths.contains(&target) {
+                        broken.push(BrokenLink { page: f.path, target: url });
+                    }
+                },
+                None => {
+                },
+            }
+        }
+    }
+    return broken;
+}
+
+/// The generated-file path a link points at, or `None` when it is out of scope
+/// (external, fragment-only, or an `/assets` reference).
+fn resolve(dir: &String, url: &String) -> Option<String> {
+    if url.contains(":") {
+        return Option::None;
+    }
+    let path = strip_suffixes(url);
+    if path.is_empty() {
+        return Option::None;
+    }
+    if let Some(rest) = path.strip_prefix("/") {
+        return map_absolute(&rest);
+    }
+    let norm = join_normalize(dir, &path);
+    // A directory link resolves to that directory's index page.
+    if path.ends_with("/") || path == "." {
+        return Option::Some(if norm.is_empty() { "index.html" } else { `{norm}/index.html` });
+    }
+    return Option::Some(norm);
+}
+
+fn map_absolute(rest: &String) -> Option<String> {
+    if rest.is_empty() || rest.starts_with("assets/") {
+        return Option::None;
+    }
+    if let Some(r) = rest.strip_prefix("blog/") {
+        return Option::Some(if r.is_empty() { "index.html" } else { r });
+    }
+    if let Some(r) = rest.strip_prefix("docs/") {
+        return Option::Some(if r.is_empty() { "docs/index.html" } else { `docs/{r}` });
+    }
+    return Option::Some(*rest);
+}
+
+fn strip_suffixes(url: &String) -> String {
+    let no_frag = match url.find("#") {
+        Some(i) => url.substr_bytes(0, i),
+        None => *url,
+    };
+    return match no_frag.find("?") {
+        Some(i) => no_frag.substr_bytes(0, i),
+        None => no_frag,
+    };
+}
+
+fn parent_dir(path: &String) -> String {
+    return match path.rfind("/") {
+        Some(i) => path.substr_bytes(0, i),
+        None => "",
+    };
+}
+
+fn join_normalize(dir: &String, path: &String) -> String {
+    let mut segs: List<String> = [];
+    if !dir.is_empty() {
+        for let s of dir.split("/") {
+            if !s.is_empty() {
+                segs.push(s);
+            }
+        }
+    }
+    for let s of path.split("/") {
+        if s.is_empty() || s == "." {
+            continue;
+        }
+        if s == ".." {
+            if !segs.is_empty() {
+                let _ = segs.pop();
+            }
+        } else {
+            segs.push(s);
+        }
+    }
+    return segs.join("/");
+}
+
+/// Every `href="…"` and `src="…"` value in the HTML. Marl escapes any `"` inside
+/// text or code to `&quot;`, so a literal `"` always closes the attribute.
+fn extract_urls(html: &String) -> List<String> {
+    let mut urls: List<String> = [];
+    collect_after(html, `href="`, &mut urls);
+    collect_after(html, `src="`, &mut urls);
+    return urls;
+}
+
+fn collect_after(html: &String, marker: String, urls: &mut List<String>) {
+    let mut rest = *html;
+    loop {
+        match rest.find(marker) {
+            Some(i) => {
+                let after = rest.substr_bytes(i + marker.len(), rest.len());
+                match after.find(`"`) {
+                    Some(j) => {
+                        urls.push(after.substr_bytes(0, j));
+                        rest = after.substr_bytes(j, after.len());
+                    },
+                    None => {
+                        return;
+                    },
+                }
+            },
+            None => {
+                return;
+            },
+        }
+    }
+}

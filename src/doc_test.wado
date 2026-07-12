@@ -1,0 +1,51 @@
+use { build_doc, rewrite_md_links } from "./doc.wado";
+
+test "build_doc takes its title from the first level-1 heading" {
+    let src = "# Wado Spec
+
+Intro *para*.
+
+## Section";
+    let doc = build_doc("spec", &src);
+    assert doc.slug == "spec";
+    assert doc.title == "Wado Spec";
+    assert doc.body_html.contains("<h1>Wado Spec</h1>");
+    assert doc.body_html.contains("<em>para</em>");
+}
+
+test "build_doc falls back to the slug when there is no heading" {
+    let doc = build_doc("notes", &"just a paragraph");
+    assert doc.title == "notes";
+}
+
+test "rewrite_md_links rewrites relative .md targets to .html" {
+    let html = `<a href="./spec.md">x</a>`;
+    assert rewrite_md_links(&html) == `<a href="./spec.html">x</a>`;
+}
+
+test "rewrite_md_links preserves the fragment" {
+    let html = `<a href="./spec.md#type-mapping">x</a>`;
+    assert rewrite_md_links(&html) == `<a href="./spec.html#type-mapping">x</a>`;
+}
+
+test "rewrite_md_links leaves absolute and external links untouched" {
+    let html = `<a href="https://example.com/CanonicalABI.md">x</a> <a href="/docs/x.md">y</a>`;
+    assert rewrite_md_links(&html) == html;
+}
+
+test "rewrite_md_links redirects excluded docs to their GitHub source" {
+    let html = `<a href="./CLAUDE.md">idx</a>`;
+    assert rewrite_md_links(&html)
+        == `<a href="https://github.com/wado-lang/wado/blob/main/docs/CLAUDE.md">idx</a>`;
+}
+
+test "rewrite_md_links sends links that escape docs/ to GitHub source" {
+    let html = `<a href="../vendor/x.md">v</a>`;
+    assert rewrite_md_links(&html)
+        == `<a href="https://github.com/wado-lang/wado/blob/main/vendor/x.md">v</a>`;
+}
+
+test "rewrite_md_links leaves non-.md hrefs and stray text alone" {
+    let html = `<a href="./other.html">x</a> plain .md text`;
+    assert rewrite_md_links(&html) == html;
+}

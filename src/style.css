@@ -132,11 +132,21 @@ blockquote {
 ul, ol { padding-left: 1.25rem; }
 li { margin: 0.35rem 0; }
 
+.section-nav {
+  margin: -0.5rem 0 1.75rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+}
+.section-nav a { text-decoration: none; }
+
 .post-list {
   list-style: none;
   padding: 0;
   margin: 2rem 0 0;
 }
+.doc-list { margin: 0.75rem 0 1.5rem; }
+.doc-list li { padding: 0.55rem 0; }
+.doc-list a { font-size: 1rem; font-weight: 500; }
 .post-list li {
   padding: 1.1rem 0;
   border-bottom: 1px solid var(--rule);

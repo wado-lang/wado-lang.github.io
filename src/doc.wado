@@ -1,0 +1,120 @@
+//! A rendered reference doc: an upstream `docs/*.md` file from the Wado repo,
+//! rendered through Marl with no front matter. The title is the first level-1
+//! heading (falling back to the slug), and relative `.md` links are rewritten
+//! to `.html` so the published set cross-links within `/docs/`.
+
+use { render } from "../.tmp/wado/package-marl/src/lib.wado";
+
+pub struct Doc {
+    pub slug: String,
+    pub title: String,
+    pub body_html: String,
+}
+
+pub fn build_doc(slug: String, source: &String) -> Doc {
+    let title = extract_title(source, &slug);
+    let body_html = rewrite_md_links(&render(source));
+    return Doc { slug, title, body_html };
+}
+
+/// The first `# ` heading, trimmed; the slug if there is none.
+fn extract_title(source: &String, slug: &String) -> String {
+    for let line of source.lines() {
+        if let Some(rest) = line.trim().strip_prefix("# ") {
+            return rest.trim();
+        }
+    }
+    return *slug;
+}
+
+/// Rewrite relative `foo.md` / `foo.md#frag` link targets to `.html`, leaving
+/// absolute URLs (`https://…/x.md`), root-absolute paths, and other schemes
+/// untouched. Operates on rendered HTML `href="…"` attribute values, which Marl
+/// delimits with a literal `"` (any `"` in text or code is escaped to `&quot;`).
+pub fn rewrite_md_links(html: &String) -> String {
+    let marker = `href="`;
+    let mut out = String::new();
+    let mut rest = *html;
+    loop {
+        match rest.find(marker) {
+            Some(i) => {
+                let cut = i + marker.len();
+                out.push_str(&rest.substr_bytes(0, cut));
+                let after = rest.substr_bytes(cut, rest.len());
+                match after.find(`"`) {
+                    Some(j) => {
+                        out.push_str(&rewrite_target(&after.substr_bytes(0, j)));
+                        rest = after.substr_bytes(j, after.len());
+                    },
+                    None => {
+                        out.push_str(&after);
+                        return out;
+                    },
+                }
+            },
+            None => {
+                out.push_str(&rest);
+                return out;
+            },
+        }
+    }
+}
+
+fn rewrite_target(url: &String) -> String {
+    if url.starts_with("/") || url.contains(":") {
+        return *url;
+    }
+    let [path, frag] = match url.find("#") {
+        Some(k) => [url.substr_bytes(0, k), url.substr_bytes(k, url.len())],
+        None => [*url, String::new()],
+    };
+    let base = match path.strip_suffix(".md") {
+        Some(b) => b,
+        None => {
+            // Non-Markdown: a same-directory sibling stays; anything reaching out
+            // of docs/ resolves to the repo source instead.
+            if escapes_dir(&path) {
+                return github_source(&path, &frag);
+            }
+            return *url;
+        },
+    };
+    // AGENTS.md / CLAUDE.md are excluded, and anything outside docs/ has no
+    // published page; point both at their GitHub source.
+    if path.ends_with("AGENTS.md") || path.ends_with("CLAUDE.md") || escapes_dir(&path) {
+        return github_source(&path, &frag);
+    }
+    return `{base}.html{frag}`;
+}
+
+/// True when the relative target leaves its own directory (any `/` after an
+/// optional leading `./`), i.e. it does not name a sibling doc.
+fn escapes_dir(path: &String) -> bool {
+    let p = match path.strip_prefix("./") {
+        Some(s) => s,
+        None => *path,
+    };
+    return p.contains("/");
+}
+
+fn github_source(path: &String, frag: &String) -> String {
+    return `https://github.com/wado-lang/wado/blob/main/{normalize_repo_path(path)}{frag}`;
+}
+
+/// Resolve a docs-relative path to its repo-root path (docs/ is the base).
+fn normalize_repo_path(path: &String) -> String {
+    let mut segs: List<String> = ["docs"];
+    for let s of path.split("/") {
+        if s == "" || s == "." {
+            continue;
+        }
+        if s == ".." {
+            if !segs.is_empty() {
+                let _ = segs.pop();
+            }
+        } else {
+            segs.push(s);
+        }
+    }
+    return segs.join("/");
+}
