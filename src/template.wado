@@ -203,8 +203,8 @@ fn doc_group(heading: String, docs: &List<Doc>) -> String {
         return String::new();
     }
     let mut out = String::new();
-    out.push_str(&`<h2>{escape_text(heading)}</h2>\n`);
-    out.push_str(&`<ul class="post-list doc-list">\n`);
+    out.push_str(&`<h2 class="doc-group">{escape_text(heading)}</h2>\n`);
+    out.push_str(&`<ul class="doc-list">\n`);
     for let d of docs {
         let href = `{d.slug}.html`;
         out.push_str(&`<li><a href="{escape_attr(href)}">{escape_text(d.title)}</a></li>\n`);
