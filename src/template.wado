@@ -26,31 +26,31 @@ struct PageMeta {
 
 /// The shared document head, up to and including the masthead inside `<main>`.
 fn page_head(meta: &PageMeta) -> String {
-    let title = escape_attr(&meta.title);
-    let desc = escape_attr(&meta.description);
-    let url = escape_attr(&meta.canonical);
+    let title = escape_attr(meta.title);
+    let desc = escape_attr(meta.description);
+    let url = escape_attr(meta.canonical);
 
     let mut out = String::new();
     out.push_str(&"<!doctype html>\n<html lang=\"en\">\n<head>\n");
     out.push_str(&`<meta charset="utf-8" />\n`);
     out.push_str(&`<meta name="viewport" content="width=device-width, initial-scale=1" />\n`);
-    out.push_str(&`<title>{escape_text(&meta.title)}</title>\n`);
+    out.push_str(&`<title>{escape_text(meta.title)}</title>\n`);
     out.push_str(&`<meta name="description" content="{desc}" />\n`);
     out.push_str(&`<link rel="canonical" href="{url}" />\n`);
     if meta.noindex {
         out.push_str(&`<meta name="robots" content="noindex, nofollow" />\n`);
     }
-    out.push_str(&`<meta property="og:type" content="{escape_attr(&meta.og_type)}" />\n`);
-    out.push_str(&`<meta property="og:site_name" content="{escape_attr(&SITE_NAME)}" />\n`);
+    out.push_str(&`<meta property="og:type" content="{escape_attr(meta.og_type)}" />\n`);
+    out.push_str(&`<meta property="og:site_name" content="{escape_attr(SITE_NAME)}" />\n`);
     out.push_str(&`<meta property="og:title" content="{title}" />\n`);
     out.push_str(&`<meta property="og:description" content="{desc}" />\n`);
     out.push_str(&`<meta property="og:url" content="{url}" />\n`);
     out.push_str(&`<meta property="og:image" content="{OG_IMAGE}" />\n`);
     if !meta.published.is_empty() {
-        out.push_str(&`<meta property="article:published_time" content="{escape_attr(&meta.published)}" />\n`);
+        out.push_str(&`<meta property="article:published_time" content="{escape_attr(meta.published)}" />\n`);
     }
     if !meta.author.is_empty() {
-        out.push_str(&`<meta property="article:author" content="{escape_attr(&meta.author)}" />\n`);
+        out.push_str(&`<meta property="article:author" content="{escape_attr(meta.author)}" />\n`);
     }
     out.push_str(&`<meta name="twitter:card" content="summary_large_image" />\n`);
     out.push_str(&`<meta name="twitter:title" content="{title}" />\n`);
@@ -100,9 +100,9 @@ pub fn render_page(post: &Post) -> String {
     };
     let mut out = page_head(&meta);
     out.push_str(&"<article>\n");
-    out.push_str(&`<h1>{escape_text(&post.title)}</h1>\n`);
+    out.push_str(&`<h1>{escape_text(post.title)}</h1>\n`);
     out.push_str(
-        &`<p class="post-meta"><span class="author">{escape_text(&post.author)}</span> · <time>{escape_text(&post.date)}</time></p>\n`,
+        &`<p class="post-meta"><span class="author">{escape_text(post.author)}</span> · <time>{escape_text(post.date)}</time></p>\n`,
     );
     out.push_str(&post.body_html);
     out.push('\n');
@@ -133,7 +133,7 @@ pub fn render_index(posts: &List<Post>) -> String {
     for let p of published {
         let href = `{p.slug}.html`;
         out.push_str(
-            &`<li><a href="{escape_attr(&href)}">{escape_text(&p.title)}</a><time>{escape_text(&p.date)}</time></li>\n`,
+            &`<li><a href="{escape_attr(href)}">{escape_text(p.title)}</a><time>{escape_text(p.date)}</time></li>\n`,
         );
     }
     out.push_str(&"</ul>\n");
@@ -203,11 +203,11 @@ fn doc_group(heading: String, docs: &List<Doc>) -> String {
         return String::new();
     }
     let mut out = String::new();
-    out.push_str(&`<h2>{escape_text(&heading)}</h2>\n`);
+    out.push_str(&`<h2>{escape_text(heading)}</h2>\n`);
     out.push_str(&`<ul class="post-list doc-list">\n`);
     for let d of docs {
         let href = `{d.slug}.html`;
-        out.push_str(&`<li><a href="{escape_attr(&href)}">{escape_text(&d.title)}</a></li>\n`);
+        out.push_str(&`<li><a href="{escape_attr(href)}">{escape_text(d.title)}</a></li>\n`);
     }
     out.push_str(&"</ul>\n");
     return out;

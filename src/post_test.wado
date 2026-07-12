@@ -13,7 +13,7 @@ A *para*.";
             assert post.title == "Hello";
             assert post.date == "2026-07-05";
             assert post.index == true;
-            assert post.body_html == "<h1>Heading</h1>
+            assert post.body_html == "<h1 id=\"heading\">Heading</h1>
 <p>A <em>para</em>.</p>";
         },
         Err(_) => {

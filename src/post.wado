@@ -22,7 +22,7 @@ pub fn build(slug: String, source: &String) -> Result<Post, String> {
         date: fm.date,
         author: fm.author,
         description: fm.description,
-        body_html: render(&body),
+        body_html: render(body).html,
         index: fm.index,
     });
 }
