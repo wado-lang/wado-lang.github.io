@@ -1,7 +1,8 @@
 use { println, eprintln, Stdout, Stderr } from "core:cli";
 use { Preopens, Descriptor, Filesize, PathFlags, OpenFlags, DescriptorFlags, ErrorCode } from "wasi:filesystem";
 use { build, Post } from "./post.wado";
-use { build_site, SiteFile } from "./site.wado";
+use { build_doc, Doc } from "./doc.wado";
+use { build_site, build_docs, SiteFile } from "./site.wado";
 
 export fn run() with Stdout, Stderr, Preopens {
     let dirs = Preopens::get_directories();
@@ -12,9 +13,11 @@ export fn run() with Stdout, Stderr, Preopens {
     let root = dirs[0].0;
 
     let posts = read_posts(&root);
-    let files = build_site(&posts);
+    let docs = read_docs(&root);
+    let mut files = build_site(&posts);
+    files.extend(&build_docs(&docs));
     write_site(&root, &files);
-    println(`sheaf: generated {files.len()} file(s) from {posts.len()} post(s)`);
+    println(`sheaf: generated {files.len()} file(s) from {posts.len()} post(s) and {docs.len()} doc(s)`);
 }
 
 fn read_posts(root: &Descriptor) -> List<Post> with Stderr {
@@ -49,6 +52,38 @@ fn read_posts(root: &Descriptor) -> List<Post> with Stderr {
     return posts;
 }
 
+fn read_docs(root: &Descriptor) -> List<Doc> with Stderr {
+    let mut docs: List<Doc> = [];
+    let dir = match open_dir(root, ".tmp/wado/docs") {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln(`sheaf: cannot open .tmp/wado/docs/ directory: {e:?}`);
+            return docs;
+        },
+    };
+    let names = match read_dir_names(&dir) {
+        Ok(n) => n,
+        Err(e) => {
+            eprintln(`sheaf: cannot read .tmp/wado/docs/ directory: {e:?}`);
+            return docs;
+        },
+    };
+    for let name of names {
+        if name == "AGENTS.md" || name == "CLAUDE.md" {
+            continue;
+        }
+        match name.strip_suffix(".md") {
+            Some(slug) => match read_file(&dir, name) {
+                Ok(source) => docs.push(build_doc(slug, &source)),
+                Err(e) => eprintln(`sheaf: cannot read {name}: {e:?}`),
+            },
+            None => {
+            },
+        }
+    }
+    return docs;
+}
+
 fn write_site(root: &Descriptor, files: &List<SiteFile>) with Stderr {
     match root.create_directory_at("_site").wait() {
         Ok(_) => {
@@ -57,6 +92,16 @@ fn write_site(root: &Descriptor, files: &List<SiteFile>) with Stderr {
         },
         Err(e) => {
             eprintln(`sheaf: cannot create _site/: {e:?}`);
+            return;
+        },
+    }
+    match root.create_directory_at("_site/docs").wait() {
+        Ok(_) => {
+        },
+        Err(ErrorCode::Exist) => {
+        },
+        Err(e) => {
+            eprintln(`sheaf: cannot create _site/docs/: {e:?}`);
             return;
         },
     }

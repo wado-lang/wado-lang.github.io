@@ -1,7 +1,8 @@
 //! Site generation: turn a list of posts into output files (pure; no I/O).
 
 use { Post } from "./post.wado";
-use { render_page, render_index } from "./template.wado";
+use { Doc } from "./doc.wado";
+use { render_page, render_index, render_doc, render_docs_index } from "./template.wado";
 
 pub struct SiteFile {
     pub path: String,
@@ -16,5 +17,15 @@ pub fn build_site(posts: &List<Post>) -> List<SiteFile> {
         files.push(SiteFile { path: `{p.slug}.html`, content: render_page(p) });
     }
     files.push(SiteFile { path: "index.html", content: render_index(posts) });
+    return files;
+}
+
+/// Produce the docs subtree: one page per doc under `docs/`, plus its index.
+pub fn build_docs(docs: &List<Doc>) -> List<SiteFile> {
+    let mut files: List<SiteFile> = [];
+    for let d of docs {
+        files.push(SiteFile { path: `docs/{d.slug}.html`, content: render_doc(d) });
+    }
+    files.push(SiteFile { path: "docs/index.html", content: render_docs_index(docs) });
     return files;
 }

@@ -5,10 +5,12 @@
 
 use { escape_text, escape_attr } from "../.tmp/wado/package-marl/src/lib.wado";
 use { Post } from "./post.wado";
+use { Doc } from "./doc.wado";
 
 global STYLE: String = #include_str("./style.css");
 global SITE_NAME: String = "The Wado Blog";
 global BLOG_URL: String = "https://wado-lang.org/blog";
+global DOCS_URL: String = "https://wado-lang.org/docs";
 global OG_IMAGE: String = "https://wado-lang.org/assets/og-image.svg";
 
 /// Per-page metadata driving the document head (SEO + Open Graph / Twitter).
@@ -126,6 +128,7 @@ pub fn render_index(posts: &List<Post>) -> String {
     };
     let mut out = page_head(&meta);
     out.push_str(&`<h1 class="page-title">The Wado Blog</h1>\n`);
+    out.push_str(&`<p class="section-nav"><a href="/docs/">Documentation →</a></p>\n`);
     out.push_str(&`<ul class="post-list">\n`);
     for let p of published {
         let href = `{p.slug}.html`;
@@ -135,5 +138,77 @@ pub fn render_index(posts: &List<Post>) -> String {
     }
     out.push_str(&"</ul>\n");
     out.push_str(&page_foot());
+    return out;
+}
+
+/// A single reference doc. Its body already opens with the level-1 heading, so
+/// no separate title is emitted; there is no author/date byline.
+pub fn render_doc(doc: &Doc) -> String {
+    let meta = PageMeta {
+        title: doc.title,
+        description: `{doc.title} — Wado documentation.`,
+        canonical: `{DOCS_URL}/{doc.slug}.html`,
+        og_type: "article",
+    };
+    let mut out = page_head(&meta);
+    out.push_str(&`<article class="doc">\n`);
+    out.push_str(&doc.body_html);
+    out.push('\n');
+    out.push_str(&"</article>\n");
+    out.push_str(&page_foot());
+    return out;
+}
+
+/// The docs landing page: every doc, grouped by kind, sorted within each group.
+pub fn render_docs_index(docs: &List<Doc>) -> String {
+    let mut guides: List<Doc> = [];
+    let mut stdlib: List<Doc> = [];
+    let mut weps: List<Doc> = [];
+    let mut research: List<Doc> = [];
+    for let d of docs {
+        if d.slug.starts_with("stdlib-") {
+            stdlib.push(*d);
+        } else if d.slug.starts_with("wep-") {
+            weps.push(*d);
+        } else if d.slug.starts_with("research-") {
+            research.push(*d);
+        } else {
+            guides.push(*d);
+        }
+    }
+    guides.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
+    stdlib.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
+    weps.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
+    research.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
+
+    let meta = PageMeta {
+        title: "Wado Documentation",
+        description: "Specification, standard library, and design proposals for the Wado language.",
+        canonical: `{DOCS_URL}/`,
+        og_type: "website",
+    };
+    let mut out = page_head(&meta);
+    out.push_str(&`<h1 class="page-title">Documentation</h1>\n`);
+    out.push_str(&`<p class="section-nav"><a href="/blog/">← Blog</a></p>\n`);
+    out.push_str(&doc_group("Guides & reference", &guides));
+    out.push_str(&doc_group("Standard library", &stdlib));
+    out.push_str(&doc_group("Proposals (WEPs)", &weps));
+    out.push_str(&doc_group("Research notes", &research));
+    out.push_str(&page_foot());
+    return out;
+}
+
+fn doc_group(heading: String, docs: &List<Doc>) -> String {
+    if docs.is_empty() {
+        return String::new();
+    }
+    let mut out = String::new();
+    out.push_str(&`<h2>{escape_text(&heading)}</h2>\n`);
+    out.push_str(&`<ul class="post-list doc-list">\n`);
+    for let d of docs {
+        let href = `{d.slug}.html`;
+        out.push_str(&`<li><a href="{escape_attr(&href)}">{escape_text(&d.title)}</a></li>\n`);
+    }
+    out.push_str(&"</ul>\n");
     return out;
 }
