@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Kick a deploy from an API call:
+  #   POST /repos/wado-lang/wado-lang.github.io/dispatches  {"event_type":"deploy"}
+  repository_dispatch:
+    types: [deploy]
 
 permissions:
   contents: read
