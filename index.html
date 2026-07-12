@@ -386,40 +386,19 @@
 
 <h2>Design Principles</h2>
 
-<ul>
-  <li><strong>Wasm in plain sight</strong> — no macros; the code you read is the code that runs, so the WAT stays something you can reason about.</li>
-  <li><strong>Explicit over implicit</strong> — no implicit conversions, no overloading, no hidden dependencies; you never jump files to see what a function does.</li>
-  <li><strong>Type-safe, no escape hatches</strong> — strong static typing with no <code>any</code>, so the defensive <code>try-catch</code> and runtime checks never creep in.</li>
-  <li><strong>Errors are values</strong> — <code>Result&lt;T, E&gt;</code> and <code>Option&lt;T&gt;</code> keep control flow local and visible; there is no stack unwinding.</li>
-</ul>
-
-<hr class="rule" />
-
-<h2>Designed for Agentic Coding</h2>
-
 <p>
-  The Wado compiler is <strong>100% agentic-coded</strong> — every line of
-  <code>wado-compiler</code> was written by an AI agent, as is most of the Wado
-  in the repository. The human handles language design and direction; the agents
-  do the rest. That shaped the language itself:
+  These principles aren't arbitrary. The Wado compiler is
+  <strong>100% agentic-coded</strong> — every line of <code>wado-compiler</code>
+  was written by an AI agent, as is most of the Wado in the repository. The human
+  handles language design and direction; the agents do the rest. Agents are fast
+  but literal, so the language leans on being explicit and predictable:
 </p>
 
 <ul>
-  <li>
-    <strong>Ambiguity multiplies.</strong> Implicit behavior spreads across a
-    codebase, so Wado has none — no implicit conversions, no overloading, no
-    macros.
-  </li>
-  <li>
-    <strong>Agents get defensive.</strong> Without type safety they pile on
-    runtime checks and nested error handling; strong static types, with no
-    <code>any</code> escape hatch, remove the reason to.
-  </li>
-  <li>
-    <strong>Exceptions break reasoning.</strong> Non-local control flow is hard
-    to predict, so failures are values — <code>Result&lt;T, E&gt;</code>, visible
-    at the call site.
-  </li>
+  <li><strong>Wasm in plain sight</strong> — no macros; the code you read is the code that runs, so the WAT stays something you can reason about.</li>
+  <li><strong>Explicit over implicit</strong> — no implicit conversions, no overloading, no hidden dependencies. Implicit behavior multiplies across a codebase — and across an agent's edits — so there is none.</li>
+  <li><strong>Type-safe, no escape hatches</strong> — strong static typing with no <code>any</code>. Without it, code drifts toward defensive <code>try-catch</code> and runtime checks; the types remove the reason to.</li>
+  <li><strong>Errors are values</strong> — <code>Result&lt;T, E&gt;</code> and <code>Option&lt;T&gt;</code> keep control flow local and visible. Non-local unwinding is hard to predict, so there is none.</li>
 </ul>
 
 <hr class="rule" />
