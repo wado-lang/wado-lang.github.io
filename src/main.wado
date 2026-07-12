@@ -3,6 +3,7 @@ use { Preopens, Descriptor, Filesize, PathFlags, OpenFlags, DescriptorFlags, Err
 use { build, Post } from "./post.wado";
 use { build_doc, Doc } from "./doc.wado";
 use { build_site, build_docs, SiteFile } from "./site.wado";
+use { check_links } from "./linkcheck.wado";
 
 export fn run() with Stdout, Stderr, Preopens {
     let dirs = Preopens::get_directories();
@@ -18,6 +19,18 @@ export fn run() with Stdout, Stderr, Preopens {
     files.extend(&build_docs(&docs));
     write_site(&root, &files);
     println(`sheaf: generated {files.len()} file(s) from {posts.len()} post(s) and {docs.len()} doc(s)`);
+    report_broken_links(&files);
+}
+
+fn report_broken_links(files: &List<SiteFile>) with Stderr {
+    let broken = check_links(files);
+    if broken.is_empty() {
+        return;
+    }
+    eprintln(`sheaf: warning: {broken.len()} broken internal link(s):`);
+    for let b of broken {
+        eprintln(`  {b.page} -> {b.target}`);
+    }
 }
 
 fn read_posts(root: &Descriptor) -> List<Post> with Stderr {

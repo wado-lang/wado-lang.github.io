@@ -71,19 +71,50 @@ fn rewrite_target(url: &String) -> String {
     let base = match path.strip_suffix(".md") {
         Some(b) => b,
         None => {
+            // Non-Markdown: a same-directory sibling stays; anything reaching out
+            // of docs/ resolves to the repo source instead.
+            if escapes_dir(&path) {
+                return github_source(&path, &frag);
+            }
             return *url;
         },
     };
-    // AGENTS.md / CLAUDE.md are not published; point at their GitHub source.
-    if path.ends_with("AGENTS.md") || path.ends_with("CLAUDE.md") {
-        return `https://github.com/wado-lang/wado/blob/main/docs/{basename(&path)}`;
+    // AGENTS.md / CLAUDE.md are excluded, and anything outside docs/ has no
+    // published page; point both at their GitHub source.
+    if path.ends_with("AGENTS.md") || path.ends_with("CLAUDE.md") || escapes_dir(&path) {
+        return github_source(&path, &frag);
     }
     return `{base}.html{frag}`;
 }
 
-fn basename(path: &String) -> String {
-    return match path.rfind("/") {
-        Some(i) => path.substr_bytes(i + 1, path.len()),
+/// True when the relative target leaves its own directory (any `/` after an
+/// optional leading `./`), i.e. it does not name a sibling doc.
+fn escapes_dir(path: &String) -> bool {
+    let p = match path.strip_prefix("./") {
+        Some(s) => s,
         None => *path,
     };
+    return p.contains("/");
+}
+
+fn github_source(path: &String, frag: &String) -> String {
+    return `https://github.com/wado-lang/wado/blob/main/{normalize_repo_path(path)}{frag}`;
+}
+
+/// Resolve a docs-relative path to its repo-root path (docs/ is the base).
+fn normalize_repo_path(path: &String) -> String {
+    let mut segs: List<String> = ["docs"];
+    for let s of path.split("/") {
+        if s == "" || s == "." {
+            continue;
+        }
+        if s == ".." {
+            if !segs.is_empty() {
+                let _ = segs.pop();
+            }
+        } else {
+            segs.push(s);
+        }
+    }
+    return segs.join("/");
 }

@@ -1,0 +1,46 @@
+use { check_links } from "./linkcheck.wado";
+use { SiteFile } from "./site.wado";
+
+test "reports a relative link with no matching file" {
+    let files: List<SiteFile> = [
+        SiteFile { path: "docs/a.html", content: `<a href="./b.html">b</a>` },
+    ];
+    let broken = check_links(&files);
+    assert broken.len() == 1;
+    assert broken[0].page == "docs/a.html";
+    assert broken[0].target == "./b.html";
+}
+
+test "accepts a relative cross-link to an existing file" {
+    let files: List<SiteFile> = [
+        SiteFile { path: "docs/a.html", content: `<a href="./b.html">b</a>` },
+        SiteFile { path: "docs/b.html", content: "ok" },
+    ];
+    assert check_links(&files).is_empty();
+}
+
+test "ignores external, asset, and fragment links" {
+    let files: List<SiteFile> = [
+        SiteFile {
+            path: "docs/a.html",
+            content: `<a href="https://x.dev/y.html">e</a><img src="/assets/logo.png" /><a href="#top">t</a>`,
+        },
+    ];
+    assert check_links(&files).is_empty();
+}
+
+test "maps absolute /docs and /blog links into the generated set" {
+    let files: List<SiteFile> = [
+        SiteFile { path: "index.html", content: `<a href="/docs/spec.html">s</a><a href="/blog/">home</a>` },
+        SiteFile { path: "docs/spec.html", content: "ok" },
+    ];
+    assert check_links(&files).is_empty();
+}
+
+test "resolves a directory link to its index" {
+    let files: List<SiteFile> = [
+        SiteFile { path: "docs/a.html", content: `<a href="./">home</a>` },
+        SiteFile { path: "docs/index.html", content: "ok" },
+    ];
+    assert check_links(&files).is_empty();
+}

@@ -39,6 +39,12 @@ test "rewrite_md_links redirects excluded docs to their GitHub source" {
         == `<a href="https://github.com/wado-lang/wado/blob/main/docs/CLAUDE.md">idx</a>`;
 }
 
+test "rewrite_md_links sends links that escape docs/ to GitHub source" {
+    let html = `<a href="../vendor/x.md">v</a>`;
+    assert rewrite_md_links(&html)
+        == `<a href="https://github.com/wado-lang/wado/blob/main/vendor/x.md">v</a>`;
+}
+
 test "rewrite_md_links leaves non-.md hrefs and stray text alone" {
     let html = `<a href="./other.html">x</a> plain .md text`;
     assert rewrite_md_links(&html) == html;

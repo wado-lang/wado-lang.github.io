@@ -74,6 +74,12 @@ rendered through the same Marl + template + stylesheet as the blog, into
   and research notes. Marl does not emit heading `id`s yet, so in-page
   `#anchor` links don't resolve — fix that upstream in Marl if needed.
 
+After generating the site, Sheaf runs an internal link check (`linkcheck.wado`)
+over the output and prints any link whose target is not a generated file. It is
+a warning only — the build never fails on it. External URLs, `#fragment`-only
+links, and `/assets/*` are out of scope. Broken links it reports are typically
+upstream doc typos; fix those in the Wado repo.
+
 Deployment: a push to `main` runs `.github/workflows/deploy.yml`, which builds
 the blog and docs and publishes the whole site to GitHub Pages — the landing
 page at the root, the blog under `/blog/`, the docs under `/docs/`.
