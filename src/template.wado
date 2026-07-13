@@ -161,25 +161,29 @@ pub fn render_doc(doc: &Doc) -> String {
 
 /// The docs landing page: every doc, grouped by kind, sorted within each group.
 pub fn render_docs_index(docs: &List<Doc>) -> String {
-    let mut guides: List<Doc> = [];
-    let mut stdlib: List<Doc> = [];
+    let mut reference: List<Doc> = [];
     let mut weps: List<Doc> = [];
+    let mut stdlib: List<Doc> = [];
     let mut research: List<Doc> = [];
+    let mut other: List<Doc> = [];
     for let d of docs {
-        if d.slug.starts_with("stdlib-") {
-            stdlib.push(*d);
+        if d.slug == "spec" || d.slug == "cheatsheet" {
+            reference.push(*d);
         } else if d.slug.starts_with("wep-") {
             weps.push(*d);
+        } else if d.slug.starts_with("stdlib-") {
+            stdlib.push(*d);
         } else if d.slug.starts_with("research-") {
             research.push(*d);
         } else {
-            guides.push(*d);
+            other.push(*d);
         }
     }
-    guides.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
-    stdlib.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
+    reference.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
     weps.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
+    stdlib.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
     research.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
+    other.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
 
     let meta = PageMeta {
         title: "Wado Documentation",
@@ -190,10 +194,11 @@ pub fn render_docs_index(docs: &List<Doc>) -> String {
     let mut out = page_head(&meta);
     out.push_str(&`<h1 class="page-title">Documentation</h1>\n`);
     out.push_str(&`<p class="section-nav"><a href="/blog/">← Blog</a></p>\n`);
-    out.push_str(&doc_group("Guides & reference", &guides));
+    out.push_str(&doc_group("Language reference", &reference));
+    out.push_str(&doc_group("Wado Evolution Proposals", &weps));
     out.push_str(&doc_group("Standard library", &stdlib));
-    out.push_str(&doc_group("Proposals (WEPs)", &weps));
     out.push_str(&doc_group("Research notes", &research));
+    out.push_str(&doc_group("Other", &other));
     out.push_str(&page_foot());
     return out;
 }
