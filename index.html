@@ -356,13 +356,13 @@
 
 <hr class="rule" />
 
-<h2>Try It in 60 Seconds</h2>
+<h2>Get Started</h2>
 
 <p>
-  Grab the latest prebuilt binary and verify it against the published
-  checksums. The archive name is derived from <code>uname</code>, so this block
-  works as-is on macOS (Apple&nbsp;Silicon) and Linux (<code>x86_64</code>,
-  <code>aarch64</code>) — copy the whole thing:
+  Grab the latest prebuilt binary and verify it. The archive name is derived
+  from <code>uname</code>, so this block works as-is on macOS
+  (Apple&nbsp;Silicon) and Linux (<code>x86_64</code>, <code>aarch64</code>) —
+  copy the whole thing:
 </p>
 
 <pre class="copyable"><code>BASE=https://github.com/wado-lang/wado/releases/latest/download
@@ -370,11 +370,13 @@ ASSET="wado-$(uname -s | tr A-Z a-z)-$(uname -m).tar.gz"
 
 curl -fsSLO "$BASE/$ASSET"
 
+# Verify the checksum and the build provenance (needs the GitHub CLI).
 if command -v shasum &gt;/dev/null; then
   curl -fsSL "$BASE/SHA256SUMS.txt" | shasum -a 256 --ignore-missing -c -
 else
   curl -fsSL "$BASE/SHA256SUMS.txt" | sha256sum --ignore-missing -c -
 fi
+gh attestation verify --repo wado-lang/wado "$ASSET"
 
 tar xzf "$ASSET"
 mkdir -p ~/bin
