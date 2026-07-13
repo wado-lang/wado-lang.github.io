@@ -167,7 +167,7 @@ pub fn render_docs_index(docs: &List<Doc>) -> String {
     let mut research: List<Doc> = [];
     let mut other: List<Doc> = [];
     for let d of docs {
-        if d.slug == "spec" || d.slug == "cheatsheet" {
+        if d.slug == "spec" || d.slug == "cheatsheet" || d.slug == "design-philosophy" {
             reference.push(*d);
         } else if d.slug.starts_with("wep-") {
             weps.push(*d);
