@@ -70,8 +70,10 @@ rendered through the same Marl + template + stylesheet as the blog, into
 - Relative `.md` link targets are rewritten to `.html`, so the whole set
   cross-links within `/docs/`. Absolute URLs and other schemes are left alone;
   links to the two excluded files point at their GitHub source instead.
-- The docs index (`/docs/`) groups pages into guides, standard library, WEPs,
-  and research notes. Marl emits GFM heading `id`s, so in-page `#anchor` links
+- The docs index (`/docs/`) groups pages by slug prefix: a language reference
+  (`spec`, `cheatsheet`), then WEPs (`wep-`), the standard library (`stdlib-`),
+  research notes (`research-`), and everything else under "Other". Marl emits GFM
+  heading `id`s, so in-page `#anchor` links
   resolve. `render` also returns the heading outline (`RenderResult.headings`),
   unused for now — available if a per-page table of contents is wanted.
 
