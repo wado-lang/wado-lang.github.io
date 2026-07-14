@@ -1,8 +1,8 @@
 [tools]
-"github:wado-lang/wado" = { version = "0.0.11", exe = "wado" }
+"github:wado-lang/wado" = { version = "0.0.16", exe = "wado" }
 
 [tasks.fetch-wado]
-description = "Shallow-clone wado-lang/wado into .tmp/wado if absent (Marl sources, logo)"
+description = "Shallow-clone wado-lang/wado into .tmp/wado if absent (upstream docs source, logo)"
 run = """
 #!/usr/bin/env bash
 set -euo pipefail
@@ -37,13 +37,17 @@ echo "Fetched and transparentized assets:"
 ls -la assets/
 """
 
+[tasks.fetch-deps]
+description = "Fetch registry component dependencies (wado-lang:marl) into the local cache before a parallel compile fetches them concurrently"
+run = "wado fetch"
+
 [tasks.blog-build]
-depends = ["fetch-wado"]
+depends = ["fetch-wado", "fetch-deps"]
 description = "Generate the blog: content/*.md -> _site/ via Sheaf"
 run = "wado run ."
 
 [tasks.blog-test]
-depends = ["fetch-wado"]
+depends = ["fetch-wado", "fetch-deps"]
 description = "Run Sheaf's Wado tests"
 run = "wado test"
 

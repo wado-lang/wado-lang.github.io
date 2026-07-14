@@ -3,7 +3,7 @@
 //! ink-on-paper, vermillion seal accent); the stylesheet is inlined from
 //! `style.css` at compile time.
 
-use { escape_text, escape_attr } from "../.tmp/wado/package-marl/src/lib.wado";
+use { escape_text, escape_attr } from "./escape.wado";
 use { Post } from "./post.wado";
 use { Doc } from "./doc.wado";
 

@@ -8,3 +8,9 @@ authors = ["FUJI Goro <g.psy.va@gmail.com>"]
 
 [world]
 "wasi:cli/command" = "src/main.wado"
+
+[registries]
+default = "oci://ghcr.io"
+
+[dependencies]
+"wado-lang:marl" = { version = "^0.0.16" }
