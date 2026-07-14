@@ -1,11 +1,12 @@
 use { println, eprintln, Stdout, Stderr } from "core:cli";
 use { Preopens, Descriptor, Filesize, PathFlags, OpenFlags, DescriptorFlags, ErrorCode } from "wasi:filesystem";
+use { Marl } from "wado-lang:marl";
 use { build, Post } from "./post.wado";
 use { build_doc, Doc } from "./doc.wado";
 use { build_site, build_docs, SiteFile } from "./site.wado";
 use { check_links } from "./linkcheck.wado";
 
-export fn run() with Stdout, Stderr, Preopens {
+export fn run() with Stdout, Stderr, Preopens, Marl {
     let dirs = Preopens::get_directories();
     if dirs.is_empty() {
         eprintln("sheaf: no preopened directory available");
@@ -33,7 +34,7 @@ fn report_broken_links(files: &List<SiteFile>) with Stderr {
     }
 }
 
-fn read_posts(root: &Descriptor) -> List<Post> with Stderr {
+fn read_posts(root: &Descriptor) -> List<Post> with Stderr, Marl {
     let mut posts: List<Post> = [];
     let content = match open_dir(root, "content") {
         Ok(d) => d,
@@ -65,7 +66,7 @@ fn read_posts(root: &Descriptor) -> List<Post> with Stderr {
     return posts;
 }
 
-fn read_docs(root: &Descriptor) -> List<Doc> with Stderr {
+fn read_docs(root: &Descriptor) -> List<Doc> with Stderr, Marl {
     let mut docs: List<Doc> = [];
     let dir = match open_dir(root, ".tmp/wado/docs") {
         Ok(d) => d,
