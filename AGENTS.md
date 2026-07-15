@@ -31,8 +31,10 @@ in [Wado](https://github.com/wado-lang/wado) and rooted in this repository:
 `wado.toml` at the root, sources under `src/`. Markdown is rendered by
 **Marl**, the Wado repo's Markdown processor, consumed as the `wado-lang:marl`
 Component Model component from the registry (`[dependencies]` in `wado.toml`,
-fetched by `wado fetch`). `Marl::render` is threaded through the render path as
-a `with Marl` effect; the templates' own HTML escaping stays local (`src/escape.wado`).
+fetched by `wado fetch`). `Marl::render` is a pure transform, so it needs no
+effect capability (the compiler reconstructs a component's required effects from
+its host-leaf imports, and Marl imports none); the templates' own HTML escaping
+stays local (`src/escape.wado`).
 
 The specification, briefly:
 

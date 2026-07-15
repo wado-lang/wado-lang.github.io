@@ -11,7 +11,7 @@ pub struct Doc {
     pub body_html: String,
 }
 
-pub fn build_doc(slug: String, source: &String) -> Doc with Marl {
+pub fn build_doc(slug: String, source: &String) -> Doc {
     let title = extract_title(source, &slug);
     let rendered = Marl::render(*source);
     let body_html = rewrite_md_links(&rendered.html);
