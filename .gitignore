@@ -6,6 +6,16 @@
 /_site/
 /build/
 
+# Playground build outputs: runtime staged from a wado checkout
+# (`mise run playground-runtime`) and the esbuild bundle
+# (`mise run playground-build`). playground/index.html and src/ are committed.
+/playground/runtime/
+/playground/node_modules/
+/playground/app.js
+/playground/app.css
+/playground/editor.worker.js
+/playground/*.ttf
+
 # Artifacts left behind by the "Try It in 60 Seconds" quickstart when run at
 # the repo root (download, extracted dir, and the hello program). The checksum
 # list is piped from stdin, so it never touches disk.

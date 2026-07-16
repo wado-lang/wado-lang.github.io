@@ -18,7 +18,9 @@ Defined in `mise.toml`. The repo must be trusted once per machine
 | `mise run blog-build` | Generates the blog and docs: `content/*.md` → `_site/` and the upstream `docs/*.md` → `_site/docs/` via Sheaf (`wado run .`). |
 | `mise run blog-test` | Runs Sheaf's Wado tests (`wado test`).                     |
 | `mise run serve` | Serves the site at <http://localhost:8000> via `python3 -m http.server`. Foreground process — Ctrl-C to stop. |
-| `mise run clean` | Removes `.tmp/` and `_site/`.                                   |
+| `mise run playground-runtime` | Stages the playground runtime (wasm binaries, jco bundle, workers) from a **built** wado checkout into `playground/runtime/`. Set `WADO_DIR` to the checkout (default `.tmp/wado`); run `mise run playground-web-build` there first. |
+| `mise run playground-build` | Bundles the playground page JS (`playground/src/` + Monaco) into `playground/app.js` etc. with esbuild (`npm ci` + `node build.mjs`). |
+| `mise run clean` | Removes `.tmp/`, `_site/`, and the playground build outputs.    |
 
 `.tmp/` and `_site/` are gitignored; `assets/` is committed (the site must
 work without running `fetch`). The `wado` CLI itself is a mise tool (a
@@ -91,6 +93,34 @@ upstream doc typos; fix those in the Wado repo.
 Deployment: a push to `main` runs `.github/workflows/deploy.yml`, which builds
 the blog and docs and publishes the whole site to GitHub Pages — the landing
 page at the root, the blog under `/blog/`, the docs under `/docs/`.
+
+## Playground
+
+`/playground/` is a standalone page: a Monaco editor backed by `wado-lsp`
+on the left, program stdout/stderr on the right. Compiler, language server,
+and the user's program all run client-side as WebAssembly (JSPI required —
+Chrome/Chromium 137+). Design:
+`wado-lang/wado:docs/wep-2026-07-16-browser-playground.md`.
+
+Committed here: `playground/index.html` (page shell) and `playground/src/`
+(the esbuild-bundled UI: Monaco wiring, Monarch grammar, LSP↔Monaco
+adapter). Everything coupled to the compiler — the wasm binaries, the jco
+bundle, the WASI shims, and the worker/client JS — is built in the wado repo
+(`wado-playground/web/`) and staged verbatim into the gitignored
+`playground/runtime/` by `mise run playground-runtime`.
+
+Local dev:
+
+```sh
+WADO_DIR=~/path/to/wado mise run playground-runtime  # after playground-web-build there
+mise run playground-build
+mise run serve   # → http://localhost:8000/playground/
+```
+
+Deployment is not wired up yet: the runtime is meant to arrive as a
+`wado-playground-web` release asset from the wado repo once it stabilizes,
+and `deploy.yml` gains a fetch + `playground-build` step then. Until that
+lands, the published site has no `/playground/`.
 
 ## Writing posts
 
