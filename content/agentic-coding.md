@@ -32,9 +32,10 @@ I love programming languages — not just writing in them, but looking at them,
 the way some people love buildings they'll never live in. I read grammars for
 fun.
 
-For years that stayed a hobby, and then the kids arrived and it stopped being
-even that. So earlier this year, half out of curiosity, I opened an agentic
-coding tool with a single thought: let's design a language. My ideal language —
+Programming is my day job — I run engineering at a startup — but languages were
+always the hobby on the side. Then the kids arrived and even that stopped. So
+earlier this year, half out of curiosity, I opened an agentic coding tool with a
+single thought: let's design a language. My ideal language —
 something like Rust but easier, as easy to reach for as TypeScript, and fitted
 to this exact moment. Target only WebAssembly. No — don't just target Wasm; take
 it as the ground the whole design stands on.
