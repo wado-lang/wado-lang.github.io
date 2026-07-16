@@ -12,8 +12,8 @@
 In January 2026 I started building a programming language. Six months on, I
 still haven't written any of the compiler myself. It's 100% pure agentic coding.
 
-Wado is a statically-typed, garbage-collected language for WebAssembly's
-Component Model. AI agents wrote every line; I steered, mostly from my phone, in
+Wado is a Rust-like, statically-typed, garbage-collected language for
+WebAssembly's Component Model. AI agents wrote every line; I steered, mostly from my phone, in
 the gaps of a day with two small kids — sample programs and the odd test,
 nothing more. About 1,450 merged pull requests later, the largest program
 written in Wado is **Gale**, an ANTLR4-compatible parser generator. On the same
