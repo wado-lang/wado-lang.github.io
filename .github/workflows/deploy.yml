@@ -51,7 +51,10 @@ jobs:
           mv dist/blog/docs dist/docs
           mkdir -p dist/playground
           cp playground/index.html playground/app.js playground/app.css \
-             playground/editor.worker.js playground/*.ttf dist/playground/
+             playground/editor.worker.js dist/playground/
+          # Monaco's codicon font is hash-named; copy via find so a zero match
+          # doesn't abort the whole-site deploy under `set -e`.
+          find playground -maxdepth 1 -name '*.ttf' -exec cp {} dist/playground/ \;
           cp -r playground/runtime dist/playground/runtime
           touch dist/.nojekyll
 
