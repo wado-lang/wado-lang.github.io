@@ -20,6 +20,7 @@ Defined in `mise.toml`. The repo must be trusted once per machine
 | `mise run serve` | Serves the site at <http://localhost:8000> via `python3 -m http.server`. Foreground process — Ctrl-C to stop. |
 | `mise run playground-runtime` | Stages the playground runtime (wasm binaries, jco bundle, workers) from a **built** wado checkout into `playground/runtime/`. Set `WADO_DIR` to the checkout (default `.tmp/wado`); run `mise run playground-web-build` there first. |
 | `mise run playground-build` | Bundles the playground page JS (`playground/src/` + Monaco) into `playground/app.js` etc. with esbuild (`npm ci` + `node build.mjs`). |
+| `mise run playground-test` | E2E smoke test for the built playground page: LSP ready → run → diagnostics → hover in a real Chromium (137+; `CHROME_PATH` overrides autodetection). |
 | `mise run clean` | Removes `.tmp/`, `_site/`, and the playground build outputs.    |
 
 `.tmp/` and `_site/` are gitignored; `assets/` is committed (the site must
@@ -91,8 +92,9 @@ links, and `/assets/*` are out of scope. Broken links it reports are typically
 upstream doc typos; fix those in the Wado repo.
 
 Deployment: a push to `main` runs `.github/workflows/deploy.yml`, which builds
-the blog and docs and publishes the whole site to GitHub Pages — the landing
-page at the root, the blog under `/blog/`, the docs under `/docs/`.
+the blog, the docs, and the playground, and publishes the whole site to GitHub
+Pages — the landing page at the root, the blog under `/blog/`, the docs under
+`/docs/`, the playground under `/playground/` (see the Playground section).
 
 ## Playground
 
@@ -117,10 +119,16 @@ mise run playground-build
 mise run serve   # → http://localhost:8000/playground/
 ```
 
-Deployment is not wired up yet: the runtime is meant to arrive as a
-`wado-playground-web` release asset from the wado repo once it stabilizes,
-and `deploy.yml` gains a fetch + `playground-build` step then. Until that
-lands, the published site has no `/playground/`.
+Deployment: `deploy.yml` builds the playground from source on every deploy
+via the `.github/actions/build-playground` composite action — it checks out
+`wado-lang/wado` (the ref is pinned in the action's `wado-ref` default),
+runs `wado-playground/web/build.sh` there (Rust → wasm, cached with
+Swatinem/rust-cache), stages the runtime, bundles the page, and copies it
+all into `dist/playground/`. `playground-ci.yml` runs the same build plus
+`playground/test-e2e.mjs` against the runner's Chrome on pull requests and
+`claude/**` pushes that touch the playground. Once the runtime ships as a
+`wado-playground-web` release asset from the wado repo, the from-source
+build should be replaced by a release fetch (and `wado-ref` retired).
 
 ## Writing posts
 

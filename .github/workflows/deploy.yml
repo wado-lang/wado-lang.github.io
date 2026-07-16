@@ -36,6 +36,9 @@ jobs:
           mise trust
           mise run blog-build
 
+      - name: Build the playground
+        uses: ./.github/actions/build-playground
+
       - name: Assemble the published site
         run: |
           set -euo pipefail
@@ -46,6 +49,10 @@ jobs:
           cp -r _site/. dist/blog/
           # Sheaf emits the docs subtree under _site/docs; lift it to /docs.
           mv dist/blog/docs dist/docs
+          mkdir -p dist/playground
+          cp playground/index.html playground/app.js playground/app.css \
+             playground/editor.worker.js playground/*.ttf dist/playground/
+          cp -r playground/runtime dist/playground/runtime
           touch dist/.nojekyll
 
       - name: Upload Pages artifact

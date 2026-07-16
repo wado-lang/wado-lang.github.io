@@ -4,6 +4,7 @@
   "type": "module",
   "devDependencies": {
     "esbuild": "^0.25.8",
-    "monaco-editor": "^0.52.2"
+    "monaco-editor": "^0.52.2",
+    "playwright-core": "^1.61.1"
   }
 }
