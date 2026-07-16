@@ -36,6 +36,8 @@ monaco.languages.setMonarchTokensProvider("wado", wadoLanguage);
 monaco.languages.setLanguageConfiguration("wado", wadoLanguageConfiguration);
 monaco.editor.defineTheme("wado-paper", wadoPaperTheme);
 
+const narrow = matchMedia("(max-width: 800px)");
+
 const editor = monaco.editor.create($("editor"), {
   value: DEFAULT_SOURCE,
   language: "wado",
@@ -47,7 +49,10 @@ const editor = monaco.editor.create($("editor"), {
   scrollBeyondLastLine: false,
   padding: { top: 12 },
   "semanticHighlighting.enabled": true,
+  wordWrap: narrow.matches ? "on" : "off",
 });
+
+narrow.addEventListener("change", (e) => editor.updateOptions({ wordWrap: e.matches ? "on" : "off" }));
 
 function setStatus(text, kind = "") {
   statusEl.textContent = text;

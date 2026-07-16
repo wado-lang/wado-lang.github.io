@@ -27,7 +27,11 @@
   html, body {
     margin: 0;
     padding: 0;
-    height: 100%;
+    height: 100vh;
+    /* Mobile: track the visual viewport so the browser chrome (address bar,
+       on-screen keyboard) never pushes the panes off-screen. */
+    height: 100dvh;
+    overflow: hidden;
     background: var(--paper);
     color: var(--ink);
   }
@@ -146,10 +150,28 @@
   #output .err { color: var(--accent); }
   #output .dim { color: var(--ink-faint); }
 
+  /* Phones and narrow viewports: stack the panes vertically. */
   @media (max-width: 800px) {
     .panes { flex-direction: column; }
-    #editor { flex: 3; border-right: 0; border-bottom: 1px solid var(--rule); }
-    #output { flex: 2; }
+    #editor {
+      flex: 3;
+      min-height: 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    #output { flex: 2; min-height: 0; font-size: 0.82rem; }
+
+    .topnav .inner { padding: 0.6rem 0.9rem; }
+    .topnav nav { gap: 1rem; }
+    .topnav .page-name { display: none; }
+
+    .toolbar { padding: 0.5rem 0.9rem; gap: 0.6rem; }
+    .toolbar .hint { display: none; } /* keyboard shortcut is meaningless on touch */
+    #status {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 </style>
 </head>
