@@ -121,8 +121,8 @@ mise run serve   # → http://localhost:8000/playground/
 
 Deployment: `deploy.yml` builds the playground from source on every deploy
 via the `.github/actions/build-playground` composite action — it checks out
-`wado-lang/wado` (the ref is pinned in the action's `wado-ref` default),
-runs `wado-playground/web/build.sh` there (Rust → wasm, cached with
+`wado-lang/wado` (`main` by default, overridable via the action's `wado-ref`
+input), runs `wado-playground/web/build.sh` there (Rust → wasm, cached with
 Swatinem/rust-cache), stages the runtime, bundles the page, and copies it
 all into `dist/playground/`. `playground-ci.yml` runs the same build plus
 `playground/test-e2e.mjs` against the runner's Chrome on pull requests and

@@ -9,8 +9,7 @@ inputs:
   wado-ref:
     description: wado-lang/wado ref to build the runtime from
     required: false
-    # TODO: switch to main once the playground branch merges upstream.
-    default: claude/wado-playground-page-2rphhv
+    default: main
 
 runs:
   using: composite
