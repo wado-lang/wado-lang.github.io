@@ -127,7 +127,7 @@ try {
 
   const example = await page.evaluate(async () => {
     const select = document.getElementById("examples");
-    const name = "fizzbuzz";
+    const name = "fizzbuzz.wado";
     select.value = name;
     select.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 100));
