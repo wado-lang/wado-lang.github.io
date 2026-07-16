@@ -90,14 +90,12 @@ would pay off, so we pushed until the shape was undeniable and only then merged.
 Harder than WIR. Worth it — the optimizer stopped being a pile of passes and
 became a thing you could reason about.
 
-Today that `codegen.rs` carries almost no logic — it's a thin orchestrator over
-the IR layers, each of them separable and testable on its own. The 15,000-line
-tangle didn't shrink so much as come apart into passes you can hold one at a
-time. The codebase overall is far bigger than it was; the point was never fewer
-lines, it was complexity that has somewhere to live. Across ~10,900 commits,
-only about one in seven adds a feature — the rest is refactoring, fixing,
-optimizing, documenting. People ask what steering agents feels like; it feels
-like that ratio.
+Today `codegen.rs` is a thin orchestrator with no complex logic left in it. The
+god file came apart by responsibility — typing into TIR, optimization into NIR,
+Wasm assembly into WIR — each piece separable, testable, and small enough to
+hold in your head. Across ~10,900 commits, only about one in seven adds a
+feature — the rest is refactoring, fixing, optimizing, documenting. People ask
+what steering agents feels like; it feels like that ratio.
 
 ## Make the artifact visible, then argue with it
 
