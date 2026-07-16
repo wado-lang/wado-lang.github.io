@@ -101,8 +101,8 @@ Pages — the landing page at the root, the blog under `/blog/`, the docs under
 `/playground/` is a standalone page: a Monaco editor backed by `wado-lsp`
 on the left, program stdout/stderr on the right. Compiler, language server,
 and the user's program all run client-side as WebAssembly (JSPI required —
-Chrome/Chromium 137+). Design:
-`wado-lang/wado:docs/wep-2026-07-16-browser-playground.md`.
+Chrome/Chromium 137+). The runtime and its pipeline are documented in
+`wado-lang/wado:wado-playground/web/README.md`.
 
 Committed here: `playground/index.html` (page shell) and `playground/src/`
 (the esbuild-bundled UI: Monaco wiring, Monarch grammar, LSP↔Monaco
