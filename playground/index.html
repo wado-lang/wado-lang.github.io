@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wado Playground</title>
+<meta name="description" content="Write and run Wado in the browser: the compiler, the language server, and your program all execute client-side as WebAssembly." />
+<link rel="icon" type="image/png" href="/assets/wado-512.png" />
+<link rel="apple-touch-icon" href="/assets/wado-512.png" />
+<link rel="stylesheet" href="./app.css" />
+<style>
+  :root {
+    --paper: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #3d3a33;
+    --ink-faint: #777268;
+    --rule: #e4ddd0;
+    --code-bg: #f6f3ec;
+    --accent: #7a1c1c; /* 朱 — vermillion seal */
+    --max: 720px;
+    --mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas,
+            "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    /* Mobile: track the visual viewport so the browser chrome (address bar,
+       on-screen keyboard) never pushes the panes off-screen. */
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  body {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP",
+                 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topnav { border-bottom: 1px solid var(--rule); flex: none; }
+  .topnav .inner {
+    margin: 0 auto;
+    max-width: none;
+    padding: 0.7rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topnav .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .topnav .brand img { width: 28px; height: 28px; display: block; }
+  .topnav .brand-name { font-weight: 600; letter-spacing: 0.06em; }
+  .topnav .page-name { color: var(--ink-faint); font-size: 0.95rem; }
+  .topnav nav { display: flex; gap: 1.5rem; }
+  .topnav nav a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+  .topnav nav a:hover { color: var(--accent); }
+
+  .banner {
+    flex: none;
+    padding: 0.6rem 1.25rem;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--rule);
+    color: var(--accent);
+    font-size: 0.95rem;
+  }
+
+  .toolbar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.55rem 1.25rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .toolbar button {
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1;
+    padding: 0.45em 1.1em;
+    color: var(--paper);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .toolbar button:hover:not(:disabled) { opacity: 0.85; }
+  .toolbar button:disabled {
+    color: var(--ink-faint);
+    background: var(--code-bg);
+    border-color: var(--rule);
+    cursor: default;
+  }
+  .toolbar button.secondary {
+    color: var(--accent);
+    background: var(--paper);
+  }
+  .toolbar button.secondary:disabled {
+    color: var(--ink-faint);
+    background: var(--paper);
+  }
+
+  .toolbar select {
+    font-family: inherit;
+    font-size: 0.92rem;
+    padding: 0.35em 0.5em;
+    color: var(--ink-soft);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    max-width: 11rem;
+  }
+  .toolbar select:hover { border-color: var(--accent); color: var(--accent); }
+
+  .toolbar .hint { color: var(--ink-faint); font-size: 0.85rem; }
+  #status { color: var(--ink-faint); font-size: 0.9rem; margin-left: auto; }
+  #status.err { color: var(--accent); }
+
+  .panes {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  #editor {
+    flex: 11;
+    min-width: 0;
+    border-right: 1px solid var(--rule);
+  }
+
+  #output {
+    flex: 9;
+    min-width: 0;
+    margin: 0;
+    padding: 0.9rem 1.1rem;
+    background: var(--code-bg);
+    font-family: var(--mono);
+    font-size: 0.88rem;
+    line-height: 1.55;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  #output .err { color: var(--accent); }
+  #output .dim { color: var(--ink-faint); }
+
+  /* Phones and narrow viewports: stack the panes vertically. */
+  @media (max-width: 800px) {
+    .panes { flex-direction: column; }
+    #editor {
+      flex: 3;
+      min-height: 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    #output { flex: 2; min-height: 0; font-size: 0.82rem; }
+
+    .topnav .inner { padding: 0.6rem 0.9rem; }
+    .topnav nav { gap: 1rem; }
+    .topnav .page-name { display: none; }
+
+    .toolbar { padding: 0.5rem 0.9rem; gap: 0.6rem; }
+    .toolbar .hint { display: none; } /* keyboard shortcut is meaningless on touch */
+    #status {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+</style>
+</head>
+<body>
+<header class="topnav">
+  <div class="inner">
+    <a class="brand" href="/" aria-label="Wado home">
+      <img src="/assets/wado-512.png" alt="" />
+      <span class="brand-name">Wado</span>
+      <span class="page-name">Playground</span>
+    </a>
+    <nav>
+      <a href="/blog/">Blog</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/wado-lang/wado">Repository</a>
+    </nav>
+  </div>
+</header>
+
+<div class="banner" id="banner" hidden>
+  The playground needs a JSPI-capable browser — Chrome or Chromium 137+.
+  The editor works below, but the language server and Run are disabled.
+</div>
+
+<div class="toolbar">
+  <button id="run" type="button">Run</button>
+  <button id="stop" type="button" class="secondary" disabled>Stop</button>
+  <select id="examples" aria-label="Load an example" hidden>
+    <option value="">Examples…</option>
+  </select>
+  <span class="hint">Ctrl/Cmd+Enter · compiles and runs entirely in your browser</span>
+  <span id="status">loading…</span>
+</div>
+
+<div class="panes">
+  <div id="editor"></div>
+  <pre id="output"></pre>
+</div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

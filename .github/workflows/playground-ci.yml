@@ -1,0 +1,41 @@
+name: Playground CI
+
+on:
+  pull_request:
+    paths:
+      - "playground/**"
+      - ".github/workflows/playground-ci.yml"
+      - ".github/actions/build-playground/**"
+      - "mise.toml"
+  push:
+    branches: ["claude/**"]
+    paths:
+      - "playground/**"
+      - ".github/workflows/playground-ci.yml"
+      - ".github/actions/build-playground/**"
+      - "mise.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      # mise hits the GitHub Releases API to install the `wado` CLI.
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up mise and install tools
+        uses: jdx/mise-action@v2
+
+      - name: Build the playground
+        uses: ./.github/actions/build-playground
+
+      - name: E2E smoke test (Chrome, JSPI)
+        run: |
+          google-chrome --version
+          node playground/test-e2e.mjs

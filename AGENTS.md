@@ -18,7 +18,10 @@ Defined in `mise.toml`. The repo must be trusted once per machine
 | `mise run blog-build` | Generates the blog and docs: `content/*.md` → `_site/` and the upstream `docs/*.md` → `_site/docs/` via Sheaf (`wado run .`). |
 | `mise run blog-test` | Runs Sheaf's Wado tests (`wado test`).                     |
 | `mise run serve` | Serves the site at <http://localhost:8000> via `python3 -m http.server`. Foreground process — Ctrl-C to stop. |
-| `mise run clean` | Removes `.tmp/` and `_site/`.                                   |
+| `mise run playground-runtime` | Stages the playground runtime (wasm binaries, jco bundle, workers) from a **built** wado checkout into `playground/runtime/`. Set `WADO_DIR` to the checkout (default `.tmp/wado`); run `mise run playground-web-build` there first. |
+| `mise run playground-build` | Bundles the playground page JS (`playground/src/` + Monaco) into `playground/app.js` etc. with esbuild (`npm ci` + `node build.mjs`). |
+| `mise run playground-test` | E2E smoke test for the built playground page: LSP ready → run → diagnostics → hover in a real Chromium (137+; `CHROME_PATH` overrides autodetection). |
+| `mise run clean` | Removes `.tmp/`, `_site/`, and the playground build outputs.    |
 
 `.tmp/` and `_site/` are gitignored; `assets/` is committed (the site must
 work without running `fetch`). The `wado` CLI itself is a mise tool (a
@@ -89,8 +92,43 @@ links, and `/assets/*` are out of scope. Broken links it reports are typically
 upstream doc typos; fix those in the Wado repo.
 
 Deployment: a push to `main` runs `.github/workflows/deploy.yml`, which builds
-the blog and docs and publishes the whole site to GitHub Pages — the landing
-page at the root, the blog under `/blog/`, the docs under `/docs/`.
+the blog, the docs, and the playground, and publishes the whole site to GitHub
+Pages — the landing page at the root, the blog under `/blog/`, the docs under
+`/docs/`, the playground under `/playground/` (see the Playground section).
+
+## Playground
+
+`/playground/` is a standalone page: a Monaco editor backed by `wado-lsp`
+on the left, program stdout/stderr on the right. Compiler, language server,
+and the user's program all run client-side as WebAssembly (JSPI required —
+Chrome/Chromium 137+). The runtime and its pipeline are documented in
+`wado-lang/wado:wado-playground/web/README.md`.
+
+Committed here: `playground/index.html` (page shell) and `playground/src/`
+(the esbuild-bundled UI: Monaco wiring, Monarch grammar, LSP↔Monaco
+adapter). Everything coupled to the compiler — the wasm binaries, the jco
+bundle, the WASI shims, and the worker/client JS — is built in the wado repo
+(`wado-playground/web/`) and staged verbatim into the gitignored
+`playground/runtime/` by `mise run playground-runtime`.
+
+Local dev:
+
+```sh
+WADO_DIR=~/path/to/wado mise run playground-runtime  # after playground-web-build there
+mise run playground-build
+mise run serve   # → http://localhost:8000/playground/
+```
+
+Deployment: `deploy.yml` builds the playground from source on every deploy
+via the `.github/actions/build-playground` composite action — it checks out
+`wado-lang/wado` (`main` by default, overridable via the action's `wado-ref`
+input), runs `wado-playground/web/build.sh` there (Rust → wasm, cached with
+Swatinem/rust-cache), stages the runtime, bundles the page, and copies it
+all into `dist/playground/`. `playground-ci.yml` runs the same build plus
+`playground/test-e2e.mjs` against the runner's Chrome on pull requests and
+`claude/**` pushes that touch the playground. Once the runtime ships as a
+`wado-playground-web` release asset from the wado repo, the from-source
+build should be replaced by a release fetch (and `wado-ref` retired).
 
 ## Writing posts
 

@@ -1,0 +1,43 @@
+name: Build playground
+description: >
+  Build the playground runtime from a wado checkout (Rust → wasm, jco bundle)
+  and bundle the page JS with esbuild. The caller must set up mise
+  (jdx/mise-action) and export GITHUB_TOKEN first. Rust toolchain and wasm
+  targets come from the wado repo's rust-toolchain.toml via rustup.
+
+inputs:
+  wado-ref:
+    description: wado-lang/wado ref to build the runtime from
+    required: false
+    default: main
+
+runs:
+  using: composite
+  steps:
+    - name: Check out wado
+      uses: actions/checkout@v4
+      with:
+        repository: wado-lang/wado
+        ref: ${{ inputs.wado-ref }}
+        path: .tmp/wado-src
+
+    - name: Cache the wado build
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: .tmp/wado-src
+        key: playground-web
+
+    - name: Build the playground runtime (wasm + jco bundle)
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd .tmp/wado-src
+        wado-playground/web/build.sh
+
+    - name: Stage the runtime and bundle the page
+      shell: bash
+      run: |
+        set -euo pipefail
+        mise trust
+        WADO_DIR=.tmp/wado-src mise run playground-runtime
+        mise run playground-build

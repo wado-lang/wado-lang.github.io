@@ -51,9 +51,42 @@ depends = ["fetch-wado", "fetch-deps"]
 description = "Run Sheaf's Wado tests"
 run = "wado test"
 
+[tasks.playground-runtime]
+description = "Stage the playground runtime (wasm, jco bundle, workers) from a built wado checkout (WADO_DIR, default .tmp/wado) into playground/runtime/"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+WADO_DIR="${WADO_DIR:-.tmp/wado}"
+WEB="$WADO_DIR/wado-playground/web"
+if [ ! -f "$WEB/wado-playground.wasm" ] || [ ! -f "$WEB/wado-lsp.wasm" ]; then
+  echo "error: $WEB is not built — run 'mise run playground-web-build' in $WADO_DIR" >&2
+  exit 1
+fi
+rm -rf playground/runtime
+mkdir -p playground/runtime
+cp "$WEB"/playground.js "$WEB"/runner-worker.js "$WEB"/lsp-worker.js "$WEB"/lsp-client.js \
+   "$WEB"/wado-playground.wasm "$WEB"/wado-lsp.wasm "$WEB"/examples.json playground/runtime/
+cp -r "$WEB"/vendor "$WEB"/shims playground/runtime/
+ls -la playground/runtime/
+"""
+
+[tasks.playground-build]
+description = "Bundle the playground page JS (Monaco + app) into playground/ with esbuild"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+cd playground
+if [ -f package-lock.json ]; then npm ci; else npm install; fi
+node build.mjs
+"""
+
+[tasks.playground-test]
+description = "E2E smoke test for the built playground page (needs Chromium/Chrome 137+; CHROME_PATH overrides autodetection)"
+run = "node playground/test-e2e.mjs"
+
 [tasks.clean]
-description = "Remove the shallow clone under .tmp and the generated _site"
-run = "rm -rf .tmp _site"
+description = "Remove the shallow clone under .tmp, the generated _site, and playground build outputs"
+run = "rm -rf .tmp _site playground/runtime playground/node_modules playground/app.js playground/app.css playground/editor.worker.js playground/*.ttf"
 
 [tasks.serve]
 description = "Serve the landing page on http://localhost:8000"
