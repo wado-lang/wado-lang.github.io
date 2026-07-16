@@ -65,7 +65,7 @@ fi
 rm -rf playground/runtime
 mkdir -p playground/runtime
 cp "$WEB"/playground.js "$WEB"/runner-worker.js "$WEB"/lsp-worker.js "$WEB"/lsp-client.js \
-   "$WEB"/wado-playground.wasm "$WEB"/wado-lsp.wasm playground/runtime/
+   "$WEB"/wado-playground.wasm "$WEB"/wado-lsp.wasm "$WEB"/examples.json playground/runtime/
 cp -r "$WEB"/vendor "$WEB"/shims playground/runtime/
 ls -la playground/runtime/
 """

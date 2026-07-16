@@ -118,6 +118,28 @@ runButton.addEventListener("click", run);
 stopButton.addEventListener("click", () => stopRun("program stopped"));
 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, run);
 
+const examplesEl = $("examples");
+
+async function loadExamples() {
+  const resp = await fetch(new URL("examples.json", RUNTIME));
+  if (!resp.ok) throw new Error(`examples.json: HTTP ${resp.status}`);
+  const examples = await resp.json();
+  if (!examples.length) return;
+  for (const ex of examples) {
+    const option = document.createElement("option");
+    option.value = ex.name;
+    option.textContent = ex.name;
+    examplesEl.appendChild(option);
+  }
+  examplesEl.hidden = false;
+  examplesEl.addEventListener("change", () => {
+    const ex = examples.find((e) => e.name === examplesEl.value);
+    if (ex) editor.setValue(ex.source);
+  });
+}
+
+loadExamples().catch((err) => console.warn("examples unavailable:", err));
+
 if (jspiSupported) {
   setStatus("starting language server…");
   attachWadoLsp(monaco, editor, RUNTIME)

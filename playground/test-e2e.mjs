@@ -124,6 +124,24 @@ try {
     return document.querySelector(".monaco-hover-content")?.textContent ?? null;
   });
   check("hover on println", Boolean(hover?.includes("println")), JSON.stringify(hover?.slice(0, 120) ?? null));
+
+  const example = await page.evaluate(async () => {
+    const select = document.getElementById("examples");
+    const name = "fizzbuzz";
+    select.value = name;
+    select.dispatchEvent(new Event("change"));
+    await new Promise((r) => setTimeout(r, 100));
+    return {
+      options: select.options.length,
+      name,
+      loaded: globalThis.__playground.editor.getValue().includes("FizzBuzz"),
+    };
+  });
+  check(
+    "load an example",
+    example.options > 1 && example.loaded,
+    `${example.options - 1} examples, ${example.name} loaded=${example.loaded}`,
+  );
 } finally {
   await browser.close();
   server.close();
