@@ -94,7 +94,7 @@ became something you can reason about.
 Today `codegen.rs` is a thin orchestrator with no complex logic left in it. The
 god file came apart by responsibility: typing into TIR, optimization into NIR,
 Wasm assembly into WIR. Each piece is separable, testable, and small enough to
-hold in your head. Across ~11,000 commits, only about one in fifteen adds a
+hold in your head. Across ~11,000 commits, only a small fraction adds a
 feature. The rest is refactoring, fixing, optimizing, documenting. People ask
 what steering agents feels like; it feels like that ratio.
 
