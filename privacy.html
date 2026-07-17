@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Privacy — The Wado Programming Language</title>
+<meta name="description" content="How the Wado site uses analytics." />
+<meta name="robots" content="noindex" />
+<link rel="icon" type="image/png" href="assets/wado-512.png" />
+<link rel="apple-touch-icon" href="assets/wado-512.png" />
+<script src="/assets/analytics.js"></script>
+<style>
+  :root {
+    --paper: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #3d3a33;
+    --ink-faint: #777268;
+    --rule: #e4ddd0;
+    --accent: #7a1c1c;
+    --max: 720px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+  body {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP",
+                 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 17px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  main { max-width: var(--max); margin: 0 auto; padding: 4.5rem 1.5rem 6rem; }
+  h1 { font-size: 1.7rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.2rem; margin: 2rem 0 .5rem; }
+  p { color: var(--ink-soft); }
+  a { color: var(--accent); }
+  .back { display: inline-block; margin-top: 2.5rem; color: var(--ink-faint); font-size: .95rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacy</h1>
+
+  <p>
+    This site uses <a href="https://marketingplatform.google.com/about/analytics/"
+    rel="noopener">Google Analytics</a> to measure how many people visit and which
+    pages they read. That's the whole reason: aggregate traffic, nothing more.
+  </p>
+
+  <h2>Consent first</h2>
+  <p>
+    No analytics cookies are set until you accept them in the banner. We run
+    <a href="https://support.google.com/analytics/answer/9976101" rel="noopener">Google
+    Consent Mode</a> with every storage type denied by default, and advertising
+    signals stay denied even after you accept. If your browser sends a
+    Do&nbsp;Not&nbsp;Track signal, analytics never loads at all. Your choice is
+    remembered locally in your browser; clear your site data to be asked again.
+  </p>
+
+  <h2>What's collected</h2>
+  <p>
+    When you accept, Google Analytics records standard usage data — pages viewed,
+    approximate location, device and browser type, and referral source. We don't
+    sell it, and we don't use it to identify you personally.
+  </p>
+
+  <a class="back" href="/">← Back to wado-lang.org</a>
+</main>
+</body>
+</html>

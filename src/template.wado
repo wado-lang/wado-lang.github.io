@@ -57,6 +57,7 @@ fn page_head(meta: &PageMeta) -> String {
     out.push_str(&`<meta name="twitter:description" content="{desc}" />\n`);
     out.push_str(&`<meta name="twitter:image" content="{OG_IMAGE}" />\n`);
     out.push_str(&`<link rel="icon" type="image/png" href="/assets/wado-512.png" />\n`);
+    out.push_str(&`<script type="module" src="/assets/analytics.js"></script>\n`);
     out.push_str(&"<style>\n");
     out.push_str(&STYLE);
     out.push_str(&"</style>\n");
