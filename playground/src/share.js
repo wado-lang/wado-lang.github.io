@@ -33,7 +33,9 @@ export async function encodeSource(source) {
 }
 
 export async function decodeSource(packed) {
-  return new TextDecoder().decode(await inflate(fromBase64Url(packed)));
+  // fatal: reject bytes that are not valid UTF-8 so a corrupt payload throws
+  // (and falls back to the default source) instead of decoding to U+FFFD.
+  return new TextDecoder("utf-8", { fatal: true }).decode(await inflate(fromBase64Url(packed)));
 }
 
 // The shared source encoded in the current location hash, or null when the

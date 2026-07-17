@@ -149,8 +149,13 @@ try {
     await globalThis.__playground.share();
     return location.hash;
   }, SHARED);
-  await page.goto(`http://127.0.0.1:${port}/playground/${hash}`, { waitUntil: "load" });
-  const restored = await page.evaluate(() => globalThis.__playground.editor.getValue());
+  // Load the hash in a fresh page so the restored value can only come from
+  // decode-on-load, not from editor state left over in this page.
+  const shared = await browser.newPage();
+  await shared.goto(`http://127.0.0.1:${port}/playground/${hash}`, { waitUntil: "load" });
+  await shared.waitForFunction(() => globalThis.__playground?.editor, null, { timeout: 30000 }).catch(() => {});
+  const restored = await shared.evaluate(() => globalThis.__playground.editor.getValue());
+  await shared.close();
   check(
     "share round-trips through the URL hash",
     hash.length > 1 && restored === SHARED,

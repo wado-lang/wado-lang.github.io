@@ -114,9 +114,12 @@ playground-runtime`.
 
 Share links carry the editor buffer in the URL hash: `share.js` deflates it
 (`CompressionStream("deflate-raw")`) and base64url-encodes it into `#<payload>`,
-so the code never touches the server. On load the hash is decoded back into the
-editor; an empty or malformed hash silently falls back to the default source,
-and shared code is never auto-run.
+so the code never touches the server. The hash stays in sync with the editor
+(debounced, `replaceState`), so a reload restores the current buffer and the
+Share button just copies the already-current link. On load the hash is decoded
+back into the editor; an empty or malformed hash silently falls back to the
+default source (the untouched default program carries no hash), and shared code
+is never auto-run.
 
 Local dev:
 

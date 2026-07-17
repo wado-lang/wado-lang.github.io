@@ -122,15 +122,44 @@ runButton.addEventListener("click", run);
 stopButton.addEventListener("click", () => stopRun("program stopped"));
 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, run);
 
+// Beyond this the URL is fine in Chrome but may be truncated when pasted into
+// chat apps, issue trackers, etc. — warn but still copy.
+const MAX_SHARE_URL = 8000;
+
+// Keep the URL hash in sync with the editor so a reload restores the current
+// buffer and Share just copies the already-current link. Debounced;
+// replaceState keeps it out of the back/forward history. The clean default
+// program carries no hash.
+let syncTimer = null;
+async function syncHashToEditor() {
+  const source = editor.getValue();
+  const packed = source === DEFAULT_SOURCE ? "" : await encodeSource(source);
+  if (editor.getValue() !== source) return; // superseded by a newer edit
+  const url = shareUrl(packed);
+  if (url !== location.href) history.replaceState(null, "", url);
+}
+editor.onDidChangeModelContent(() => {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncHashToEditor().catch(() => {}), 300);
+});
+
 async function share() {
-  const url = shareUrl(await encodeSource(editor.getValue()));
-  history.replaceState(null, "", url);
+  // Call clipboard.write synchronously with a data promise so the write stays
+  // tied to the click's user activation even though encoding is async.
+  const built = encodeSource(editor.getValue()).then(shareUrl);
+  let copied = false;
   try {
-    await navigator.clipboard.writeText(url);
-    setStatus("link copied to clipboard");
+    await navigator.clipboard.write([
+      new ClipboardItem({ "text/plain": built.then((url) => new Blob([url], { type: "text/plain" })) }),
+    ]);
+    copied = true;
   } catch {
-    setStatus("share link is in the address bar");
+    copied = false;
   }
+  const url = await built;
+  history.replaceState(null, "", url);
+  const note = url.length > MAX_SHARE_URL ? " · long link, may not open everywhere" : "";
+  setStatus((copied ? "link copied to clipboard" : "share link is in the address bar") + note);
 }
 
 shareButton.addEventListener("click", () => {
