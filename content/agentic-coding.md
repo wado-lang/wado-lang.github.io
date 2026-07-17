@@ -18,7 +18,7 @@ from my phone, in the gaps of a day with two small kids; my own contributions
 were sample programs and the odd test, nothing more. About 1,450 merged pull
 requests later, the largest program written in Wado is **Gale**, an
 ANTLR4-compatible parser generator. On the same SQLite grammar, a Gale parser
-runs roughly **88× faster** than ANTLR4's own Java.
+runs roughly **80× faster** than ANTLR4's own Java.
 
 Here's the part I still can't get over: no model was ever trained on Wado. It
 didn't exist before this year. Every line of Gale is written in a language the
@@ -162,19 +162,23 @@ it is by far the largest Wado program in existence, roughly ten times the next
 one. And it is fast. On the same SQLite grammar and input, benchmarked side by
 side:
 
-- Parsing: Gale **2.4 ms** vs ANTLR4's own Java parser at **213 ms**, about
-  **88×**; within 1.5× of hand-written `sqlparser-rs`.
+- Parsing: about **80× faster** than ANTLR4's own Java parser; within 1.5× of
+  hand-written `sqlparser-rs`.
 - Highlighting: faster than tree-sitter (native _and_ Wasm), faster than Lezer,
   faster than Shiki. The only thing ahead is Prism, which doesn't parse (it's
   regex). Among highlighters that build a real syntax tree, Gale currently sits
   first.
-- Generating: about **4×** faster than ANTLR4 at producing a parser from the
+- Generating: about **3.5×** faster than ANTLR4 at producing a parser from the
   same grammar.
+
+Full numbers, grammars, inputs, and how each contender was measured — ANTLR4
+JIT-warmed to steady state, with JVM startup excluded — are in the
+[benchmark README](https://github.com/wado-lang/wado/blob/main/benchmark/README.md).
 
 The asterisk: Gale still diverges from ANTLR4 on real grammars. The SQLite test
 suite pins several known differences, and there are surely more. It is not yet a
-complete comparison. It is a real one, though, and 88× is not the kind of gap a
-few bugs explain away.
+complete comparison. It is a real one, though, and a gap this size is not the
+kind a few bugs explain away.
 
 Gale even accepts a few grammars ANTLR4 rejects, but only where the meaning is
 uniquely determined, never by guessing. A parser generator with opinions.
