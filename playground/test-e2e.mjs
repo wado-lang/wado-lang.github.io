@@ -142,6 +142,23 @@ try {
     example.options > 1 && example.loaded,
     `${example.options - 1} examples, ${example.name} loaded=${example.loaded}`,
   );
+
+  const SHARED = `// shared snippet\nexport fn answer() -> u32 { return 42 }\n`;
+  const hash = await page.evaluate(async (source) => {
+    globalThis.__playground.editor.setValue(source);
+    await globalThis.__playground.share();
+    return location.hash;
+  }, SHARED);
+  const shared = await browser.newPage();
+  await shared.goto(`http://127.0.0.1:${port}/playground/${hash}`, { waitUntil: "load" });
+  await shared.waitForFunction(() => globalThis.__playground?.editor, null, { timeout: 30000 }).catch(() => {});
+  const restored = await shared.evaluate(() => globalThis.__playground.editor.getValue());
+  await shared.close();
+  check(
+    "share round-trips through the URL hash",
+    hash.length > 1 && restored === SHARED,
+    `hash=${hash.length} chars, restored=${JSON.stringify(restored)}`,
+  );
 } finally {
   await browser.close();
   server.close();

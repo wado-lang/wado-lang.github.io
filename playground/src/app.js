@@ -6,6 +6,7 @@
 import * as monaco from "monaco-editor";
 import { wadoLanguage, wadoLanguageConfiguration, wadoPaperTheme } from "./wado-monarch.js";
 import { attachWadoLsp } from "./lsp-monaco.js";
+import { encodeSource, sharedSourceFromHash, shareUrl } from "./share.js";
 
 const RUNTIME = new URL("./runtime/", import.meta.url);
 
@@ -22,6 +23,7 @@ export fn run() with Stdout {
 const $ = (id) => document.getElementById(id);
 const runButton = $("run");
 const stopButton = $("stop");
+const shareButton = $("share");
 const statusEl = $("status");
 const outputEl = $("output");
 
@@ -38,8 +40,10 @@ monaco.editor.defineTheme("wado-paper", wadoPaperTheme);
 
 const narrow = matchMedia("(max-width: 800px)");
 
+const initialSource = (await sharedSourceFromHash()) ?? DEFAULT_SOURCE;
+
 const editor = monaco.editor.create($("editor"), {
-  value: DEFAULT_SOURCE,
+  value: initialSource,
   language: "wado",
   theme: "wado-paper",
   fontFamily: '"JetBrains Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace',
@@ -118,6 +122,45 @@ runButton.addEventListener("click", run);
 stopButton.addEventListener("click", () => stopRun("program stopped"));
 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, run);
 
+const MAX_SHARE_URL = 8000;
+
+let syncTimer = null;
+async function syncHashToEditor() {
+  const source = editor.getValue();
+  const packed = source === DEFAULT_SOURCE ? "" : await encodeSource(source);
+  if (editor.getValue() !== source) return;
+  const url = shareUrl(packed);
+  if (url !== location.href) history.replaceState(null, "", url);
+}
+editor.onDidChangeModelContent(() => {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncHashToEditor().catch(() => {}), 300);
+});
+
+async function share() {
+  const built = encodeSource(editor.getValue()).then(shareUrl);
+  let copied = false;
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({ "text/plain": built.then((url) => new Blob([url], { type: "text/plain" })) }),
+    ]);
+    copied = true;
+  } catch {
+    copied = false;
+  }
+  const url = await built;
+  history.replaceState(null, "", url);
+  const note = url.length > MAX_SHARE_URL ? " · long link, may not open everywhere" : "";
+  setStatus((copied ? "link copied to clipboard" : "share link is in the address bar") + note);
+}
+
+shareButton.addEventListener("click", () => {
+  share().catch((err) => {
+    console.error(err);
+    setStatus("could not build share link", "err");
+  });
+});
+
 const examplesEl = $("examples");
 
 async function loadExamples() {
@@ -155,4 +198,4 @@ if (jspiSupported) {
 }
 
 // Test hook: lets Playwright drive a run and read the state.
-globalThis.__playground = { editor, run, output: () => outputEl.textContent, monaco };
+globalThis.__playground = { editor, run, share, output: () => outputEl.textContent, monaco };
