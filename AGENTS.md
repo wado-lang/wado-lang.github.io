@@ -106,10 +106,17 @@ Chrome/Chromium 137+). The runtime and its pipeline are documented in
 
 Committed here: `playground/index.html` (page shell) and `playground/src/`
 (the esbuild-bundled UI: Monaco wiring, Monarch grammar, LSP↔Monaco
-adapter). Everything coupled to the compiler — the wasm binaries, the jco
-bundle, the WASI shims, and the worker/client JS — is built in the wado repo
-(`wado-playground/web/`) and staged verbatim into the gitignored
-`playground/runtime/` by `mise run playground-runtime`.
+adapter, and `share.js` — the Share button). Everything coupled to the
+compiler — the wasm binaries, the jco bundle, the WASI shims, and the
+worker/client JS — is built in the wado repo (`wado-playground/web/`) and
+staged verbatim into the gitignored `playground/runtime/` by `mise run
+playground-runtime`.
+
+Share links carry the editor buffer in the URL hash: `share.js` deflates it
+(`CompressionStream("deflate-raw")`) and base64url-encodes it into `#<payload>`,
+so the code never touches the server. On load the hash is decoded back into the
+editor; an empty or malformed hash silently falls back to the default source,
+and shared code is never auto-run.
 
 Local dev:
 

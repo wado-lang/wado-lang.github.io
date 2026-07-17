@@ -6,6 +6,7 @@
 import * as monaco from "monaco-editor";
 import { wadoLanguage, wadoLanguageConfiguration, wadoPaperTheme } from "./wado-monarch.js";
 import { attachWadoLsp } from "./lsp-monaco.js";
+import { encodeSource, sharedSourceFromHash, shareUrl } from "./share.js";
 
 const RUNTIME = new URL("./runtime/", import.meta.url);
 
@@ -22,6 +23,7 @@ export fn run() with Stdout {
 const $ = (id) => document.getElementById(id);
 const runButton = $("run");
 const stopButton = $("stop");
+const shareButton = $("share");
 const statusEl = $("status");
 const outputEl = $("output");
 
@@ -38,8 +40,10 @@ monaco.editor.defineTheme("wado-paper", wadoPaperTheme);
 
 const narrow = matchMedia("(max-width: 800px)");
 
+const initialSource = (await sharedSourceFromHash()) ?? DEFAULT_SOURCE;
+
 const editor = monaco.editor.create($("editor"), {
-  value: DEFAULT_SOURCE,
+  value: initialSource,
   language: "wado",
   theme: "wado-paper",
   fontFamily: '"JetBrains Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace',
@@ -118,6 +122,24 @@ runButton.addEventListener("click", run);
 stopButton.addEventListener("click", () => stopRun("program stopped"));
 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, run);
 
+async function share() {
+  const url = shareUrl(await encodeSource(editor.getValue()));
+  history.replaceState(null, "", url);
+  try {
+    await navigator.clipboard.writeText(url);
+    setStatus("link copied to clipboard");
+  } catch {
+    setStatus("share link is in the address bar");
+  }
+}
+
+shareButton.addEventListener("click", () => {
+  share().catch((err) => {
+    console.error(err);
+    setStatus("could not build share link", "err");
+  });
+});
+
 const examplesEl = $("examples");
 
 async function loadExamples() {
@@ -155,4 +177,4 @@ if (jspiSupported) {
 }
 
 // Test hook: lets Playwright drive a run and read the state.
-globalThis.__playground = { editor, run, output: () => outputEl.textContent, monaco };
+globalThis.__playground = { editor, run, share, output: () => outputEl.textContent, monaco };
