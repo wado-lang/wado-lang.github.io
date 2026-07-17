@@ -236,9 +236,8 @@
 
   /* Narrow viewports: drop the long title in favor of just "Wado". */
   @media (max-width: 640px) {
-    .hero h1 .h1-full  { display: none; }
-    .hero h1 .h1-short { display: inline; }
-    .hero h1 { font-size: 2.2rem; letter-spacing: 0.04em; }
+    /* Mid-size phones: keep the full title, wrapped onto two centered lines. */
+    .hero h1 { white-space: normal; font-size: 2rem; }
   }
 
   .topnav { border-bottom: 1px solid var(--rule); }
@@ -284,6 +283,11 @@
     .topnav .inner { padding: 0.7rem 0.75rem; column-gap: 0.6rem; }
     .topnav nav { gap: 0.7rem; }
     .topnav nav a { font-size: 0.8rem; }
+    /* Smallest screens: the full title would wrap to 3+ lines — fall back to
+       the short "Wado". */
+    .hero h1 .h1-full { display: none; }
+    .hero h1 .h1-short { display: inline; }
+    .hero h1 { white-space: nowrap; font-size: 2.2rem; }
   }
 </style>
 </head>
