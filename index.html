@@ -236,9 +236,8 @@
 
   /* Narrow viewports: drop the long title in favor of just "Wado". */
   @media (max-width: 640px) {
-    .hero h1 .h1-full  { display: none; }
-    .hero h1 .h1-short { display: inline; }
-    .hero h1 { font-size: 2.2rem; letter-spacing: 0.04em; }
+    /* Mid-size phones: keep the full title, wrapped onto two centered lines. */
+    .hero h1 { white-space: normal; font-size: 2rem; }
   }
 
   .topnav { border-bottom: 1px solid var(--rule); }
@@ -271,8 +270,24 @@
     body { font-size: 16px; }
     main { padding: 2.5rem 1.1rem 4rem; }
     .hero img { width: 140px; height: 140px; }
-    .topnav .inner { padding: 0.7rem 1.1rem; }
-    .topnav nav { gap: 1.15rem; }
+    /* Brand + four nav links stay on one row: tighten the nav and reserve a
+       column-gap (space-between can't collapse a flex gap) so "Wado" and
+       "Playground" never touch. */
+    .topnav .inner { padding: 0.7rem 0.9rem; column-gap: 0.75rem; }
+    .topnav nav { gap: 0.85rem; }
+    .topnav nav a { font-size: 0.85rem; }
+    .topnav .brand-name { letter-spacing: 0.03em; }
+  }
+
+  @media (max-width: 380px) {
+    .topnav .inner { padding: 0.7rem 0.75rem; column-gap: 0.6rem; }
+    .topnav nav { gap: 0.7rem; }
+    .topnav nav a { font-size: 0.8rem; }
+    /* Smallest screens: the full title would wrap to 3+ lines — fall back to
+       the short "Wado". */
+    .hero h1 .h1-full { display: none; }
+    .hero h1 .h1-short { display: inline; }
+    .hero h1 { white-space: nowrap; font-size: 2.2rem; }
   }
 </style>
 </head>
