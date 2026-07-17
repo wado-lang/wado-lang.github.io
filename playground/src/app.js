@@ -122,19 +122,13 @@ runButton.addEventListener("click", run);
 stopButton.addEventListener("click", () => stopRun("program stopped"));
 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, run);
 
-// Beyond this the URL is fine in Chrome but may be truncated when pasted into
-// chat apps, issue trackers, etc. — warn but still copy.
 const MAX_SHARE_URL = 8000;
 
-// Keep the URL hash in sync with the editor so a reload restores the current
-// buffer and Share just copies the already-current link. Debounced;
-// replaceState keeps it out of the back/forward history. The clean default
-// program carries no hash.
 let syncTimer = null;
 async function syncHashToEditor() {
   const source = editor.getValue();
   const packed = source === DEFAULT_SOURCE ? "" : await encodeSource(source);
-  if (editor.getValue() !== source) return; // superseded by a newer edit
+  if (editor.getValue() !== source) return;
   const url = shareUrl(packed);
   if (url !== location.href) history.replaceState(null, "", url);
 }
@@ -144,8 +138,6 @@ editor.onDidChangeModelContent(() => {
 });
 
 async function share() {
-  // Call clipboard.write synchronously with a data promise so the write stays
-  // tied to the click's user activation even though encoding is async.
   const built = encodeSource(editor.getValue()).then(shareUrl);
   let copied = false;
   try {

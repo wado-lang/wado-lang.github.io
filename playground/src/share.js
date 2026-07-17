@@ -1,12 +1,5 @@
-// Share the editor buffer through the URL: deflate-raw + base64url in the
-// location hash. Native browser APIs only — no dependencies. The hash keeps
-// the payload off the server (never sent in the request) and out of access
-// logs. A hash that fails to decode is silently ignored.
-
 async function pipe(stream, bytes) {
   const writer = stream.writable.getWriter();
-  // The error of a malformed input surfaces on the readable side; swallow the
-  // writable-side rejection so it never becomes an unhandled rejection.
   writer.write(bytes).catch(() => {});
   writer.close().catch(() => {});
   return new Uint8Array(await new Response(stream.readable).arrayBuffer());
@@ -33,13 +26,9 @@ export async function encodeSource(source) {
 }
 
 export async function decodeSource(packed) {
-  // fatal: reject bytes that are not valid UTF-8 so a corrupt payload throws
-  // (and falls back to the default source) instead of decoding to U+FFFD.
   return new TextDecoder("utf-8", { fatal: true }).decode(await inflate(fromBase64Url(packed)));
 }
 
-// The shared source encoded in the current location hash, or null when the
-// hash is empty or cannot be decoded.
 export async function sharedSourceFromHash() {
   const packed = location.hash.replace(/^#/, "");
   if (!packed) return null;

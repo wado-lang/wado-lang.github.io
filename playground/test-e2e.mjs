@@ -149,8 +149,6 @@ try {
     await globalThis.__playground.share();
     return location.hash;
   }, SHARED);
-  // Load the hash in a fresh page so the restored value can only come from
-  // decode-on-load, not from editor state left over in this page.
   const shared = await browser.newPage();
   await shared.goto(`http://127.0.0.1:${port}/playground/${hash}`, { waitUntil: "load" });
   await shared.waitForFunction(() => globalThis.__playground?.editor, null, { timeout: 30000 }).catch(() => {});
