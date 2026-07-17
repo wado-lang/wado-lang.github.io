@@ -18,7 +18,8 @@ Defined in `mise.toml`. The repo must be trusted once per machine
 | `mise run blog-build` | Generates the blog and docs: `content/*.md` → `_site/` and the upstream `docs/*.md` → `_site/docs/` via Sheaf (`wado run .`). |
 | `mise run blog-test` | Runs Sheaf's Wado tests (`wado test`).                     |
 | `mise run serve` | Serves the site at <http://localhost:8000> via `python3 -m http.server`. Foreground process — Ctrl-C to stop. |
-| `mise run playground-runtime` | Stages the playground runtime (wasm binaries, jco bundle, workers) from a **built** wado checkout into `playground/runtime/`. Set `WADO_DIR` to the checkout (default `.tmp/wado`); run `mise run playground-web-build` there first. |
+| `mise run fetch-playground` | Downloads the `wado-playground-web.tar.gz` release asset (`WADO_PLAYGROUND_VERSION` in `mise.toml`, default `latest`), verifies its checksum, and unpacks it into `playground/runtime/`. The deploy/CI path. |
+| `mise run playground-runtime` | Alternative to `fetch-playground` for local dev **against an unreleased wado**: stages the runtime from a locally built wado checkout (`WADO_DIR`, default `.tmp/wado`; run `mise run playground-web-build` there first). |
 | `mise run playground-build` | Bundles the playground page JS (`playground/src/` + Monaco) into `playground/app.js` etc. with esbuild (`npm ci` + `node build.mjs`). |
 | `mise run playground-test` | E2E smoke test for the built playground page: LSP ready → run → diagnostics → hover in a real Chromium (137+; `CHROME_PATH` overrides autodetection). |
 | `mise run clean` | Removes `.tmp/`, `_site/`, and the playground build outputs.    |
@@ -109,8 +110,10 @@ Committed here: `playground/index.html` (page shell) and `playground/src/`
 adapter, and `share.js` — the Share button). Everything coupled to the
 compiler — the wasm binaries, the jco bundle, the WASI shims, and the
 worker/client JS — is built in the wado repo (`wado-playground/web/`) and
-staged verbatim into the gitignored `playground/runtime/` by `mise run
-playground-runtime`.
+published as the `wado-playground-web.tar.gz` release asset, which
+`mise run fetch-playground` unpacks into the gitignored `playground/runtime/`
+(`WADO_PLAYGROUND_VERSION` in `mise.toml` selects the release; default
+`latest`).
 
 Share links carry the editor buffer in the URL hash: `share.js` deflates it
 (`CompressionStream("deflate-raw")`) and base64url-encodes it into `#<payload>`,
@@ -124,21 +127,24 @@ is never auto-run.
 Local dev:
 
 ```sh
-WADO_DIR=~/path/to/wado mise run playground-runtime  # after playground-web-build there
+mise run fetch-playground   # unpack the pinned release runtime into playground/runtime/
 mise run playground-build
-mise run serve   # → http://localhost:8000/playground/
+mise run serve              # → http://localhost:8000/playground/
 ```
 
-Deployment: `deploy.yml` builds the playground from source on every deploy
-via the `.github/actions/build-playground` composite action — it checks out
-`wado-lang/wado` (`main` by default, overridable via the action's `wado-ref`
-input), runs `wado-playground/web/build.sh` there (Rust → wasm, cached with
-Swatinem/rust-cache), stages the runtime, bundles the page, and copies it
-all into `dist/playground/`. `playground-ci.yml` runs the same build plus
-`playground/test-e2e.mjs` against the runner's Chrome on pull requests and
-`claude/**` pushes that touch the playground. Once the runtime ships as a
-`wado-playground-web` release asset from the wado repo, the from-source
-build should be replaced by a release fetch (and `wado-ref` retired).
+To iterate against unreleased wado changes, swap the first step for
+`WADO_DIR=~/path/to/wado mise run playground-runtime` (after
+`mise run playground-web-build` in that checkout).
+
+Deployment: `deploy.yml` fetches the runtime on every deploy via the
+`.github/actions/build-playground` composite action — `mise run
+fetch-playground` (pinned by `WADO_PLAYGROUND_VERSION`) + `mise run
+playground-build` — then copies the result into `dist/playground/`. No Rust
+toolchain or from-source build on the site side. `playground-ci.yml` runs the
+same fetch + build plus `playground/test-e2e.mjs` against the runner's Chrome
+on pull requests and `claude/**` pushes that touch the playground. Deploys
+track the latest wado release by default; set `WADO_PLAYGROUND_VERSION` to a
+tag to freeze or roll back the runtime.
 
 ## Writing posts
 
