@@ -17,7 +17,7 @@
 (function () {
   "use strict";
 
-  var GA_MEASUREMENT_ID = "G-XXXXXXXXXX";
+  var GA_MEASUREMENT_ID = "G-NVQNT18PGN";
   var STORAGE_KEY = "wado-analytics-consent";
 
   // Not configured yet: do nothing so a placeholder id never ships live.
