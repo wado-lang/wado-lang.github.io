@@ -1,6 +1,6 @@
 ---json
 {
-    "title": "The Untrodden Path: Building a Language, and a Parser Generator in It, with AI Agents",
+    "title": "The Untrodden Path: Building a Language with AI Agents",
     "date": "2026-07-16",
     "author": "FUJI Goro",
     "description": "In January 2026 I started building a programming language with 100% agentic coding. Six months and ~1,450 pull requests later, the largest program written in it beats ANTLR4, in a language no model was ever trained on.",
@@ -18,14 +18,13 @@ from my phone, in the gaps of a day with two small kids; my own contributions
 were sample programs and the odd test, nothing more. About 1,450 merged pull
 requests later, the largest program written in Wado is **Gale**, an
 ANTLR4-compatible parser generator. On the same SQLite grammar, a Gale parser
-runs roughly **88× faster** than ANTLR4's own Java, and its highlighter beats
-tree-sitter.
+runs roughly **88× faster** than ANTLR4's own Java.
 
 Here's the part I still can't get over: no model was ever trained on Wado. It
 didn't exist before this year. Every line of Gale is written in a language the
 agent learned on the spot, from the compiler's own error messages and a spec we
 wrote as we went. Large software, in a language unknown to the machine writing
-it. The untrodden path, twice over.
+it.
 
 ## I like languages more than I like programming
 
@@ -95,7 +94,7 @@ became something you can reason about.
 Today `codegen.rs` is a thin orchestrator with no complex logic left in it. The
 god file came apart by responsibility: typing into TIR, optimization into NIR,
 Wasm assembly into WIR. Each piece is separable, testable, and small enough to
-hold in your head. Across ~10,900 commits, only about one in seven adds a
+hold in your head. Across ~11,000 commits, only about one in fifteen adds a
 feature. The rest is refactoring, fixing, optimizing, documenting. People ask
 what steering agents feels like; it feels like that ratio.
 
