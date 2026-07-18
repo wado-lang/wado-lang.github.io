@@ -178,9 +178,13 @@
     .topnav nav { gap: 1rem; }
     .topnav .page-name { display: none; }
 
-    .toolbar { padding: 0.5rem 0.9rem; gap: 0.6rem; }
+    /* The buttons crowd out the right-aligned status; wrap it onto its own
+       full-width row so the "compiling · <phase>" progress stays readable. */
+    .toolbar { padding: 0.5rem 0.9rem; gap: 0.4rem 0.6rem; flex-wrap: wrap; }
     .toolbar .hint { display: none; } /* keyboard shortcut is meaningless on touch */
     #status {
+      margin-left: 0;
+      flex-basis: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
