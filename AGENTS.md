@@ -108,7 +108,7 @@ Chrome/Chromium 137+). The runtime and its pipeline are documented in
 Committed here: `playground/index.html` (page shell) and `playground/src/`
 (the esbuild-bundled UI: Monaco wiring, Monarch grammar, LSP↔Monaco
 adapter, and `share.js` — the Share button). Everything coupled to the
-compiler — the wasm binaries, the jco bundle, the WASI shims, and the
+compiler — the wasm binary (compiler + bundled LSP engine), the jco bundle, the WASI shims, and the
 worker/client JS — is built in the wado repo (`wado-playground/web/`) and
 published as the `wado-playground-web.tar.gz` release asset, which
 `mise run fetch-playground` unpacks into the gitignored `playground/runtime/`

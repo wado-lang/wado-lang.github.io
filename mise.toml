@@ -1,5 +1,5 @@
 [tools]
-"github:wado-lang/wado" = { version = "0.0.17", exe = "wado" }
+"github:wado-lang/wado" = { version = "0.0.19", exe = "wado" }
 
 [env]
 # The wado release whose wado-playground-web.tar.gz asset the playground
@@ -86,14 +86,15 @@ run = """
 set -euo pipefail
 WADO_DIR="${WADO_DIR:-.tmp/wado}"
 WEB="$WADO_DIR/wado-playground/web"
-if [ ! -f "$WEB/wado-playground.wasm" ] || [ ! -f "$WEB/wado-lsp.wasm" ]; then
+if [ ! -f "$WEB/wado-playground.wasm" ]; then
   echo "error: $WEB is not built — run 'mise run playground-web-build' in $WADO_DIR" >&2
   exit 1
 fi
 rm -rf playground/runtime
 mkdir -p playground/runtime
+# wado-playground.wasm bundles the LSP engine, so there is no separate LSP wasm.
 cp "$WEB"/playground.js "$WEB"/runner-worker.js "$WEB"/lsp-worker.js "$WEB"/lsp-client.js \
-   "$WEB"/wado-playground.wasm "$WEB"/wado-lsp.wasm "$WEB"/examples.json playground/runtime/
+   "$WEB"/wado-playground.wasm "$WEB"/examples.json playground/runtime/
 cp -r "$WEB"/vendor "$WEB"/shims playground/runtime/
 ls -la playground/runtime/
 """

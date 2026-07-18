@@ -56,7 +56,7 @@ fn resolve(dir: &String, url: &String) -> Option<String> {
     let norm = join_normalize(dir, &path);
     // A directory link resolves to that directory's index page.
     if path.ends_with("/") || path == "." {
-        return Option::Some(if norm.is_empty() { "index.html" } else { `{norm}/index.html` });
+        return Option::Some(if norm.is_empty() { "index.html" } else { `${norm}/index.html` });
     }
     return Option::Some(norm);
 }
@@ -69,7 +69,7 @@ fn map_absolute(rest: &String) -> Option<String> {
         return Option::Some(if r.is_empty() { "index.html" } else { r });
     }
     if let Some(r) = rest.strip_prefix("docs/") {
-        return Option::Some(if r.is_empty() { "docs/index.html" } else { `docs/{r}` });
+        return Option::Some(if r.is_empty() { "docs/index.html" } else { `docs/${r}` });
     }
     return Option::Some(*rest);
 }
