@@ -26,10 +26,10 @@ jobs:
       # mise hits the GitHub Releases API to install the `wado` CLI.
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up mise and install tools
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v4.2.0
 
       - name: Generate the blog
         run: |
@@ -59,7 +59,7 @@ jobs:
           touch dist/.nojekyll
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -72,4 +72,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
