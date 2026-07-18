@@ -85,7 +85,7 @@ fn rewrite_target(url: &String) -> String {
     if path.ends_with("AGENTS.md") || path.ends_with("CLAUDE.md") || escapes_dir(&path) {
         return github_source(&path, &frag);
     }
-    return `{base}.html{frag}`;
+    return `${base}.html${frag}`;
 }
 
 /// True when the relative target leaves its own directory (any `/` after an
@@ -99,7 +99,7 @@ fn escapes_dir(path: &String) -> bool {
 }
 
 fn github_source(path: &String, frag: &String) -> String {
-    return `https://github.com/wado-lang/wado/blob/main/{normalize_repo_path(path)}{frag}`;
+    return `https://github.com/wado-lang/wado/blob/main/${normalize_repo_path(path)}${frag}`;
 }
 
 /// Resolve a docs-relative path to its repo-root path (docs/ is the base).

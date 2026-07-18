@@ -98,6 +98,9 @@ function run() {
   runner.onmessage = (e) => {
     const msg = e.data;
     if (msg.type === "status") setStatus(PHASE_LABEL[msg.phase] ?? msg.phase);
+    // Fine-grained compiler phase (parse, monomorphize, codegen, …): refine the
+    // "compiling…" status so a slow (mobile) compile visibly stays alive.
+    else if (msg.type === "phase") setStatus(`compiling · ${msg.name}`);
     else if (msg.type === "stdout") appendOutput(msg.text, "out");
     else if (msg.type === "stderr") appendOutput(msg.text, "err");
     else if (msg.type === "done") {

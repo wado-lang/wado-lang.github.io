@@ -14,7 +14,7 @@ pub struct SiteFile {
 pub fn build_site(posts: &List<Post>) -> List<SiteFile> {
     let mut files: List<SiteFile> = [];
     for let p of posts {
-        files.push(SiteFile { path: `{p.slug}.html`, content: render_page(p) });
+        files.push(SiteFile { path: `${p.slug}.html`, content: render_page(p) });
     }
     files.push(SiteFile { path: "index.html", content: render_index(posts) });
     return files;
@@ -24,7 +24,7 @@ pub fn build_site(posts: &List<Post>) -> List<SiteFile> {
 pub fn build_docs(docs: &List<Doc>) -> List<SiteFile> {
     let mut files: List<SiteFile> = [];
     for let d of docs {
-        files.push(SiteFile { path: `docs/{d.slug}.html`, content: render_doc(d) });
+        files.push(SiteFile { path: `docs/${d.slug}.html`, content: render_doc(d) });
     }
     files.push(SiteFile { path: "docs/index.html", content: render_docs_index(docs) });
     return files;

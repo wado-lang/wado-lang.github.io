@@ -18,7 +18,7 @@ export fn run() with Stdout, Stderr, Preopens {
     let mut files = build_site(&posts);
     files.extend(&build_docs(&docs));
     write_site(&root, &files);
-    println(`sheaf: generated {files.len()} file(s) from {posts.len()} post(s) and {docs.len()} doc(s)`);
+    println(`sheaf: generated ${files.len()} file(s) from ${posts.len()} post(s) and ${docs.len()} doc(s)`);
     report_broken_links(&files);
 }
 
@@ -27,9 +27,9 @@ fn report_broken_links(files: &List<SiteFile>) with Stderr {
     if broken.is_empty() {
         return;
     }
-    eprintln(`sheaf: warning: {broken.len()} broken internal link(s):`);
+    eprintln(`sheaf: warning: ${broken.len()} broken internal link(s):`);
     for let b of broken {
-        eprintln(`  {b.page} -> {b.target}`);
+        eprintln(`  ${b.page} -> ${b.target}`);
     }
 }
 
@@ -38,14 +38,14 @@ fn read_posts(root: &Descriptor) -> List<Post> with Stderr {
     let content = match open_dir(root, "content") {
         Ok(d) => d,
         Err(e) => {
-            eprintln(`sheaf: cannot open content/ directory: {e:?}`);
+            eprintln(`sheaf: cannot open content/ directory: ${e:?}`);
             return posts;
         },
     };
     let names = match read_dir_names(&content) {
         Ok(n) => n,
         Err(e) => {
-            eprintln(`sheaf: cannot read content/ directory: {e:?}`);
+            eprintln(`sheaf: cannot read content/ directory: ${e:?}`);
             return posts;
         },
     };
@@ -54,9 +54,9 @@ fn read_posts(root: &Descriptor) -> List<Post> with Stderr {
             Some(slug) => match read_file(&content, name) {
                 Ok(source) => match build(slug, &source) {
                     Ok(post) => posts.push(post),
-                    Err(e) => eprintln(`sheaf: {name}: {e}`),
+                    Err(e) => eprintln(`sheaf: ${name}: ${e}`),
                 },
-                Err(e) => eprintln(`sheaf: cannot read {name}: {e:?}`),
+                Err(e) => eprintln(`sheaf: cannot read ${name}: ${e:?}`),
             },
             None => {
             },
@@ -70,14 +70,14 @@ fn read_docs(root: &Descriptor) -> List<Doc> with Stderr {
     let dir = match open_dir(root, ".tmp/wado/docs") {
         Ok(d) => d,
         Err(e) => {
-            eprintln(`sheaf: cannot open .tmp/wado/docs/ directory: {e:?}`);
+            eprintln(`sheaf: cannot open .tmp/wado/docs/ directory: ${e:?}`);
             return docs;
         },
     };
     let names = match read_dir_names(&dir) {
         Ok(n) => n,
         Err(e) => {
-            eprintln(`sheaf: cannot read .tmp/wado/docs/ directory: {e:?}`);
+            eprintln(`sheaf: cannot read .tmp/wado/docs/ directory: ${e:?}`);
             return docs;
         },
     };
@@ -88,7 +88,7 @@ fn read_docs(root: &Descriptor) -> List<Doc> with Stderr {
         match name.strip_suffix(".md") {
             Some(slug) => match read_file(&dir, name) {
                 Ok(source) => docs.push(build_doc(slug, &source)),
-                Err(e) => eprintln(`sheaf: cannot read {name}: {e:?}`),
+                Err(e) => eprintln(`sheaf: cannot read ${name}: ${e:?}`),
             },
             None => {
             },
@@ -104,7 +104,7 @@ fn write_site(root: &Descriptor, files: &List<SiteFile>) with Stderr {
         Err(ErrorCode::Exist) => {
         },
         Err(e) => {
-            eprintln(`sheaf: cannot create _site/: {e:?}`);
+            eprintln(`sheaf: cannot create _site/: ${e:?}`);
             return;
         },
     }
@@ -114,7 +114,7 @@ fn write_site(root: &Descriptor, files: &List<SiteFile>) with Stderr {
         Err(ErrorCode::Exist) => {
         },
         Err(e) => {
-            eprintln(`sheaf: cannot create _site/docs/: {e:?}`);
+            eprintln(`sheaf: cannot create _site/docs/: ${e:?}`);
             return;
         },
     }
@@ -126,7 +126,7 @@ fn write_site(root: &Descriptor, files: &List<SiteFile>) with Stderr {
     ).wait() {
         Ok(d) => d,
         Err(e) => {
-            eprintln(`sheaf: cannot open _site/: {e:?}`);
+            eprintln(`sheaf: cannot open _site/: ${e:?}`);
             return;
         },
     };
@@ -134,7 +134,7 @@ fn write_site(root: &Descriptor, files: &List<SiteFile>) with Stderr {
         match write_file(&site, f.path, &f.content) {
             Ok(_) => {
             },
-            Err(e) => eprintln(`sheaf: cannot write {f.path}: {e:?}`),
+            Err(e) => eprintln(`sheaf: cannot write ${f.path}: ${e:?}`),
         }
     }
 }

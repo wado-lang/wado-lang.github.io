@@ -53,7 +53,7 @@ pub fn parse(source: &String) -> Result<[FrontMatter, String], String> {
             return Result::Ok([fm, body]);
         },
         Err(e) => {
-            return Result::Err(`invalid front matter: {e:?}`);
+            return Result::Err(`invalid front matter: ${e:?}`);
         },
     }
 }
