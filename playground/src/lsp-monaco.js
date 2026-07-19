@@ -31,9 +31,6 @@ export async function attachWadoLsp(monaco, editor, runtimeBase) {
         message: d.message,
         severity: MARKER_SEVERITY[d.severity ?? 1] ?? 8,
         source: d.source,
-        // LSP DiagnosticTag values match Monaco MarkerTag (Unnecessary=1,
-        // Deprecated=2), so pass them straight through. Without this the
-        // dead-code lint's Unnecessary tag is lost and the range never fades.
         tags: d.tags,
       })),
     );
