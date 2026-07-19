@@ -31,6 +31,7 @@ export async function attachWadoLsp(monaco, editor, runtimeBase) {
         message: d.message,
         severity: MARKER_SEVERITY[d.severity ?? 1] ?? 8,
         source: d.source,
+        code: d.code,
         tags: d.tags,
       })),
     );
