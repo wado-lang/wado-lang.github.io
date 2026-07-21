@@ -10,7 +10,9 @@ if (!doNotTrack) init();
 
 function init() {
   window.dataLayer = window.dataLayer || [];
-  const gtag = (...args) => window.dataLayer.push(args);
+  const gtag = function () {
+    window.dataLayer.push(arguments);
+  };
   window.gtag = gtag;
 
   let stored = null;
