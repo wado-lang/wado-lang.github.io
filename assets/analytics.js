@@ -10,7 +10,13 @@ if (!doNotTrack) init();
 
 function init() {
   window.dataLayer = window.dataLayer || [];
-  const gtag = (...args) => window.dataLayer.push(args);
+  // gtag.js only treats a dataLayer entry as a command when it is the
+  // `arguments` object — a plain array is silently ignored, so this must be a
+  // regular function (arrow functions have no `arguments`), not `(...args) =>
+  // dataLayer.push(args)`.
+  const gtag = function () {
+    window.dataLayer.push(arguments);
+  };
   window.gtag = gtag;
 
   let stored = null;
