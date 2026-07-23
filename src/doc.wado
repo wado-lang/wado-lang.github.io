@@ -3,7 +3,7 @@
 //! heading (falling back to the slug), and relative `.md` links are rewritten
 //! to `.html` so the published set cross-links within `/docs/`.
 
-use { Marl } from "wado-lang:marl";
+use { render } from "./markdown.wado";
 
 pub struct Doc {
     pub slug: String,
@@ -13,8 +13,8 @@ pub struct Doc {
 
 pub fn build_doc(slug: String, source: &String) -> Doc {
     let title = extract_title(source, &slug);
-    let rendered = Marl::render(*source);
-    let body_html = rewrite_md_links(&rendered.html);
+    let rendered = render(*source);
+    let body_html = rewrite_md_links(&rendered);
     return Doc { slug, title, body_html };
 }
 

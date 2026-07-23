@@ -1,0 +1,11 @@
+//! The project's single Marl import — the one place the `Highlight` extension
+//! point is wired. Code blocks are highlighted by gale's Wado highlighter via
+//! provider composition (`highlight_provider.wado`); every other language and
+//! all inline text render exactly as plain Marl would.
+
+use { Marl } from "wado-lang:marl" with { provider: "./highlight_provider.wado" };
+
+/// Render Markdown to HTML, syntax-highlighting fenced code blocks.
+pub fn render(source: String) -> String {
+    return Marl::render_highlighted(source).html;
+}

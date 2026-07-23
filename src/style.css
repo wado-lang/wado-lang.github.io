@@ -6,6 +6,10 @@
   --rule: #e4ddd0;
   --code-bg: #f6f3ec;
   --accent: #7a1c1c; /* 朱 — vermillion seal */
+  --hl-keyword: #7a1c1c; /* seal vermillion */
+  --hl-string: #4f6b34; /* moss */
+  --hl-literal: #9c6410; /* ochre — numbers & builtin constants */
+  --hl-comment: #8c8578; /* faint ink */
   --max: 720px;
 }
 
@@ -121,6 +125,15 @@ pre {
   border-radius: 2px;
 }
 pre code { background: transparent; padding: 0; }
+
+/* Syntax highlighting — a restrained "wado-paper" palette for the tree-sitter
+   capture classes gale emits (`class="constant builtin"` → `.constant.builtin`).
+   Scoped to code blocks; identifiers (`.variable`) stay ink. */
+pre code .keyword { color: var(--hl-keyword); }
+pre code .string { color: var(--hl-string); }
+pre code .number { color: var(--hl-literal); }
+pre code .constant.builtin { color: var(--hl-literal); }
+pre code .comment { color: var(--hl-comment); font-style: italic; }
 
 blockquote {
   margin: 1.25rem 0;

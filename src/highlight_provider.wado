@@ -1,0 +1,27 @@
+//! Provider for marl's `Highlight` extension point. Wado code blocks are
+//! rendered by gale's syntax highlighter into `<span class="...">` markup;
+//! every other language is emitted as escaped plain text. Marl inserts the
+//! result verbatim, so the provider owns output safety — the non-Wado path
+//! mirrors Marl's own element-content escaping (`&`, `<`, `>`).
+
+use { highlight as highlight_wado } from "wado-lang:gale-highlight-wado";
+
+export fn highlight(code: String, lang: String) -> String {
+    if lang == "wado" {
+        return highlight_wado(code);
+    }
+    return escape_html(&code);
+}
+
+fn escape_html(s: &String) -> String {
+    let mut out = String::with_capacity(s.len());
+    for let c of s.chars() {
+        match c {
+            '&' => out.push_str(&"&amp;"),
+            '<' => out.push_str(&"&lt;"),
+            '>' => out.push_str(&"&gt;"),
+            _ => out.push(c),
+        }
+    }
+    return out;
+}

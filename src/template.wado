@@ -3,7 +3,7 @@
 //! ink-on-paper, vermillion seal accent); the stylesheet is inlined from
 //! `style.css` at compile time.
 
-use { Marl } from "wado-lang:marl";
+use { render } from "./markdown.wado";
 use { escape_text, escape_attr } from "./escape.wado";
 use { Post } from "./post.wado";
 use { Doc } from "./doc.wado";
@@ -95,7 +95,7 @@ fn page_foot() -> String {
 /// result is HTML-safe just like `escape_text`; a non-paragraph result (never
 /// expected for a one-line title) falls back to plain escaping.
 fn render_title_inline(title: &String) -> String {
-    let html = Marl::render(*title).html;
+    let html = render(*title);
     if let Some(rest) = html.trim().strip_prefix("<p>") {
         if let Some(inner) = rest.strip_suffix("</p>") {
             return inner;

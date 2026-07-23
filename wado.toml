@@ -13,4 +13,5 @@ authors = ["FUJI Goro <g.psy.va@gmail.com>"]
 default = "oci://ghcr.io"
 
 [dependencies]
-"wado-lang:marl" = { version = "^0.0.17" }
+"wado-lang:marl" = { version = "^0.0.22" }
+"wado-lang:gale-highlight-wado" = { version = "^0.0.22" }

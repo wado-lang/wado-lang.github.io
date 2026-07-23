@@ -1,6 +1,6 @@
 //! A rendered post: front-matter metadata plus the Marl-rendered body.
 
-use { Marl } from "wado-lang:marl";
+use { render } from "./markdown.wado";
 use { parse } from "./front_matter.wado";
 
 pub struct Post {
@@ -22,7 +22,7 @@ pub fn build(slug: String, source: &String) -> Result<Post, String> {
         date: fm.date,
         author: fm.author,
         description: fm.description,
-        body_html: Marl::render(body).html,
+        body_html: render(body),
         index: fm.index,
     });
 }
