@@ -126,9 +126,9 @@ pre {
 }
 pre code { background: transparent; padding: 0; }
 
-/* Syntax highlighting — a restrained "wado-paper" palette for the tree-sitter
-   capture classes gale emits (`class="constant builtin"` → `.constant.builtin`).
-   Scoped to code blocks; identifiers (`.variable`) stay ink. */
+/* Syntax highlighting for gale's capture classes, scoped to code blocks. A
+   dotted capture (`constant.builtin`) is emitted as `class="constant builtin"`,
+   hence the compound `.constant.builtin` selector. */
 pre code .keyword { color: var(--hl-keyword); }
 pre code .string { color: var(--hl-string); }
 pre code .number { color: var(--hl-literal); }

@@ -1,7 +1,5 @@
-//! The project's single Marl import — the one place the `Highlight` extension
-//! point is wired. Code blocks are highlighted by gale's Wado highlighter via
-//! provider composition (`highlight_provider.wado`); every other language and
-//! all inline text render exactly as plain Marl would.
+//! The single Marl import site: binds the `Highlight` extension point to gale's
+//! Wado highlighter so fenced code blocks are syntax-highlighted.
 
 use { Marl } from "wado-lang:marl" with { provider: "./highlight_provider.wado" };
 

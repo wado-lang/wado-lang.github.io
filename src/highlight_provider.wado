@@ -1,8 +1,6 @@
-//! Provider for marl's `Highlight` extension point. Wado code blocks are
-//! rendered by gale's syntax highlighter into `<span class="...">` markup;
-//! every other language is emitted as escaped plain text. Marl inserts the
-//! result verbatim, so the provider owns output safety — the non-Wado path
-//! mirrors Marl's own element-content escaping (`&`, `<`, `>`).
+//! Satisfies marl's `Highlight`: Wado goes through gale's highlighter, other
+//! languages are escaped. Marl inserts the result verbatim, so the provider
+//! owns output safety — hence the escape on the non-Wado path.
 
 use { highlight as highlight_wado } from "wado-lang:gale-highlight-wado";
 
