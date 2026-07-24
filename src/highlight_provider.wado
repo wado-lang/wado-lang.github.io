@@ -1,0 +1,25 @@
+//! Satisfies marl's `Highlight`: Wado goes through gale's highlighter, other
+//! languages are escaped. Marl inserts the result verbatim, so the provider
+//! owns output safety — hence the escape on the non-Wado path.
+
+use { highlight as highlight_wado } from "wado-lang:gale-highlight-wado";
+
+export fn highlight(code: String, lang: String) -> String {
+    if lang == "wado" {
+        return highlight_wado(code);
+    }
+    return escape_html(&code);
+}
+
+fn escape_html(s: &String) -> String {
+    let mut out = String::with_capacity(s.len());
+    for let c of s.chars() {
+        match c {
+            '&' => out.push_str(&"&amp;"),
+            '<' => out.push_str(&"&lt;"),
+            '>' => out.push_str(&"&gt;"),
+            _ => out.push(c),
+        }
+    }
+    return out;
+}

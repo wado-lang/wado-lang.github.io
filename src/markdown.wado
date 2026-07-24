@@ -1,0 +1,9 @@
+//! The single Marl import site: binds the `Highlight` extension point to gale's
+//! Wado highlighter so fenced code blocks are syntax-highlighted.
+
+use { Marl } from "wado-lang:marl" with { provider: "./highlight_provider.wado" };
+
+/// Render Markdown to HTML, syntax-highlighting fenced code blocks.
+pub fn render(source: String) -> String {
+    return Marl::render_highlighted(source).html;
+}
