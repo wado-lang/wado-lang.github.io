@@ -92,7 +92,5 @@ test "build_doc truncates a long summary without splitting a character" {
     assert !paragraph.is_char_boundary(SUMMARY_MAX);
 
     let doc = build_doc("x", &`# T\n\n${paragraph}\n`);
-    assert doc.summary.ends_with("…");
-    assert doc.summary.chars().count() == SUMMARY_MAX;
-    assert !doc.summary.contains("\u{00e9}");
+    assert doc.summary == `${"x".repeat(SUMMARY_MAX - 1)}…`;
 }

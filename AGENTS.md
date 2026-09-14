@@ -75,8 +75,9 @@ The specification, briefly:
   construction: raw HTML is escaped rather than passed through, and link
   destinations are scheme-filtered.
 - An unreadable input, an unparseable post, or an unwritable output fails the
-  run with a non-zero status. A site generated in part but reported as complete
-  is one the deploy publishes. The link check below is the one exception.
+  run with a non-zero status. The deploy publishes whatever is left in
+  `_site/`, so a run that stops early must not also report success. The link
+  check below is the one exception.
 
 ### Docs
 
@@ -99,9 +100,9 @@ rendered through the same Marl + template + stylesheet as the blog, into
   library (`stdlib-`), research notes (`research-`), and everything else under
   "Other". `src/doc.wado` owns the classifier (`group_of`) and the collector
   (`in_group`, slug-sorted), which `llms.txt` shares. Marl emits GFM heading
-  `id`s, so in-page `#anchor` links resolve.
-  `render` also returns the heading outline (`RenderResult.headings`), unused
-  for now, but available if a per-page table of contents is wanted.
+  `id`s, so in-page `#anchor` links resolve. `render` also returns the heading
+  outline (`RenderResult.headings`), unused for now, but available if a
+  per-page table of contents is wanted.
 
 ### llms.txt
 
@@ -199,10 +200,10 @@ tag to freeze or roll back the runtime.
 House style for `src/*.wado`:
 
 - State an invariant as an assertion, never as a comment. An `assert` is
-  checked on every run and fails loudly the day it stops holding; a comment
-  just goes stale and misleads the next reader. This covers a test's fixture
-  too: if the case a test means to exercise depends on the fixture being built
-  a particular way, assert that, or the test quietly stops exercising it.
+  checked on every run and fails the day it stops holding; a comment goes stale
+  and misleads the next reader. This covers test fixtures too. When a test only
+  exercises its case because the fixture is built a certain way, assert that —
+  otherwise the fixture can drift and the test still passes, guarding nothing.
 - Write a comment only for what the code cannot say: a reason, a constraint, an
   upstream quirk. If a comment restates the code, rename and decompose until it
   is redundant, then delete it.

@@ -61,37 +61,30 @@ fn slug_of(name: &String) -> String {
     return slug;
 }
 
+/// An `fs` call as this module's `Result`. `FsError` already names the path.
+fn io<T>(result: Result<T, fs::FsError>) -> Result<T, String> {
+    return match result {
+        Ok(v) => Result::Ok(v),
+        Err(e) => Result::Err(`${e}`),
+    };
+}
+
 /// Every `*.md` in `dir` except the excluded names, as `[name, source]`.
 fn read_markdown(dir: &String, exclude: &List<String>) -> Result<List<[String, String]>, String> with Preopens {
     let mut out: List<[String, String]> = [];
-    let entries = match fs::read_dir(dir) {
-        Ok(e) => e,
-        Err(e) => {
-            return Result::Err(`${e}`);
-        },
-    };
-    for let entry of entries {
+    for let entry of io(fs::read_dir(dir))? {
         if !entry.name.ends_with(".md") || exclude.contains(&entry.name) {
             continue;
         }
-        match fs::read_to_string(&`${dir}/${entry.name}`) {
-            Ok(source) => out.push([entry.name, source]),
-            Err(e) => {
-                return Result::Err(`${e}`);
-            },
-        }
+        out.push([entry.name, io(fs::read_to_string(&`${dir}/${entry.name}`))?]);
     }
     return Result::Ok(out);
 }
 
 fn write_site(files: &List<SiteFile>) -> Result<(), String> with Preopens {
-    if let Err(e) = fs::create_dir_all(&`${OUT_DIR}/docs`) {
-        return Result::Err(`${e}`);
-    }
+    io(fs::create_dir_all(&`${OUT_DIR}/docs`))?;
     for let f of files {
-        if let Err(e) = fs::write(&`${OUT_DIR}/${f.path}`, &f.content) {
-            return Result::Err(`${e}`);
-        }
+        io(fs::write(&`${OUT_DIR}/${f.path}`, &f.content))?;
     }
     return Result::Ok(());
 }

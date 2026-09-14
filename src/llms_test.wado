@@ -71,20 +71,23 @@ test "render_llms drops the description when a page has no summary" {
     assert out.contains("- [WASI Standard Library](https://wado-lang.org/docs/stdlib-wasi.md)\n");
 }
 
+fn entry_url(line: &String) -> String {
+    let Some(open) = line.find("](") else {
+        panic(`entry carries no link: ${line}`);
+    };
+    let rest = line.substr_bytes(open + 2, line.len());
+    let Some(close) = rest.find(")") else {
+        panic(`entry has an unterminated link: ${line}`);
+    };
+    return rest.substr_bytes(0, close);
+}
+
 test "render_llms links a page as Markdown and a directory with a trailing slash" {
-    let out = render_llms(&posts(), &docs());
-    for let line of out.lines() {
+    for let line of render_llms(&posts(), &docs()).lines() {
         if !line.starts_with("- [") {
             continue;
         }
-        let Some(open) = line.find("](") else {
-            panic(`entry is not a Markdown link: ${line}`);
-        };
-        let rest = line.substr_bytes(open + 2, line.len());
-        let Some(close) = rest.find(")") else {
-            panic(`entry is not a Markdown link: ${line}`);
-        };
-        let url = rest.substr_bytes(0, close);
+        let url = entry_url(&line);
         assert url.ends_with(".md") || url.ends_with("/"), `CONVENTION does not describe ${url}`;
     }
 }
