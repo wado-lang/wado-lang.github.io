@@ -1,0 +1,54 @@
+use { render_llms } from "./llms.wado";
+use { build_doc, Doc } from "./doc.wado";
+use { Post } from "./post.wado";
+
+fn docs() -> List<Doc> {
+    return [
+        build_doc("cheatsheet", &"# Wado Cheatsheet\n\nQuick reference for Wado syntax.\n"),
+        build_doc("stdlib-core-json", &"# core:json\n\nJSON serialization.\n"),
+        build_doc("wep-2026-01-10-wasm-import", &"# WEP: Wasm Module Import\n\nImporting a core module.\n"),
+        build_doc("research-wasm-cm", &"# Research: CM\n\nNotes.\n"),
+        build_doc("compiler", &"# Wado Compiler\n\nThe compiler translates source to Wasm.\n"),
+    ];
+}
+
+fn posts() -> List<Post> {
+    return [
+        Post { slug: "hello", title: "Hello", date: "2026-03-01", author: "FUJI Goro", description: "A first look.", body_md: "", body_html: "", index: true },
+        Post { slug: "draft", title: "Draft", date: "2026-04-01", author: "FUJI Goro", description: "", body_md: "", body_html: "", index: false },
+    ];
+}
+
+test "render_llms opens with the llms.txt header and summary" {
+    let out = render_llms(&posts(), &docs());
+    assert out.starts_with("# Wado\n\n> ");
+    assert out.contains("\n## Start here\n");
+    assert out.contains("\n## Standard library\n");
+    assert out.contains("\n## Blog\n");
+    assert out.contains("\n## Optional\n");
+}
+
+test "render_llms links the Markdown copy of each page" {
+    let out = render_llms(&posts(), &docs());
+    assert out.contains("- [Cheatsheet](https://wado-lang.org/docs/cheatsheet.md): ");
+    assert out.contains("- [core:json](https://wado-lang.org/docs/stdlib-core-json.md): JSON serialization.\n");
+    assert out.contains("- [Hello](https://wado-lang.org/blog/hello.md): A first look.\n");
+}
+
+test "render_llms files toolchain docs under Optional and leaves out WEPs and research notes" {
+    let out = render_llms(&posts(), &docs());
+    assert out.contains("- [Wado Compiler](https://wado-lang.org/docs/compiler.md): ");
+    assert !out.contains("wep-2026-01-10-wasm-import.md");
+    assert !out.contains("research-wasm-cm.md");
+}
+
+test "render_llms omits unlisted posts and a curated page that is not published" {
+    let out = render_llms(&posts(), &docs());
+    assert !out.contains("draft.md");
+    assert !out.contains("/docs/spec.md");
+}
+
+test "render_llms drops the description when a page has no summary" {
+    let out = render_llms(&[], &[build_doc("stdlib-wasi", &"# WASI Standard Library\n\n## wasi:cli\n")]);
+    assert out.contains("- [WASI Standard Library](https://wado-lang.org/docs/stdlib-wasi.md)\n");
+}

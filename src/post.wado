@@ -9,6 +9,7 @@ pub struct Post {
     pub date: String,
     pub author: String,
     pub description: String,
+    pub body_md: String,
     pub body_html: String,
     pub index: bool,
 }
@@ -22,6 +23,7 @@ pub fn build(slug: String, source: &String) -> Result<Post, String> {
         date: fm.date,
         author: fm.author,
         description: fm.description,
+        body_md: body,
         body_html: render(body),
         index: fm.index,
     });

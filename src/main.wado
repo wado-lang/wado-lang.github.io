@@ -2,7 +2,7 @@ use { println, eprintln, Stdout, Stderr } from "core:cli";
 use { Preopens, Descriptor, Filesize, PathFlags, OpenFlags, DescriptorFlags, ErrorCode } from "wasi:filesystem";
 use { build, Post } from "./post.wado";
 use { build_doc, Doc } from "./doc.wado";
-use { build_site, build_docs, SiteFile } from "./site.wado";
+use { build_site, build_docs, build_llms, SiteFile } from "./site.wado";
 use { check_links } from "./linkcheck.wado";
 
 export fn run() with Stdout, Stderr, Preopens {
@@ -17,6 +17,7 @@ export fn run() with Stdout, Stderr, Preopens {
     let docs = read_docs(&root);
     let mut files = build_site(&posts);
     files.extend(&build_docs(&docs));
+    files.push(build_llms(&posts, &docs));
     write_site(&root, &files);
     println(`sheaf: generated ${files.len()} file(s) from ${posts.len()} post(s) and ${docs.len()} doc(s)`);
     report_broken_links(&files);

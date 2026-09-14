@@ -1,0 +1,140 @@
+//! `/llms.txt` — the index defined by <https://llmstxt.org>: a short project
+//! summary, then annotated links to the Markdown copy of every page an agent is
+//! likely to need. The long tail sits under `## Optional`, which a client may
+//! skip when its context is tight.
+
+use { Post } from "./post.wado";
+use { Doc, DocGroup, group_of } from "./doc.wado";
+use { SITE_URL } from "./template.wado";
+
+global TAGLINE: String = "Type-safe like Rust, familiar like TypeScript, compiled to clean Wasm.";
+
+global INTRO: String = "Wado is a statically-typed, garbage-collected language that targets exactly one platform: WebAssembly. It compiles to a Wasm component (Wasm 3.0 with GC), speaks the Component Model and WASI 0.3, and replaces the borrow checker with value semantics plus an effect system. Most of the syntax is Rust-compatible by design.";
+
+global CONVENTION: String = "Every link below points at Markdown. The same page is published as HTML at the same path with `.html` in place of `.md`. Two families are large enough to be left out of this index and are addressed by slug instead: the Wado Evolution Proposals, one per language feature, at `/docs/wep-<date>-<name>.md`, and the research notes behind them at `/docs/research-<name>.md`. The documentation index linked under `## Optional` lists both.";
+
+pub fn render_llms(posts: &List<Post>, docs: &List<Doc>) -> String {
+    let mut out = String::new();
+    out.push_str(&"# Wado\n\n");
+    out.push_str(&`> ${TAGLINE}\n\n`);
+    out.push_str(&`${INTRO}\n\n`);
+    out.push_str(&`${CONVENTION}\n`);
+    out.push_str(&start_here(docs));
+    out.push_str(&section("Standard library", &in_group(docs, DocGroup::Stdlib)));
+    out.push_str(&blog(posts));
+    out.push_str(&optional(docs));
+    return out;
+}
+
+/// The curated head of the index: the three pages that answer "how do I write
+/// Wado", then the place to run it.
+fn start_here(docs: &List<Doc>) -> String {
+    let mut out = "\n## Start here\n\n";
+    out.push_str(
+        &curated(
+            docs,
+            "cheatsheet",
+            "Cheatsheet",
+            "the whole syntax in one page — enough to write Wado without reading anything else",
+        ),
+    );
+    out.push_str(
+        &curated(
+            docs,
+            "spec",
+            "Language specification",
+            "the normative reference for types, traits, effects, modules, and how each maps to Wasm",
+        ),
+    );
+    out.push_str(&curated(docs, "design-philosophy", "Design philosophy", "why Wado is shaped the way it is"));
+    out.push_str(
+        &entry(
+            `${SITE_URL}/playground/`,
+            "Playground",
+            "compiler, language server, and the program itself, all running in the browser",
+        ),
+    );
+    return out;
+}
+
+fn blog(posts: &List<Post>) -> String {
+    let mut published: List<Post> = [];
+    for let p of posts {
+        if p.index {
+            published.push(*p);
+        }
+    }
+    if published.is_empty() {
+        return String::new();
+    }
+    published.sort_by(|a: &Post, b: &Post| b.date.cmp(&a.date));
+    let mut out = "\n## Blog\n\n";
+    for let p of published {
+        out.push_str(&entry(`${SITE_URL}/blog/${p.slug}.md`, p.title, p.description));
+    }
+    return out;
+}
+
+fn optional(docs: &List<Doc>) -> String {
+    let mut out = "\n## Optional\n\n";
+    out.push_str(
+        &entry(
+            `${SITE_URL}/docs/`,
+            "Documentation index",
+            "every published page, including the Wado Evolution Proposals and the research notes",
+        ),
+    );
+    for let d of sorted(&in_group(docs, DocGroup::Other)) {
+        out.push_str(&entry(doc_url(&d.slug), d.title, d.summary));
+    }
+    return out;
+}
+
+fn section(heading: String, docs: &List<Doc>) -> String {
+    if docs.is_empty() {
+        return String::new();
+    }
+    let mut out = `\n## ${heading}\n\n`;
+    for let d of sorted(docs) {
+        out.push_str(&entry(doc_url(&d.slug), d.title, d.summary));
+    }
+    return out;
+}
+
+/// A hand-written entry for one doc, skipped when that doc is not published so
+/// the index never names a page that is not there.
+fn curated(docs: &List<Doc>, slug: String, title: String, description: String) -> String {
+    for let d of docs {
+        if d.slug == slug {
+            return entry(doc_url(&d.slug), title, description);
+        }
+    }
+    return String::new();
+}
+
+fn entry(url: String, title: String, description: String) -> String {
+    if description.is_empty() {
+        return `- [${title}](${url})\n`;
+    }
+    return `- [${title}](${url}): ${description}\n`;
+}
+
+fn doc_url(slug: &String) -> String {
+    return `${SITE_URL}/docs/${slug}.md`;
+}
+
+fn in_group(docs: &List<Doc>, group: DocGroup) -> List<Doc> {
+    let mut out: List<Doc> = [];
+    for let d of docs {
+        if group_of(&d.slug) == group {
+            out.push(*d);
+        }
+    }
+    return out;
+}
+
+fn sorted(docs: &List<Doc>) -> List<Doc> {
+    let mut out = *docs;
+    out.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
+    return out;
+}

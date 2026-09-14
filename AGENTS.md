@@ -56,11 +56,15 @@ The specification, briefly:
   for now; `index` defaults to `true`.
 
 - The slug is the file stem: `content/hello.md` → `_site/hello.html`.
-- Outputs: an index page listing posts newest-first, plus one page per post.
+- Outputs: an index page listing posts newest-first, plus one page per post
+  and a Markdown copy of it (`hello.md`) carrying the heading and byline in
+  place of the front matter.
 - `"index": false` makes a post unlisted: omitted from the index page and
-  stamped with a `noindex, nofollow` robots meta tag, but its page is still
-  generated and reachable by direct URL (a shareable preview). The repo is
-  public, so unlisted is not private.
+  `llms.txt`, stamped with a `noindex, nofollow` robots meta tag, and given no
+  Markdown copy — a `.md` file carries no meta tag, so a copy would hand a
+  crawler what the page asks it to skip. The HTML page is still generated and
+  reachable by direct URL (a shareable preview). The repo is public, so
+  unlisted is not private.
 - Markdown is a CommonMark/GFM subset (Marl). HTML output is safe by
   construction: raw HTML is escaped rather than passed through, and link
   destinations are scheme-filtered.
@@ -78,6 +82,9 @@ rendered through the same Marl + template + stylesheet as the blog, into
 - Relative `.md` link targets are rewritten to `.html`, so the whole set
   cross-links within `/docs/`. Absolute URLs and other schemes are left alone;
   links to the two excluded files point at their GitHub source instead.
+- The upstream source is also copied verbatim beside each page, so
+  `/docs/spec.html` has `/docs/spec.md` next to it. Its relative `.md` links
+  need no rewriting — they resolve against the sibling copies.
 - The docs index (`/docs/`) groups pages by slug prefix: a language reference
   (`spec`, `cheatsheet`, `design-philosophy`), then WEPs (`wep-`), the standard
   library (`stdlib-`),
@@ -85,6 +92,35 @@ rendered through the same Marl + template + stylesheet as the blog, into
   heading `id`s, so in-page `#anchor` links
   resolve. `render` also returns the heading outline (`RenderResult.headings`),
   unused for now — available if a per-page table of contents is wanted.
+
+### llms.txt
+
+Sheaf writes `/llms.txt`, the index defined by <https://llmstxt.org>: a project
+summary, then annotated links to the Markdown copy of each page. `src/llms.wado`
+builds it; `src/doc.wado` supplies the per-doc one-line summary (the first
+sentence after the level-1 heading, with Markdown links flattened) and
+`group_of`, the slug classifier the docs index shares.
+
+What goes where:
+
+- `## Start here` — cheatsheet, spec, design philosophy, playground. Curated,
+  with hand-written descriptions, and an entry is dropped when its doc is not
+  published, so the index never names a missing page.
+- `## Standard library` — every `stdlib-` doc.
+- `## Blog` — listed posts, newest first, described by their front matter.
+- `## Optional` — the docs index plus the toolchain docs (compiler, optimizer,
+  formatter, …). A client short on context may skip the whole section.
+
+The WEPs and research notes are left out: 168 + 14 entries would swamp the
+index, and both families are addressable by slug (`/docs/wep-<date>-<name>.md`,
+`/docs/research-<name>.md`), which the preamble states.
+
+There is no `llms-full.txt`. It is not part of the llmstxt.org proposal, the
+reference plus the standard library concatenate to ~630 KB (~160K tokens), and
+`cheatsheet.md` already is the single file that lets a model write Wado.
+
+Sheaf writes `llms.txt` at the blog root; the deploy moves it to the site root,
+which is the only place a client looks for it.
 
 After generating the site, Sheaf runs an internal link check (`linkcheck.wado`)
 over the output and prints any link whose target is not a generated file. It is

@@ -6,10 +6,11 @@
 use { render } from "./markdown.wado";
 use { escape_text, escape_attr } from "./escape.wado";
 use { Post } from "./post.wado";
-use { Doc } from "./doc.wado";
+use { Doc, group_of } from "./doc.wado";
 
 global STYLE: String = #include_str("./style.css");
 global SITE_NAME: String = "The Wado Blog";
+pub global SITE_URL: String = "https://wado-lang.org";
 global BLOG_URL: String = "https://wado-lang.org/blog";
 global DOCS_URL: String = "https://wado-lang.org/docs";
 global OG_IMAGE: String = "https://wado-lang.org/assets/og-image.svg";
@@ -184,16 +185,12 @@ pub fn render_docs_index(docs: &List<Doc>) -> String {
     let mut research: List<Doc> = [];
     let mut other: List<Doc> = [];
     for let d of docs {
-        if d.slug == "spec" || d.slug == "cheatsheet" || d.slug == "design-philosophy" {
-            reference.push(*d);
-        } else if d.slug.starts_with("wep-") {
-            weps.push(*d);
-        } else if d.slug.starts_with("stdlib-") {
-            stdlib.push(*d);
-        } else if d.slug.starts_with("research-") {
-            research.push(*d);
-        } else {
-            other.push(*d);
+        match group_of(&d.slug) {
+            Reference => reference.push(*d),
+            Wep => weps.push(*d),
+            Stdlib => stdlib.push(*d),
+            Research => research.push(*d),
+            Other => other.push(*d),
         }
     }
     reference.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));

@@ -5,17 +5,136 @@
 
 use { render } from "./markdown.wado";
 
+global SUMMARY_MAX: i32 = 200;
+
 pub struct Doc {
     pub slug: String,
     pub title: String,
+    pub summary: String,
+    pub source: String,
     pub body_html: String,
+}
+
+/// How a doc is filed on the index and in `llms.txt`, decided by its slug.
+pub enum DocGroup {
+    Reference,
+    Wep,
+    Stdlib,
+    Research,
+    Other,
+}
+
+pub fn group_of(slug: &String) -> DocGroup {
+    if *slug == "spec" || *slug == "cheatsheet" || *slug == "design-philosophy" {
+        return DocGroup::Reference;
+    }
+    if slug.starts_with("wep-") {
+        return DocGroup::Wep;
+    }
+    if slug.starts_with("stdlib-") {
+        return DocGroup::Stdlib;
+    }
+    if slug.starts_with("research-") {
+        return DocGroup::Research;
+    }
+    return DocGroup::Other;
 }
 
 pub fn build_doc(slug: String, source: &String) -> Doc {
     let title = extract_title(source, &slug);
+    let summary = extract_summary(source);
     let rendered = render(*source);
     let body_html = rewrite_md_links(&rendered);
-    return Doc { slug, title, body_html };
+    return Doc { slug, title, summary, source: *source, body_html };
+}
+
+/// The first sentence of the paragraph following the level-1 heading, as a
+/// one-line summary. Empty when the heading is followed straight by a
+/// subsection.
+fn extract_summary(source: &String) -> String {
+    let joined = strip_links(&lead_paragraph(source));
+    let shortened = shorten(&first_sentence(&joined));
+    let trimmed = shortened.trim_end();
+    // A lead-in ending in a colon introduces a list the summary does not carry.
+    return match trimmed.strip_suffix(":") {
+        Some(t) => t.trim_end(),
+        None => trimmed,
+    };
+}
+
+fn lead_paragraph(source: &String) -> String {
+    let mut seen_title = false;
+    let mut parts: List<String> = [];
+    for let line of source.lines() {
+        let t = line.trim();
+        if !seen_title {
+            if t.starts_with("# ") {
+                seen_title = true;
+            }
+            continue;
+        }
+        if t.is_empty() {
+            if parts.is_empty() {
+                continue;
+            }
+            break;
+        }
+        if t.starts_with("#") || t.starts_with("<!--") || t.starts_with("```") {
+            break;
+        }
+        parts.push(t);
+    }
+    return parts.join(" ");
+}
+
+fn first_sentence(s: &String) -> String {
+    return match s.find(". ") {
+        Some(i) => s.substr_bytes(0, i + 1),
+        None => *s,
+    };
+}
+
+fn shorten(s: &String) -> String {
+    if s.len() <= SUMMARY_MAX {
+        return *s;
+    }
+    let head = s.substr_bytes(0, SUMMARY_MAX);
+    let cut = match head.rfind(" ") {
+        Some(i) => head.substr_bytes(0, i),
+        None => head,
+    };
+    return `${cut}…`;
+}
+
+/// Replace `[text](url)` and a bare `[text]` reference with `text`: a summary is
+/// republished at a path the doc's relative links do not resolve from.
+fn strip_links(s: &String) -> String {
+    let mut out = String::new();
+    let mut rest = *s;
+    loop {
+        let Some(open) = rest.find("[") else {
+            out.push_str(&rest);
+            return out;
+        };
+        let after_open = rest.substr_bytes(open + 1, rest.len());
+        let Some(close_bracket) = after_open.find("]") else {
+            out.push_str(&rest);
+            return out;
+        };
+        let label = after_open.substr_bytes(0, close_bracket);
+        let tail = after_open.substr_bytes(close_bracket + 1, after_open.len());
+        out.push_str(&rest.substr_bytes(0, open));
+        out.push_str(&label);
+        if !tail.starts_with("(") {
+            rest = tail;
+            continue;
+        }
+        let Some(close_paren) = tail.find(")") else {
+            out.push_str(&tail);
+            return out;
+        };
+        rest = tail.substr_bytes(close_paren + 1, tail.len());
+    }
 }
 
 /// The first `# ` heading, trimmed; the slug if there is none.

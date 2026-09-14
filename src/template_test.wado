@@ -8,6 +8,7 @@ test "render_page emits a full page and escapes the title" {
         date: "2026-07-05",
         author: "FUJI Goro",
         description: "An intro to Wado",
+        body_md: "",
         body_html: "<p>x</p>",
         index: true,
     };
@@ -31,6 +32,7 @@ test "render_page emits Open Graph and Twitter metadata" {
         date: "2026-07-05",
         author: "FUJI Goro",
         description: "An intro to Wado",
+        body_md: "",
         body_html: "<p>x</p>",
         index: true,
     };
@@ -52,6 +54,7 @@ test "render_page falls back to the title when no description is set" {
         date: "2026-07-05",
         author: "FUJI Goro",
         description: "",
+        body_md: "",
         body_html: "<p>x</p>",
         index: true,
     };
@@ -65,6 +68,7 @@ test "render_page adds a noindex meta for unlisted posts" {
         date: "d",
         author: "FUJI Goro",
         description: "",
+        body_md: "",
         body_html: "<p>y</p>",
         index: false,
     };
@@ -73,9 +77,9 @@ test "render_page adds a noindex meta for unlisted posts" {
 
 test "render_index lists published posts newest-first and omits unlisted" {
     let posts: List<Post> = [
-        Post { slug: "b", title: "B", date: "2026-02-01", author: "FUJI Goro", description: "", body_html: "", index: true },
-        Post { slug: "a", title: "A", date: "2026-03-01", author: "FUJI Goro", description: "", body_html: "", index: true },
-        Post { slug: "d", title: "Draft", date: "2026-04-01", author: "FUJI Goro", description: "", body_html: "", index: false },
+        Post { slug: "b", title: "B", date: "2026-02-01", author: "FUJI Goro", description: "", body_md: "", body_html: "", index: true },
+        Post { slug: "a", title: "A", date: "2026-03-01", author: "FUJI Goro", description: "", body_md: "", body_html: "", index: true },
+        Post { slug: "d", title: "Draft", date: "2026-04-01", author: "FUJI Goro", description: "", body_md: "", body_html: "", index: false },
     ];
     let html = render_index(&posts);
     assert html.contains("<h1 class=\"page-title\">The Wado Blog</h1>");
