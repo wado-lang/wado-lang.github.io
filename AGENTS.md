@@ -139,7 +139,7 @@ reference plus the standard library concatenate to ~630 KB (~160K tokens), and
 
 After generating the site, Sheaf runs an internal link check (`linkcheck.wado`)
 over the output and prints any link whose target is not a generated file. It is
-a warning only — the build never fails on it. External URLs, `#fragment`-only
+a warning only. The build never fails on it. External URLs, `#fragment`-only
 links, and `/assets/*` are out of scope. Broken links it reports are typically
 upstream doc typos; fix those in the Wado repo.
 
@@ -204,13 +204,17 @@ tag to freeze or roll back the runtime.
 House style for `src/*.wado`:
 
 - State an invariant as an assertion, never as a comment. An `assert` is
-  checked on every run and fails the day it stops holding; a comment goes stale
-  and misleads the next reader. This covers test fixtures too. When a test only
-  exercises its case because the fixture is built a certain way, assert that —
-  otherwise the fixture can drift and the test still passes, guarding nothing.
+  checked on every run and fails the day it stops holding. A comment goes stale
+  and misleads the next reader.
+- This covers test fixtures. When a test only exercises its case because the
+  fixture is built a certain way, assert that. A fixture free to drift leaves a
+  test that passes while guarding nothing.
 - Write a comment only for what the code cannot say: a reason, a constraint, an
   upstream quirk. If a comment restates the code, rename and decompose until it
   is redundant, then delete it.
+- Post fixtures live in `src/fixture.wado`. Reach for `post(...)` and override
+  what a test is about with `Post { ..post(...), body_md: "…" }`, rather than
+  writing the struct out again.
 
 ## Writing posts
 

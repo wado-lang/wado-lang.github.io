@@ -10,8 +10,8 @@ pub struct SiteFile {
     pub content: String,
 }
 
-/// A page per post (unlisted ones included, so they stay reachable by URL), the
-/// index, and a Markdown copy of each listed post — only HTML carries `noindex`.
+/// A page per post, the index, and a Markdown copy of each listed post. An
+/// unlisted post gets no copy, because a `.md` file cannot carry `noindex`.
 pub fn build_site(posts: &List<Post>) -> List<SiteFile> {
     let mut files: List<SiteFile> = [];
     for let p of posts {
@@ -24,7 +24,7 @@ pub fn build_site(posts: &List<Post>) -> List<SiteFile> {
     return files;
 }
 
-/// Produce the docs subtree: one page per doc under `docs/`, plus its index.
+/// The docs subtree: one page and one Markdown copy per doc, plus its index.
 pub fn build_docs(docs: &List<Doc>) -> List<SiteFile> {
     let mut files: List<SiteFile> = [];
     for let d of docs {

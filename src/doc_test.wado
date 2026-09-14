@@ -74,7 +74,7 @@ test "build_doc leaves the summary empty when a subsection follows the heading" 
 test "build_doc truncates a long summary on a word boundary" {
     let long = "word ".repeat(60);
     let doc = build_doc("long", &`# Long\n\n${long}`);
-    assert doc.summary.len() <= 203;
+    assert doc.summary.len() <= SUMMARY_MAX + "…".len();
     assert doc.summary.ends_with("…");
     assert !doc.summary.contains("wor…");
 }

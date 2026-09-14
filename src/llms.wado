@@ -18,7 +18,7 @@ pub fn render_llms(posts: &List<Post>, docs: &List<Doc>) -> String {
     out.push_str(&`${INTRO}\n\n`);
     out.push_str(&`${CONVENTION}\n`);
     out.push_str(&start_here(docs));
-    out.push_str(&section("Standard library", &in_group(docs, DocGroup::Stdlib)));
+    out.push_str(&stdlib(docs));
     out.push_str(&blog(posts));
     out.push_str(&optional(docs));
     return out;
@@ -55,11 +55,12 @@ fn start_here(docs: &List<Doc>) -> String {
     return out;
 }
 
-fn section(heading: String, docs: &List<Doc>) -> String {
-    if docs.is_empty() {
+fn stdlib(docs: &List<Doc>) -> String {
+    let entries = doc_entries(&in_group(docs, DocGroup::Stdlib));
+    if entries.is_empty() {
         return String::new();
     }
-    return `\n## ${heading}\n\n${doc_entries(docs)}`;
+    return `\n## Standard library\n\n${entries}`;
 }
 
 fn blog(posts: &List<Post>) -> String {

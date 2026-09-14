@@ -1,6 +1,7 @@
 use { render_llms } from "./llms.wado";
 use { build_doc, Doc } from "./doc.wado";
 use { Post } from "./post.wado";
+use { post } from "./fixture.wado";
 
 fn docs() -> List<Doc> {
     return [
@@ -14,26 +15,8 @@ fn docs() -> List<Doc> {
 
 fn posts() -> List<Post> {
     return [
-        Post {
-            slug: "hello",
-            title: "Hello",
-            date: "2026-03-01",
-            author: "FUJI Goro",
-            description: "A first look.",
-            body_md: "",
-            body_html: "",
-            index: true,
-        },
-        Post {
-            slug: "draft",
-            title: "Draft",
-            date: "2026-04-01",
-            author: "FUJI Goro",
-            description: "",
-            body_md: "",
-            body_html: "",
-            index: false,
-        },
+        post("hello", "Hello", "2026-03-01", "A first look."),
+        post("draft", "Draft", "2026-04-01", "", false),
     ];
 }
 

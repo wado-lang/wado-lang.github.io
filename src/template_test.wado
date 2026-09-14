@@ -1,18 +1,6 @@
 use { render_page, render_index } from "./template.wado";
 use { Post } from "./post.wado";
-
-fn post(slug: String, title: String, date: String, description: String = "", index: bool = true) -> Post {
-    return Post {
-        slug,
-        title,
-        date,
-        author: "FUJI Goro",
-        description,
-        body_md: "",
-        body_html: "<p>x</p>",
-        index,
-    };
-}
+use { post } from "./fixture.wado";
 
 test "render_page emits a full page and escapes the title" {
     let html = render_page(&post("hello", "Hi & Co", "2026-07-05", "An intro to Wado"));

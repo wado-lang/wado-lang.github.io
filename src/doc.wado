@@ -116,13 +116,13 @@ fn shorten(s: &String) -> String {
 }
 
 /// The longest prefix of `s` within `limit` bytes that does not split a
-/// character. `substr_bytes` panics on an index that is not a UTF-8 boundary.
+/// character. The walk terminates because byte 0 is always a boundary.
 fn truncate_bytes(s: &String, limit: i32) -> String {
+    assert limit >= 0 && limit <= s.len();
     let mut end = limit;
     while !s.is_char_boundary(end) {
         end -= 1;
     }
-    assert end >= 0;
     return s.substr_bytes(0, end);
 }
 

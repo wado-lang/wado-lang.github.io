@@ -14,7 +14,6 @@ pub struct Post {
     pub index: bool,
 }
 
-/// Build a post from its slug (typically the file stem) and source document.
 pub fn build(slug: String, source: &String) -> Result<Post, String> {
     let [fm, body] = parse(source)?;
     return Result::Ok(Post {

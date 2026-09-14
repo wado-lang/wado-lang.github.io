@@ -1,29 +1,12 @@
 use { build_site, build_docs, build_llms } from "./site.wado";
 use { build_doc } from "./doc.wado";
 use { Post } from "./post.wado";
+use { post } from "./fixture.wado";
 
 fn sample_posts() -> List<Post> {
     return [
-        Post {
-            slug: "hello",
-            title: "Hello",
-            date: "2026-03-01",
-            author: "FUJI Goro",
-            description: "",
-            body_md: "hi",
-            body_html: "<p>hi</p>",
-            index: true,
-        },
-        Post {
-            slug: "wip",
-            title: "WIP",
-            date: "2026-04-01",
-            author: "FUJI Goro",
-            description: "",
-            body_md: "wip",
-            body_html: "<p>wip</p>",
-            index: false,
-        },
+        Post { ..post("hello", "Hello", "2026-03-01"), body_md: "hi" },
+        Post { ..post("wip", "WIP", "2026-04-01", "", false), body_md: "wip" },
     ];
 }
 
