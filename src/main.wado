@@ -21,17 +21,6 @@ export fn run() with (Stdout, Stderr, Preopens) {
     report_broken_links(&files);
 }
 
-fn report_broken_links(files: &List<SiteFile>) with Stderr {
-    let broken = check_links(files);
-    if broken.is_empty() {
-        return;
-    }
-    eprintln(`sheaf: warning: ${broken.len()} broken internal link(s):`);
-    for let b of broken {
-        eprintln(`  ${b.page} -> ${b.target}`);
-    }
-}
-
 fn read_posts() -> List<Post> with (Stderr, Preopens) {
     let mut posts: List<Post> = [];
     for let [name, source] of read_markdown(&CONTENT_DIR, &[]) {
@@ -48,9 +37,8 @@ fn read_posts() -> List<Post> with (Stderr, Preopens) {
 
 fn read_docs() -> List<Doc> with (Stderr, Preopens) {
     let mut docs: List<Doc> = [];
-    // `CLAUDE.md` is a symlink to `AGENTS.md` upstream, so excluding the two by
-    // name before the read is also what keeps the walk off a link it cannot
-    // follow out of the preopened tree.
+    // `CLAUDE.md` is a symlink upstream, so the two must be excluded before the
+    // read: following it out of the preopened tree fails.
     for let [name, source] of read_markdown(&DOCS_DIR, &["AGENTS.md", "CLAUDE.md"]) {
         let Some(slug) = name.strip_suffix(".md") else {
             continue;
@@ -60,9 +48,8 @@ fn read_docs() -> List<Doc> with (Stderr, Preopens) {
     return docs;
 }
 
-/// Every `*.md` in `dir` except the excluded names, as `[name, source]`. A
-/// directory that cannot be read is reported and yields nothing, so one missing
-/// input does not stop the rest.
+/// Every `*.md` in `dir` except the excluded names, as `[name, source]`. An
+/// unreadable directory or file is reported and skipped, never fatal.
 fn read_markdown(dir: &String, exclude: &List<String>) -> List<[String, String]> with (Stderr, Preopens) {
     let mut out: List<[String, String]> = [];
     let entries = match fs::read_dir(dir) {
@@ -93,5 +80,16 @@ fn write_site(files: &List<SiteFile>) with (Stderr, Preopens) {
         if let Err(e) = fs::write(&`${OUT_DIR}/${f.path}`, &f.content) {
             eprintln(`sheaf: ${e}`);
         }
+    }
+}
+
+fn report_broken_links(files: &List<SiteFile>) with Stderr {
+    let broken = check_links(files);
+    if broken.is_empty() {
+        return;
+    }
+    eprintln(`sheaf: warning: ${broken.len()} broken internal link(s):`);
+    for let b of broken {
+        eprintln(`  ${b.page} -> ${b.target}`);
     }
 }

@@ -35,14 +35,12 @@ test "rewrite_md_links leaves absolute and external links untouched" {
 
 test "rewrite_md_links redirects excluded docs to their GitHub source" {
     let html = `<a href="./CLAUDE.md">idx</a>`;
-    assert rewrite_md_links(&html)
-        == `<a href="https://github.com/wado-lang/wado/blob/main/docs/CLAUDE.md">idx</a>`;
+    assert rewrite_md_links(&html) == `<a href="https://github.com/wado-lang/wado/blob/main/docs/CLAUDE.md">idx</a>`;
 }
 
 test "rewrite_md_links sends links that escape docs/ to GitHub source" {
     let html = `<a href="../vendor/x.md">v</a>`;
-    assert rewrite_md_links(&html)
-        == `<a href="https://github.com/wado-lang/wado/blob/main/vendor/x.md">v</a>`;
+    assert rewrite_md_links(&html) == `<a href="https://github.com/wado-lang/wado/blob/main/vendor/x.md">v</a>`;
 }
 
 test "rewrite_md_links leaves non-.md hrefs and stray text alone" {
@@ -56,7 +54,10 @@ test "build_doc summarises with the first sentence after the heading" {
 }
 
 test "build_doc strips Markdown links from the summary" {
-    let doc = build_doc("optimizer", &"# Opt\n\nRewrites the IR (see [WEP](./wep-nir.md)) before lowering, and [`fold`] runs first.");
+    let doc = build_doc(
+        "optimizer",
+        &"# Opt\n\nRewrites the IR (see [WEP](./wep-nir.md)) before lowering, and [`fold`] runs first.",
+    );
     assert doc.summary == "Rewrites the IR (see WEP) before lowering, and `fold` runs first.";
 }
 

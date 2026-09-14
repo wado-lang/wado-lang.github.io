@@ -1,4 +1,4 @@
-//! Site generation: turn a list of posts into output files (pure; no I/O).
+//! Site generation: posts and docs into output files (pure; no I/O).
 
 use { Post } from "./post.wado";
 use { Doc } from "./doc.wado";
@@ -10,11 +10,8 @@ pub struct SiteFile {
     pub content: String,
 }
 
-/// Produce every output file: one page per post (including unlisted ones, so
-/// they remain reachable by URL) plus the index page (published posts only).
-/// A listed post also gets a Markdown copy beside it, which `llms.txt` links.
-/// An unlisted one does not: only the HTML page can carry the `noindex` meta
-/// tag that keeps it out of a crawler's hands.
+/// A page per post (unlisted ones included, so they stay reachable by URL), the
+/// index, and a Markdown copy of each listed post — only HTML carries `noindex`.
 pub fn build_site(posts: &List<Post>) -> List<SiteFile> {
     let mut files: List<SiteFile> = [];
     for let p of posts {
@@ -38,8 +35,8 @@ pub fn build_docs(docs: &List<Doc>) -> List<SiteFile> {
     return files;
 }
 
-/// The llms.txt index. Written at the blog root, from where the deploy lifts it
-/// to the site root — the only place a client looks for it.
+/// The llms.txt index, written at the blog root. The deploy lifts it to the site
+/// root, the only place a client looks for it.
 pub fn build_llms(posts: &List<Post>, docs: &List<Doc>) -> SiteFile {
     return SiteFile { path: "llms.txt", content: render_llms(posts, docs) };
 }

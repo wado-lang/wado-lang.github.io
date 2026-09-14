@@ -49,7 +49,7 @@ jobs:
           cp -r _site/. dist/blog/
           # Sheaf emits the docs subtree under _site/docs; lift it to /docs.
           mv dist/blog/docs dist/docs
-          # llms.txt is only found at the site root, so lift it out of the blog.
+          # A client looks for llms.txt only at the site root.
           mv dist/blog/llms.txt dist/llms.txt
           mkdir -p dist/playground
           cp playground/index.html playground/app.js playground/app.css \

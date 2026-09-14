@@ -14,8 +14,26 @@ fn docs() -> List<Doc> {
 
 fn posts() -> List<Post> {
     return [
-        Post { slug: "hello", title: "Hello", date: "2026-03-01", author: "FUJI Goro", description: "A first look.", body_md: "", body_html: "", index: true },
-        Post { slug: "draft", title: "Draft", date: "2026-04-01", author: "FUJI Goro", description: "", body_md: "", body_html: "", index: false },
+        Post {
+            slug: "hello",
+            title: "Hello",
+            date: "2026-03-01",
+            author: "FUJI Goro",
+            description: "A first look.",
+            body_md: "",
+            body_html: "",
+            index: true,
+        },
+        Post {
+            slug: "draft",
+            title: "Draft",
+            date: "2026-04-01",
+            author: "FUJI Goro",
+            description: "",
+            body_md: "",
+            body_html: "",
+            index: false,
+        },
     ];
 }
 

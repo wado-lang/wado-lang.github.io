@@ -46,10 +46,10 @@ stays local (`src/escape.wado`).
 
 The specification, briefly:
 
-- A pure static transform: `content/*.md` → `_site/`. No server, no
-  database, no persistence between runs; filesystem I/O is the only effect,
-  and it all goes through `core:fs` (`src/main.wado`) — whole-file reads and
-  writes against the preopened directory, no `wasi:filesystem` plumbing.
+- A pure static transform: `content/*.md` → `_site/`. No server, no database,
+  no persistence between runs. Filesystem I/O is the only effect, and it all
+  goes through `core:fs` (`src/main.wado`): whole-file reads and writes against
+  the preopened directory, with no `wasi:filesystem` plumbing.
 - Each post is Markdown opening with fenced JSON front matter:
 
   ```markdown
@@ -62,15 +62,15 @@ The specification, briefly:
   for now; `index` defaults to `true`.
 
 - The slug is the file stem: `content/hello.md` → `_site/hello.html`.
-- Outputs: an index page listing posts newest-first, plus one page per post
-  and a Markdown copy of it (`hello.md`) carrying the heading and byline in
+- Outputs: an index page listing posts newest-first, one page per post, and a
+  Markdown copy of each (`hello.md`) that carries the heading and byline in
   place of the front matter.
 - `"index": false` makes a post unlisted: omitted from the index page and
   `llms.txt`, stamped with a `noindex, nofollow` robots meta tag, and given no
-  Markdown copy — a `.md` file carries no meta tag, so a copy would hand a
-  crawler what the page asks it to skip. The HTML page is still generated and
-  reachable by direct URL (a shareable preview). The repo is public, so
-  unlisted is not private.
+  Markdown copy. A `.md` file carries no meta tag, so a copy would hand a
+  crawler exactly what the page asks it to skip. The HTML page is still
+  generated and reachable by direct URL (a shareable preview). The repo is
+  public, so unlisted is not private.
 - Markdown is a CommonMark/GFM subset (Marl). HTML output is safe by
   construction: raw HTML is escaped rather than passed through, and link
   destinations are scheme-filtered.
@@ -90,22 +90,24 @@ rendered through the same Marl + template + stylesheet as the blog, into
   links to the two excluded files point at their GitHub source instead.
 - The upstream source is also copied verbatim beside each page, so
   `/docs/spec.html` has `/docs/spec.md` next to it. Its relative `.md` links
-  need no rewriting — they resolve against the sibling copies.
+  need no rewriting, since they resolve against the sibling copies.
 - The docs index (`/docs/`) groups pages by slug prefix: a language reference
   (`spec`, `cheatsheet`, `design-philosophy`), then WEPs (`wep-`), the standard
-  library (`stdlib-`),
-  research notes (`research-`), and everything else under "Other". Marl emits GFM
-  heading `id`s, so in-page `#anchor` links
-  resolve. `render` also returns the heading outline (`RenderResult.headings`),
-  unused for now — available if a per-page table of contents is wanted.
+  library (`stdlib-`), research notes (`research-`), and everything else under
+  "Other". `src/doc.wado` owns the classifier (`group_of`) and the collector
+  (`in_group`, slug-sorted), which `llms.txt` shares. Marl emits GFM heading
+  `id`s, so in-page `#anchor` links resolve.
+  `render` also returns the heading outline (`RenderResult.headings`), unused
+  for now, but available if a per-page table of contents is wanted.
 
 ### llms.txt
 
-Sheaf writes `/llms.txt`, the index defined by <https://llmstxt.org>: a project
-summary, then annotated links to the Markdown copy of each page. `src/llms.wado`
-builds it; `src/doc.wado` supplies the per-doc one-line summary (the first
-sentence after the level-1 heading, with Markdown links flattened) and
-`group_of`, the slug classifier the docs index shares.
+Sheaf writes `llms.txt`, the index defined by <https://llmstxt.org>: a project
+summary, then annotated links to the Markdown copy of each page.
+`src/llms.wado` builds it at the blog root, and the deploy lifts it to the site
+root, the only place a client looks for it. The per-doc one-line summary comes
+from `src/doc.wado`: the first sentence after the level-1 heading, with
+Markdown links flattened.
 
 What goes where:
 
@@ -123,10 +125,9 @@ index, and both families are addressable by slug (`/docs/wep-<date>-<name>.md`,
 
 There is no `llms-full.txt`. It is not part of the llmstxt.org proposal, the
 reference plus the standard library concatenate to ~630 KB (~160K tokens), and
-`cheatsheet.md` already is the single file that lets a model write Wado.
+`cheatsheet.md` is already the single file that lets a model write Wado.
 
-Sheaf writes `llms.txt` at the blog root; the deploy moves it to the site root,
-which is the only place a client looks for it.
+### Link check
 
 After generating the site, Sheaf runs an internal link check (`linkcheck.wado`)
 over the output and prints any link whose target is not a generated file. It is
@@ -134,7 +135,9 @@ a warning only — the build never fails on it. External URLs, `#fragment`-only
 links, and `/assets/*` are out of scope. Broken links it reports are typically
 upstream doc typos; fix those in the Wado repo.
 
-Deployment: a push to `main` runs `.github/workflows/deploy.yml`, which builds
+### Deployment
+
+A push to `main` runs `.github/workflows/deploy.yml`, which builds
 the blog, the docs, and the playground, and publishes the whole site to GitHub
 Pages — the landing page at the root, the blog under `/blog/`, the docs under
 `/docs/`, the playground under `/playground/` (see the Playground section).
