@@ -82,6 +82,11 @@ The specification, briefly:
   run with a non-zero status. The deploy publishes whatever is left in
   `_site/`, so a run that stops early must not also report success. The link
   check below is the one exception.
+- Sheaf writes over `_site/` but never clears it, so a file an earlier run
+  produced and this one does not stays behind. Run `mise run clean` after
+  renaming or deleting a post. The deploy is unaffected, because the runner
+  clones fresh and generates into an empty `_site/`. `core:fs` has no
+  recursive removal (wado-lang/wado#2061).
 
 ### Docs
 
