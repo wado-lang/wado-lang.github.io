@@ -74,6 +74,9 @@ The specification, briefly:
 - Markdown is a CommonMark/GFM subset (Marl). HTML output is safe by
   construction: raw HTML is escaped rather than passed through, and link
   destinations are scheme-filtered.
+- An unreadable input, an unparseable post, or an unwritable output fails the
+  run with a non-zero status. A site generated in part but reported as complete
+  is one the deploy publishes. The link check below is the one exception.
 
 ### Docs
 

@@ -107,12 +107,23 @@ fn shorten(s: &String) -> String {
     if s.len() <= SUMMARY_MAX {
         return *s;
     }
-    let head = s.substr_bytes(0, SUMMARY_MAX);
+    let head = truncate_bytes(s, SUMMARY_MAX);
     let cut = match head.rfind(" ") {
         Some(i) => head.substr_bytes(0, i),
         None => head,
     };
     return `${cut}…`;
+}
+
+/// The longest prefix of `s` within `limit` bytes that does not split a
+/// character. `substr_bytes` panics on an index that is not a UTF-8 boundary.
+fn truncate_bytes(s: &String, limit: i32) -> String {
+    let mut end = limit;
+    while !s.is_char_boundary(end) {
+        end -= 1;
+    }
+    assert end >= 0;
+    return s.substr_bytes(0, end);
 }
 
 /// Replace `[text](url)` and a bare `[text]` reference with `text`: a summary is

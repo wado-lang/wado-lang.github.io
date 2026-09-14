@@ -86,3 +86,12 @@ test "group_of files a doc by its slug" {
     assert group_of(&"research-wasm-cm") == DocGroup::Research;
     assert group_of(&"compiler") == DocGroup::Other;
 }
+
+test "build_doc truncates a long summary without splitting a character" {
+    let lead = "x".repeat(199);
+    let doc = build_doc("x", &`# T\n\n${lead}\u{00e9} tail that pushes the summary past the limit.\n`);
+    assert doc.summary.ends_with("…");
+    // The cut lands at byte 200, inside the two-byte `\u{00e9}` that starts at 199.
+    assert doc.summary.chars().count() == 200;
+    assert !doc.summary.contains("\u{00e9}");
+}
