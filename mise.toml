@@ -1,5 +1,5 @@
 [tools]
-"github:wado-lang/wado" = { version = "0.0.27", exe = "wado" }
+"github:wado-lang/wado" = { version = "0.0.28", exe = "wado" }
 
 [env]
 # The wado release whose wado-playground-web.tar.gz asset the playground

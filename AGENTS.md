@@ -28,13 +28,9 @@ Defined in `mise.toml`. The repo must be trusted once per machine
 work without running `fetch`). The `wado` CLI itself is a mise tool (a
 release binary installed via ubi from `wado-lang/wado` GitHub Releases).
 
-**Sheaf currently needs an unreleased wado.** It reads and writes through
-`core:fs`, which landed two days after 0.0.27, and derives `BLOG_URL` /
-`DOCS_URL` from `SITE_URL` with a template literal, which ICEs every released
-compiler (wado-lang/wado#2051). Bump the `mise.toml` pin and the two
-`[dependencies]` together when 0.0.28 ships: the compiler and the `marl` /
-`gale-highlight-wado` components move as a set, and a new compiler against
-old components fails in `link.rs`, not in a diagnostic.
+Bump the `mise.toml` pin and the two `[dependencies]` together: the compiler
+and the `marl` / `gale-highlight-wado` components move as a set, and a new
+compiler against old components fails in `link.rs`, not in a diagnostic.
 
 ## CMS
 
