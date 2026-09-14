@@ -30,7 +30,11 @@ release binary installed via ubi from `wado-lang/wado` GitHub Releases).
 
 Bump the `mise.toml` pin and the two `[dependencies]` together: the compiler
 and the `marl` / `gale-highlight-wado` components move as a set, and a new
-compiler against old components fails in `link.rs`, not in a diagnostic.
+compiler against old components fails in `link.rs`, not in a diagnostic. Then
+run `wado update` and commit the `wado.lock` it rewrites. The lock records the
+resolved version and content hash of each component, so a deploy builds against
+the same bytes this repository was tested against. `wado check` reads it too,
+and without one it reports the dependency as unresolvable.
 
 ## CMS
 

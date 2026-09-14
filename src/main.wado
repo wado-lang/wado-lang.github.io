@@ -10,6 +10,16 @@ global CONTENT_DIR: String = "content";
 global DOCS_DIR: String = ".tmp/wado/docs";
 global OUT_DIR: String = "_site";
 
+/// Why the run stopped, ready to print. Every failure reaches `run` as one.
+type BuildError = String;
+
+/// `FsError` already names the path it failed on, so `?` adds no context.
+impl From<fs::FsError> for BuildError {
+    fn from(value: fs::FsError) -> BuildError {
+        return `${value}`;
+    }
+}
+
 export fn run() with (Stdout, Stderr, Preopens, Exit) {
     if let Err(e) = generate() {
         eprintln(`sheaf: ${e}`);
@@ -19,7 +29,7 @@ export fn run() with (Stdout, Stderr, Preopens, Exit) {
 
 /// Generate the whole site. Any unreadable input or unwritable output fails the
 /// run: a half-generated site that exits 0 is one the deploy would publish.
-fn generate() -> Result<(), String> with (Stdout, Stderr, Preopens) {
+fn generate() -> Result<(), BuildError> with (Stdout, Stderr, Preopens) {
     let posts = read_posts()?;
     let docs = read_docs()?;
     let mut files = build_site(&posts);
@@ -31,7 +41,7 @@ fn generate() -> Result<(), String> with (Stdout, Stderr, Preopens) {
     return Result::Ok(());
 }
 
-fn read_posts() -> Result<List<Post>, String> with Preopens {
+fn read_posts() -> Result<List<Post>, BuildError> with Preopens {
     let mut posts: List<Post> = [];
     for let [name, source] of read_markdown(&CONTENT_DIR, &[])? {
         match build(slug_of(&name), &source) {
@@ -44,7 +54,7 @@ fn read_posts() -> Result<List<Post>, String> with Preopens {
     return Result::Ok(posts);
 }
 
-fn read_docs() -> Result<List<Doc>, String> with Preopens {
+fn read_docs() -> Result<List<Doc>, BuildError> with Preopens {
     let mut docs: List<Doc> = [];
     // `CLAUDE.md` is a symlink upstream, so the two must be excluded before the
     // read: following it out of the preopened tree fails.
@@ -61,30 +71,22 @@ fn slug_of(name: &String) -> String {
     return slug;
 }
 
-/// An `fs` call as this module's `Result`. `FsError` already names the path.
-fn io<T>(result: Result<T, fs::FsError>) -> Result<T, String> {
-    return match result {
-        Ok(v) => Result::Ok(v),
-        Err(e) => Result::Err(`${e}`),
-    };
-}
-
 /// Every `*.md` in `dir` except the excluded names, as `[name, source]`.
-fn read_markdown(dir: &String, exclude: &List<String>) -> Result<List<[String, String]>, String> with Preopens {
+fn read_markdown(dir: &String, exclude: &List<String>) -> Result<List<[String, String]>, BuildError> with Preopens {
     let mut out: List<[String, String]> = [];
-    for let entry of io(fs::read_dir(dir))? {
+    for let entry of fs::read_dir(dir)? {
         if !entry.name.ends_with(".md") || exclude.contains(&entry.name) {
             continue;
         }
-        out.push([entry.name, io(fs::read_to_string(&`${dir}/${entry.name}`))?]);
+        out.push([entry.name, fs::read_to_string(&`${dir}/${entry.name}`)?]);
     }
     return Result::Ok(out);
 }
 
-fn write_site(files: &List<SiteFile>) -> Result<(), String> with Preopens {
-    io(fs::create_dir_all(&`${OUT_DIR}/docs`))?;
+fn write_site(files: &List<SiteFile>) -> Result<(), BuildError> with Preopens {
+    fs::create_dir_all(&`${OUT_DIR}/docs`)?;
     for let f of files {
-        io(fs::write(&`${OUT_DIR}/${f.path}`, &f.content))?;
+        fs::write(&`${OUT_DIR}/${f.path}`, &f.content)?;
     }
     return Result::Ok(());
 }
