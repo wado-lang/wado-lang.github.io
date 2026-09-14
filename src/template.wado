@@ -1,18 +1,17 @@
-//! HTML templates built from the language's template literals plus Marl's HTML
-//! escaping helpers. The visual design mirrors the landing page (calligraphic
-//! ink-on-paper, vermillion seal accent); the stylesheet is inlined from
-//! `style.css` at compile time.
+//! HTML templates for every page, built from template literals. The design
+//! mirrors the landing page; `style.css` is inlined at compile time.
 
 use { render } from "./markdown.wado";
 use { escape_text, escape_attr } from "./escape.wado";
-use { Post } from "./post.wado";
-use { Doc } from "./doc.wado";
+use { Post, listed } from "./post.wado";
+use { Doc, DocGroup, in_group } from "./doc.wado";
 
 global STYLE: String = #include_str("./style.css");
 global SITE_NAME: String = "The Wado Blog";
-global BLOG_URL: String = "https://wado-lang.org/blog";
-global DOCS_URL: String = "https://wado-lang.org/docs";
-global OG_IMAGE: String = "https://wado-lang.org/assets/og-image.svg";
+pub global SITE_URL: String = "https://wado-lang.org";
+global BLOG_URL: String = `${SITE_URL}/blog`;
+global DOCS_URL: String = `${SITE_URL}/docs`;
+global OG_IMAGE: String = `${SITE_URL}/assets/og-image.svg`;
 
 /// Per-page metadata driving the document head (SEO + Open Graph / Twitter).
 struct PageMeta {
@@ -89,11 +88,8 @@ fn page_foot() -> String {
     return out;
 }
 
-/// Render a title's inline Markdown (notably `` `code` ``, heavily used in doc
-/// headings) to HTML. A title is a single line, so Marl wraps it in one
-/// `<p>…</p>`; strip that to get the inline HTML. Marl escapes text, so the
-/// result is HTML-safe just like `escape_text`; a non-paragraph result (never
-/// expected for a one-line title) falls back to plain escaping.
+/// A title's inline Markdown as HTML — doc headings lean on `` `code` ``. Marl
+/// wraps a one-line input in one `<p>`, and escapes text, so unwrapping is safe.
 fn render_title_inline(title: &String) -> String {
     let html = render(*title);
     if let Some(rest) = html.trim().strip_prefix("<p>") {
@@ -129,14 +125,7 @@ pub fn render_page(post: &Post) -> String {
 }
 
 pub fn render_index(posts: &List<Post>) -> String {
-    let mut published: List<Post> = [];
-    for let p of posts {
-        if p.index {
-            published.push(*p);
-        }
-    }
-    published.sort_by(|a: &Post, b: &Post| b.date.cmp(&a.date));
-
+    let published = listed(posts);
     let meta = PageMeta {
         title: SITE_NAME,
         description: "Notes from the Wado programming language project.",
@@ -178,30 +167,6 @@ pub fn render_doc(doc: &Doc) -> String {
 
 /// The docs landing page: every doc, grouped by kind, sorted within each group.
 pub fn render_docs_index(docs: &List<Doc>) -> String {
-    let mut reference: List<Doc> = [];
-    let mut weps: List<Doc> = [];
-    let mut stdlib: List<Doc> = [];
-    let mut research: List<Doc> = [];
-    let mut other: List<Doc> = [];
-    for let d of docs {
-        if d.slug == "spec" || d.slug == "cheatsheet" || d.slug == "design-philosophy" {
-            reference.push(*d);
-        } else if d.slug.starts_with("wep-") {
-            weps.push(*d);
-        } else if d.slug.starts_with("stdlib-") {
-            stdlib.push(*d);
-        } else if d.slug.starts_with("research-") {
-            research.push(*d);
-        } else {
-            other.push(*d);
-        }
-    }
-    reference.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
-    weps.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
-    stdlib.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
-    research.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
-    other.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
-
     let meta = PageMeta {
         title: "Wado Documentation",
         description: "Specification, standard library, and design proposals for the Wado language.",
@@ -211,11 +176,11 @@ pub fn render_docs_index(docs: &List<Doc>) -> String {
     let mut out = page_head(&meta);
     out.push_str(&`<h1 class="page-title">Documentation</h1>\n`);
     out.push_str(&`<p class="section-nav"><a href="/blog/">← Blog</a></p>\n`);
-    out.push_str(&doc_group("Language reference", &reference));
-    out.push_str(&doc_group("Wado Evolution Proposals", &weps));
-    out.push_str(&doc_group("Standard library", &stdlib));
-    out.push_str(&doc_group("Research notes", &research));
-    out.push_str(&doc_group("Other", &other));
+    out.push_str(&doc_group("Language reference", &in_group(docs, DocGroup::Reference)));
+    out.push_str(&doc_group("Wado Evolution Proposals", &in_group(docs, DocGroup::Wep)));
+    out.push_str(&doc_group("Standard library", &in_group(docs, DocGroup::Stdlib)));
+    out.push_str(&doc_group("Research notes", &in_group(docs, DocGroup::Research)));
+    out.push_str(&doc_group("Other", &in_group(docs, DocGroup::Other)));
     out.push_str(&page_foot());
     return out;
 }

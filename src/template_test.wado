@@ -1,17 +1,9 @@
 use { render_page, render_index } from "./template.wado";
 use { Post } from "./post.wado";
+use { post } from "./fixture.wado";
 
 test "render_page emits a full page and escapes the title" {
-    let post = Post {
-        slug: "hello",
-        title: "Hi & Co",
-        date: "2026-07-05",
-        author: "FUJI Goro",
-        description: "An intro to Wado",
-        body_html: "<p>x</p>",
-        index: true,
-    };
-    let html = render_page(&post);
+    let html = render_page(&post("hello", "Hi & Co", "2026-07-05", "An intro to Wado"));
     assert html.starts_with("<!doctype html>");
     assert html.contains("<meta name=\"viewport\"");
     assert html.contains("<title>Hi &amp; Co</title>");
@@ -25,16 +17,7 @@ test "render_page emits a full page and escapes the title" {
 }
 
 test "render_page emits Open Graph and Twitter metadata" {
-    let post = Post {
-        slug: "hello",
-        title: "Hi & Co",
-        date: "2026-07-05",
-        author: "FUJI Goro",
-        description: "An intro to Wado",
-        body_html: "<p>x</p>",
-        index: true,
-    };
-    let html = render_page(&post);
+    let html = render_page(&post("hello", "Hi & Co", "2026-07-05", "An intro to Wado"));
     assert html.contains("<meta property=\"og:type\" content=\"article\" />");
     assert html.contains("<meta property=\"og:title\" content=\"Hi &amp; Co\" />");
     assert html.contains("<meta property=\"og:description\" content=\"An intro to Wado\" />");
@@ -46,50 +29,32 @@ test "render_page emits Open Graph and Twitter metadata" {
 }
 
 test "render_page falls back to the title when no description is set" {
-    let post = Post {
-        slug: "hello",
-        title: "Just a Title",
-        date: "2026-07-05",
-        author: "FUJI Goro",
-        description: "",
-        body_html: "<p>x</p>",
-        index: true,
-    };
-    assert render_page(&post).contains("<meta property=\"og:description\" content=\"Just a Title\" />");
+    let html = render_page(&post("hello", "Just a Title", "2026-07-05"));
+    assert html.contains("<meta property=\"og:description\" content=\"Just a Title\" />");
 }
 
 test "render_page adds a noindex meta for unlisted posts" {
-    let post = Post {
-        slug: "draft",
-        title: "Draft",
-        date: "d",
-        author: "FUJI Goro",
-        description: "",
-        body_html: "<p>y</p>",
-        index: false,
-    };
-    assert render_page(&post).contains("<meta name=\"robots\" content=\"noindex, nofollow\" />");
+    let html = render_page(&post("draft", "Draft", "2026-07-05", "", false));
+    assert html.contains("<meta name=\"robots\" content=\"noindex, nofollow\" />");
 }
 
 test "render_index lists published posts newest-first and omits unlisted" {
     let posts: List<Post> = [
-        Post { slug: "b", title: "B", date: "2026-02-01", author: "FUJI Goro", description: "", body_html: "", index: true },
-        Post { slug: "a", title: "A", date: "2026-03-01", author: "FUJI Goro", description: "", body_html: "", index: true },
-        Post { slug: "d", title: "Draft", date: "2026-04-01", author: "FUJI Goro", description: "", body_html: "", index: false },
+        post("b", "B", "2026-02-01"),
+        post("a", "A", "2026-03-01"),
+        post("d", "Draft", "2026-04-01", "", false),
     ];
     let html = render_index(&posts);
     assert html.contains("<h1 class=\"page-title\">The Wado Blog</h1>");
     assert html.contains("<meta property=\"og:type\" content=\"website\" />");
     assert html.contains("<meta property=\"og:url\" content=\"https://wado-lang.org/blog/\" />");
 
-    let a_pos = html.find("a.html");
-    let b_pos = html.find("b.html");
-    if let Some(a) = a_pos {
-        if let Some(b) = b_pos {
-            assert a < b;
-        }
-    }
-    assert a_pos matches { Some(_) };
-    assert b_pos matches { Some(_) };
+    let Some(a) = html.find("a.html") else {
+        panic("the index does not link a.html");
+    };
+    let Some(b) = html.find("b.html") else {
+        panic("the index does not link b.html");
+    };
+    assert a < b;
     assert !html.contains("Draft");
 }

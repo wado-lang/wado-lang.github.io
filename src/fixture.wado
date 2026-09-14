@@ -1,0 +1,18 @@
+//! Post fixtures shared by the `*_test.wado` files.
+
+use { Post } from "./post.wado";
+
+/// A post carrying stub bodies, so a test states only the fields it is about.
+/// Override the rest with `Post { ..post(...), body_md: "…" }`.
+pub fn post(slug: String, title: String, date: String, description: String = "", index: bool = true) -> Post {
+    return Post {
+        slug,
+        title,
+        date,
+        author: "FUJI Goro",
+        description,
+        body_md: "",
+        body_html: "<p>x</p>",
+        index,
+    };
+}

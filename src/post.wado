@@ -9,11 +9,11 @@ pub struct Post {
     pub date: String,
     pub author: String,
     pub description: String,
+    pub body_md: String,
     pub body_html: String,
     pub index: bool,
 }
 
-/// Build a post from its slug (typically the file stem) and source document.
 pub fn build(slug: String, source: &String) -> Result<Post, String> {
     let [fm, body] = parse(source)?;
     return Result::Ok(Post {
@@ -22,7 +22,21 @@ pub fn build(slug: String, source: &String) -> Result<Post, String> {
         date: fm.date,
         author: fm.author,
         description: fm.description,
+        body_md: body,
         body_html: render(body),
         index: fm.index,
     });
+}
+
+/// The listed posts, newest first. `"index": false` keeps a post out of every
+/// listing.
+pub fn listed(posts: &List<Post>) -> List<Post> {
+    let mut out: List<Post> = [];
+    for let p of posts {
+        if p.index {
+            out.push(*p);
+        }
+    }
+    out.sort_by(|a: &Post, b: &Post| b.date.cmp(&a.date));
+    return out;
 }

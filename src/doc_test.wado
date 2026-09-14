@@ -1,4 +1,4 @@
-use { build_doc, rewrite_md_links } from "./doc.wado";
+use { build_doc, rewrite_md_links, group_of, DocGroup, SUMMARY_MAX } from "./doc.wado";
 
 test "build_doc takes its title from the first level-1 heading" {
     let src = "# Wado Spec
@@ -35,17 +35,62 @@ test "rewrite_md_links leaves absolute and external links untouched" {
 
 test "rewrite_md_links redirects excluded docs to their GitHub source" {
     let html = `<a href="./CLAUDE.md">idx</a>`;
-    assert rewrite_md_links(&html)
-        == `<a href="https://github.com/wado-lang/wado/blob/main/docs/CLAUDE.md">idx</a>`;
+    assert rewrite_md_links(&html) == `<a href="https://github.com/wado-lang/wado/blob/main/docs/CLAUDE.md">idx</a>`;
 }
 
 test "rewrite_md_links sends links that escape docs/ to GitHub source" {
     let html = `<a href="../vendor/x.md">v</a>`;
-    assert rewrite_md_links(&html)
-        == `<a href="https://github.com/wado-lang/wado/blob/main/vendor/x.md">v</a>`;
+    assert rewrite_md_links(&html) == `<a href="https://github.com/wado-lang/wado/blob/main/vendor/x.md">v</a>`;
 }
 
 test "rewrite_md_links leaves non-.md hrefs and stray text alone" {
     let html = `<a href="./other.html">x</a> plain .md text`;
     assert rewrite_md_links(&html) == html;
+}
+
+test "build_doc summarises with the first sentence after the heading" {
+    let doc = build_doc("spec", &"# Wado Spec\n\nWado targets Wasm. It also targets WASI.\n\n## Section");
+    assert doc.summary == "Wado targets Wasm.";
+}
+
+test "build_doc strips Markdown links from the summary" {
+    let doc = build_doc(
+        "optimizer",
+        &"# Opt\n\nRewrites the IR (see [WEP](./wep-nir.md)) before lowering, and [`fold`] runs first.",
+    );
+    assert doc.summary == "Rewrites the IR (see WEP) before lowering, and `fold` runs first.";
+}
+
+test "build_doc drops a colon lead-in from the summary" {
+    let doc = build_doc("compiler", &"# Compiler\n\nDeeper topics live in their own docs:\n\n- one\n- two");
+    assert doc.summary == "Deeper topics live in their own docs";
+}
+
+test "build_doc leaves the summary empty when a subsection follows the heading" {
+    let doc = build_doc("stdlib-wasi", &"# WASI Standard Library\n\n## wasi:cli\n\nText.");
+    assert doc.summary == "";
+}
+
+test "build_doc truncates a long summary on a word boundary" {
+    let long = "word ".repeat(60);
+    let doc = build_doc("long", &`# Long\n\n${long}`);
+    assert doc.summary.len() <= SUMMARY_MAX + "…".len();
+    assert doc.summary.ends_with("…");
+    assert !doc.summary.contains("wor…");
+}
+
+test "group_of files a doc by its slug" {
+    assert group_of(&"spec") == DocGroup::Reference;
+    assert group_of(&"wep-2026-01-10-wasm-import") == DocGroup::Wep;
+    assert group_of(&"stdlib-core-json") == DocGroup::Stdlib;
+    assert group_of(&"research-wasm-cm") == DocGroup::Research;
+    assert group_of(&"compiler") == DocGroup::Other;
+}
+
+test "build_doc truncates a long summary without splitting a character" {
+    let paragraph = `${"x".repeat(SUMMARY_MAX - 1)}\u{00e9} tail that pushes the summary past the limit.`;
+    assert !paragraph.is_char_boundary(SUMMARY_MAX);
+
+    let doc = build_doc("x", &`# T\n\n${paragraph}\n`);
+    assert doc.summary == `${"x".repeat(SUMMARY_MAX - 1)}…`;
 }

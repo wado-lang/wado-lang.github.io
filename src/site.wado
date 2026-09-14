@@ -1,7 +1,8 @@
-//! Site generation: turn a list of posts into output files (pure; no I/O).
+//! Site generation: posts and docs into output files (pure; no I/O).
 
 use { Post } from "./post.wado";
 use { Doc } from "./doc.wado";
+use { render_llms } from "./llms.wado";
 use { render_page, render_index, render_doc, render_docs_index } from "./template.wado";
 
 pub struct SiteFile {
@@ -9,23 +10,39 @@ pub struct SiteFile {
     pub content: String,
 }
 
-/// Produce every output file: one page per post (including unlisted ones, so
-/// they remain reachable by URL) plus the index page (published posts only).
+/// A page per post, the index, and a Markdown copy of each listed post. An
+/// unlisted post gets no copy, because a `.md` file cannot carry `noindex`.
 pub fn build_site(posts: &List<Post>) -> List<SiteFile> {
     let mut files: List<SiteFile> = [];
     for let p of posts {
         files.push(SiteFile { path: `${p.slug}.html`, content: render_page(p) });
+        if p.index {
+            files.push(SiteFile { path: `${p.slug}.md`, content: post_markdown(p) });
+        }
     }
     files.push(SiteFile { path: "index.html", content: render_index(posts) });
     return files;
 }
 
-/// Produce the docs subtree: one page per doc under `docs/`, plus its index.
+/// The docs subtree: one page and one Markdown copy per doc, plus its index.
 pub fn build_docs(docs: &List<Doc>) -> List<SiteFile> {
     let mut files: List<SiteFile> = [];
     for let d of docs {
         files.push(SiteFile { path: `docs/${d.slug}.html`, content: render_doc(d) });
+        files.push(SiteFile { path: `docs/${d.slug}.md`, content: d.source });
     }
     files.push(SiteFile { path: "docs/index.html", content: render_docs_index(docs) });
     return files;
+}
+
+/// The llms.txt index, written at the blog root. The deploy lifts it to the site
+/// root, the only place a client looks for it.
+pub fn build_llms(posts: &List<Post>, docs: &List<Doc>) -> SiteFile {
+    return SiteFile { path: "llms.txt", content: render_llms(posts, docs) };
+}
+
+/// The post as standalone Markdown: the front matter it carried replaced by the
+/// heading and byline its HTML page shows.
+fn post_markdown(post: &Post) -> String {
+    return `# ${post.title}\n\n${post.author} · ${post.date}\n\n${post.body_md.trim()}\n`;
 }
