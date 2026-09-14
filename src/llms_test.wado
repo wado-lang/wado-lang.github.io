@@ -70,3 +70,21 @@ test "render_llms drops the description when a page has no summary" {
     let out = render_llms(&[], &[build_doc("stdlib-wasi", &"# WASI Standard Library\n\n## wasi:cli\n")]);
     assert out.contains("- [WASI Standard Library](https://wado-lang.org/docs/stdlib-wasi.md)\n");
 }
+
+test "render_llms links a page as Markdown and a directory with a trailing slash" {
+    let out = render_llms(&posts(), &docs());
+    for let line of out.lines() {
+        if !line.starts_with("- [") {
+            continue;
+        }
+        let Some(open) = line.find("](") else {
+            panic(`entry is not a Markdown link: ${line}`);
+        };
+        let rest = line.substr_bytes(open + 2, line.len());
+        let Some(close) = rest.find(")") else {
+            panic(`entry is not a Markdown link: ${line}`);
+        };
+        let url = rest.substr_bytes(0, close);
+        assert url.ends_with(".md") || url.ends_with("/"), `CONVENTION does not describe ${url}`;
+    }
+}

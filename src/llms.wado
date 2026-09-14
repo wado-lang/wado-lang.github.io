@@ -9,7 +9,7 @@ global TAGLINE: String = "Type-safe like Rust, familiar like TypeScript, compile
 
 global INTRO: String = "Wado is a statically-typed, garbage-collected language that targets exactly one platform: WebAssembly. It compiles to a Wasm component (Wasm 3.0 with GC), speaks the Component Model and WASI 0.3, and replaces the borrow checker with value semantics plus an effect system. Most of the syntax is Rust-compatible by design.";
 
-global CONVENTION: String = "Every link below points at Markdown. The same page is published as HTML at the same path with `.html` in place of `.md`. Two families are large enough to be left out of this index and are addressed by slug instead: the Wado Evolution Proposals, one per language feature, at `/docs/wep-<date>-<name>.md`, and the research notes behind them at `/docs/research-<name>.md`. The documentation index linked under `## Optional` lists both.";
+global CONVENTION: String = "Every link to a page points at Markdown; the same page is published as HTML at the same path, with `.html` in place of `.md`. The two links to a directory (`/docs/`, `/playground/`) are HTML. Two families are large enough to be left out of this index and are addressed by slug instead: the Wado Evolution Proposals, one per language feature, at `/docs/wep-<date>-<name>.md`, and the research notes behind them at `/docs/research-<name>.md`. The documentation index linked under `## Optional` lists both.";
 
 pub fn render_llms(posts: &List<Post>, docs: &List<Doc>) -> String {
     let mut out = String::new();

@@ -63,8 +63,8 @@ The specification, briefly:
 
 - The slug is the file stem: `content/hello.md` → `_site/hello.html`.
 - Outputs: an index page listing posts newest-first, one page per post, and a
-  Markdown copy of each (`hello.md`) that carries the heading and byline in
-  place of the front matter.
+  Markdown copy of each listed post (`hello.md`) carrying the heading and
+  byline in place of the front matter.
 - `"index": false` makes a post unlisted: omitted from the index page and
   `llms.txt`, stamped with a `noindex, nofollow` robots meta tag, and given no
   Markdown copy. A `.md` file carries no meta tag, so a copy would hand a
