@@ -11,9 +11,9 @@ use { Doc, group_of } from "./doc.wado";
 global STYLE: String = #include_str("./style.css");
 global SITE_NAME: String = "The Wado Blog";
 pub global SITE_URL: String = "https://wado-lang.org";
-global BLOG_URL: String = "https://wado-lang.org/blog";
-global DOCS_URL: String = "https://wado-lang.org/docs";
-global OG_IMAGE: String = "https://wado-lang.org/assets/og-image.svg";
+global BLOG_URL: String = `${SITE_URL}/blog`;
+global DOCS_URL: String = `${SITE_URL}/docs`;
+global OG_IMAGE: String = `${SITE_URL}/assets/og-image.svg`;
 
 /// Per-page metadata driving the document head (SEO + Open Graph / Twitter).
 struct PageMeta {

@@ -1,24 +1,22 @@
 use { println, eprintln, Stdout, Stderr } from "core:cli";
-use { Preopens, Descriptor, Filesize, PathFlags, OpenFlags, DescriptorFlags, ErrorCode } from "wasi:filesystem";
+use fs from "core:fs";
+use { Preopens } from "wasi:filesystem";
 use { build, Post } from "./post.wado";
 use { build_doc, Doc } from "./doc.wado";
 use { build_site, build_docs, build_llms, SiteFile } from "./site.wado";
 use { check_links } from "./linkcheck.wado";
 
-export fn run() with (Stdout, Stderr, Preopens) {
-    let dirs = Preopens::get_directories();
-    if dirs.is_empty() {
-        eprintln("sheaf: no preopened directory available");
-        return;
-    }
-    let root = dirs[0].0;
+global CONTENT_DIR: String = "content";
+global DOCS_DIR: String = ".tmp/wado/docs";
+global OUT_DIR: String = "_site";
 
-    let posts = read_posts(&root);
-    let docs = read_docs(&root);
+export fn run() with (Stdout, Stderr, Preopens) {
+    let posts = read_posts();
+    let docs = read_docs();
     let mut files = build_site(&posts);
     files.extend(&build_docs(&docs));
     files.push(build_llms(&posts, &docs));
-    write_site(&root, &files);
+    write_site(&files);
     println(`sheaf: generated ${files.len()} file(s) from ${posts.len()} post(s) and ${docs.len()} doc(s)`);
     report_broken_links(&files);
 }
@@ -34,160 +32,66 @@ fn report_broken_links(files: &List<SiteFile>) with Stderr {
     }
 }
 
-fn read_posts(root: &Descriptor) -> List<Post> with Stderr {
+fn read_posts() -> List<Post> with (Stderr, Preopens) {
     let mut posts: List<Post> = [];
-    let content = match open_dir(root, "content") {
-        Ok(d) => d,
-        Err(e) => {
-            eprintln(`sheaf: cannot open content/ directory: ${e:?}`);
-            return posts;
-        },
-    };
-    let names = match read_dir_names(&content) {
-        Ok(n) => n,
-        Err(e) => {
-            eprintln(`sheaf: cannot read content/ directory: ${e:?}`);
-            return posts;
-        },
-    };
-    for let name of names {
-        match name.strip_suffix(".md") {
-            Some(slug) => match read_file(&content, name) {
-                Ok(source) => match build(slug, &source) {
-                    Ok(post) => posts.push(post),
-                    Err(e) => eprintln(`sheaf: ${name}: ${e}`),
-                },
-                Err(e) => eprintln(`sheaf: cannot read ${name}: ${e:?}`),
-            },
-            None => {
-            },
+    for let [name, source] of read_markdown(&CONTENT_DIR, &[]) {
+        let Some(slug) = name.strip_suffix(".md") else {
+            continue;
+        };
+        match build(slug, &source) {
+            Ok(post) => posts.push(post),
+            Err(e) => eprintln(`sheaf: ${name}: ${e}`),
         }
     }
     return posts;
 }
 
-fn read_docs(root: &Descriptor) -> List<Doc> with Stderr {
+fn read_docs() -> List<Doc> with (Stderr, Preopens) {
     let mut docs: List<Doc> = [];
-    let dir = match open_dir(root, ".tmp/wado/docs") {
-        Ok(d) => d,
-        Err(e) => {
-            eprintln(`sheaf: cannot open .tmp/wado/docs/ directory: ${e:?}`);
-            return docs;
-        },
-    };
-    let names = match read_dir_names(&dir) {
-        Ok(n) => n,
-        Err(e) => {
-            eprintln(`sheaf: cannot read .tmp/wado/docs/ directory: ${e:?}`);
-            return docs;
-        },
-    };
-    for let name of names {
-        if name == "AGENTS.md" || name == "CLAUDE.md" {
+    // `CLAUDE.md` is a symlink to `AGENTS.md` upstream, so excluding the two by
+    // name before the read is also what keeps the walk off a link it cannot
+    // follow out of the preopened tree.
+    for let [name, source] of read_markdown(&DOCS_DIR, &["AGENTS.md", "CLAUDE.md"]) {
+        let Some(slug) = name.strip_suffix(".md") else {
             continue;
-        }
-        match name.strip_suffix(".md") {
-            Some(slug) => match read_file(&dir, name) {
-                Ok(source) => docs.push(build_doc(slug, &source)),
-                Err(e) => eprintln(`sheaf: cannot read ${name}: ${e:?}`),
-            },
-            None => {
-            },
-        }
+        };
+        docs.push(build_doc(slug, &source));
     }
     return docs;
 }
 
-fn write_site(root: &Descriptor, files: &List<SiteFile>) with Stderr {
-    match root.create_directory_at("_site").wait() {
-        Ok(_) => {
-        },
-        Err(ErrorCode::Exist) => {
-        },
+/// Every `*.md` in `dir` except the excluded names, as `[name, source]`. A
+/// directory that cannot be read is reported and yields nothing, so one missing
+/// input does not stop the rest.
+fn read_markdown(dir: &String, exclude: &List<String>) -> List<[String, String]> with (Stderr, Preopens) {
+    let mut out: List<[String, String]> = [];
+    let entries = match fs::read_dir(dir) {
+        Ok(e) => e,
         Err(e) => {
-            eprintln(`sheaf: cannot create _site/: ${e:?}`);
-            return;
-        },
-    }
-    match root.create_directory_at("_site/docs").wait() {
-        Ok(_) => {
-        },
-        Err(ErrorCode::Exist) => {
-        },
-        Err(e) => {
-            eprintln(`sheaf: cannot create _site/docs/: ${e:?}`);
-            return;
-        },
-    }
-    let site = match root.open_at(
-        PathFlags::none(),
-        "_site",
-        OpenFlags::Directory,
-        DescriptorFlags::Read | DescriptorFlags::MutateDirectory,
-    ).wait() {
-        Ok(d) => d,
-        Err(e) => {
-            eprintln(`sheaf: cannot open _site/: ${e:?}`);
-            return;
+            eprintln(`sheaf: ${e}`);
+            return out;
         },
     };
-    for let f of files {
-        match write_file(&site, f.path, &f.content) {
-            Ok(_) => {
-            },
-            Err(e) => eprintln(`sheaf: cannot write ${f.path}: ${e:?}`),
+    for let entry of entries {
+        if !entry.name.ends_with(".md") || exclude.contains(&entry.name) {
+            continue;
+        }
+        match fs::read_to_string(&`${dir}/${entry.name}`) {
+            Ok(source) => out.push([entry.name, source]),
+            Err(e) => eprintln(`sheaf: ${e}`),
         }
     }
+    return out;
 }
 
-fn open_dir(root: &Descriptor, name: String) -> Result<Descriptor, ErrorCode> {
-    return root.open_at(PathFlags::none(), name, OpenFlags::Directory, DescriptorFlags::Read).wait();
-}
-
-fn read_dir_names(dir: &Descriptor) -> Result<List<String>, ErrorCode> {
-    let mut names: List<String> = [];
-    let [stream, done] = dir.read_directory();
-    for let e of stream.read_to_end() {
-        names.push(e.name);
+fn write_site(files: &List<SiteFile>) with (Stderr, Preopens) {
+    if let Err(e) = fs::create_dir_all(&`${OUT_DIR}/docs`) {
+        eprintln(`sheaf: ${e}`);
+        return;
     }
-    stream.drop();
-    let read_result = done.read();
-    done.drop();
-    if let Some(Err(e)) = read_result {
-        return Result::Err(e);
+    for let f of files {
+        if let Err(e) = fs::write(&`${OUT_DIR}/${f.path}`, &f.content) {
+            eprintln(`sheaf: ${e}`);
+        }
     }
-    return Result::Ok(names);
-}
-
-fn read_file(dir: &Descriptor, path: String) -> Result<String, ErrorCode> {
-    let file = dir.open_at(PathFlags::none(), path, OpenFlags::none(), DescriptorFlags::Read).wait()?;
-    let [stream, done] = file.read_via_stream(0 as Filesize);
-    let bytes = stream.read_to_end();
-    stream.drop();
-    let read_result = done.read();
-    done.drop();
-    if let Some(Err(e)) = read_result {
-        return Result::Err(e);
-    }
-    return Result::Ok(String::from_utf8_lossy(bytes));
-}
-
-fn write_file(dir: &Descriptor, path: String, content: &String) -> Result<(), ErrorCode> {
-    let file = dir.open_at(
-        PathFlags::none(),
-        path,
-        OpenFlags::Create | OpenFlags::Truncate,
-        DescriptorFlags::Write | DescriptorFlags::Read,
-    ).wait()?;
-    let bytes: List<u8> = content.bytes().collect();
-    let [rx, tx] = Stream::<u8>::new();
-    let sub = file.write_via_stream(rx, 0 as Filesize);
-    let _ = tx.write_all(bytes);
-    tx.drop();
-    let write_result = sub.read();
-    sub.drop();
-    if let Some(Err(e)) = write_result {
-        return Result::Err(e);
-    }
-    return Result::Ok(());
 }
