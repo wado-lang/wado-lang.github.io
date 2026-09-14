@@ -3,7 +3,7 @@
 
 use { render } from "./markdown.wado";
 
-global SUMMARY_MAX: i32 = 200;
+internal global SUMMARY_MAX: i32 = 200;
 
 pub struct Doc {
     pub slug: String,

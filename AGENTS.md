@@ -194,6 +194,19 @@ on pull requests and `claude/**` pushes that touch the playground. Deploys
 track the latest wado release by default; set `WADO_PLAYGROUND_VERSION` to a
 tag to freeze or roll back the runtime.
 
+## Writing Sheaf
+
+House style for `src/*.wado`:
+
+- State an invariant as an assertion, never as a comment. An `assert` is
+  checked on every run and fails loudly the day it stops holding; a comment
+  just goes stale and misleads the next reader. This covers a test's fixture
+  too: if the case a test means to exercise depends on the fixture being built
+  a particular way, assert that, or the test quietly stops exercising it.
+- Write a comment only for what the code cannot say: a reason, a constraint, an
+  upstream quirk. If a comment restates the code, rename and decompose until it
+  is redundant, then delete it.
+
 ## Writing posts
 
 House style for `content/*.md`:

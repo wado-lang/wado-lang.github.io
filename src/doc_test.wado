@@ -1,4 +1,4 @@
-use { build_doc, rewrite_md_links, group_of, DocGroup } from "./doc.wado";
+use { build_doc, rewrite_md_links, group_of, DocGroup, SUMMARY_MAX } from "./doc.wado";
 
 test "build_doc takes its title from the first level-1 heading" {
     let src = "# Wado Spec
@@ -88,10 +88,11 @@ test "group_of files a doc by its slug" {
 }
 
 test "build_doc truncates a long summary without splitting a character" {
-    let lead = "x".repeat(199);
-    let doc = build_doc("x", &`# T\n\n${lead}\u{00e9} tail that pushes the summary past the limit.\n`);
+    let paragraph = `${"x".repeat(SUMMARY_MAX - 1)}\u{00e9} tail that pushes the summary past the limit.`;
+    assert !paragraph.is_char_boundary(SUMMARY_MAX);
+
+    let doc = build_doc("x", &`# T\n\n${paragraph}\n`);
     assert doc.summary.ends_with("…");
-    // The cut lands at byte 200, inside the two-byte `\u{00e9}` that starts at 199.
-    assert doc.summary.chars().count() == 200;
+    assert doc.summary.chars().count() == SUMMARY_MAX;
     assert !doc.summary.contains("\u{00e9}");
 }
