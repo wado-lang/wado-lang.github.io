@@ -1,4 +1,4 @@
-use { build_doc, rewrite_md_links, group_of, DocGroup, SUMMARY_MAX } from "./doc.wado";
+use { build_doc, rewrite_md_links, group_of, in_group, Doc, DocGroup, SUMMARY_MAX, SPEC_OVERVIEW } from "./doc.wado";
 
 test "build_doc takes its title from the first level-1 heading" {
     let src = "# Wado Spec
@@ -6,8 +6,8 @@ test "build_doc takes its title from the first level-1 heading" {
 Intro *para*.
 
 ## Section";
-    let doc = build_doc("spec", &src);
-    assert doc.slug == "spec";
+    let doc = build_doc("spec-overview", &src);
+    assert doc.slug == "spec-overview";
     assert doc.title == "Wado Spec";
     assert doc.body_html.contains(`<h1 id="wado-spec">Wado Spec</h1>`);
     assert doc.body_html.contains("<em>para</em>");
@@ -19,13 +19,13 @@ test "build_doc falls back to the slug when there is no heading" {
 }
 
 test "rewrite_md_links rewrites relative .md targets to .html" {
-    let html = `<a href="./spec.md">x</a>`;
-    assert rewrite_md_links(&html) == `<a href="./spec.html">x</a>`;
+    let html = `<a href="./spec-types.md">x</a>`;
+    assert rewrite_md_links(&html) == `<a href="./spec-types.html">x</a>`;
 }
 
 test "rewrite_md_links preserves the fragment" {
-    let html = `<a href="./spec.md#type-mapping">x</a>`;
-    assert rewrite_md_links(&html) == `<a href="./spec.html#type-mapping">x</a>`;
+    let html = `<a href="./spec-types.md#type-mapping">x</a>`;
+    assert rewrite_md_links(&html) == `<a href="./spec-types.html#type-mapping">x</a>`;
 }
 
 test "rewrite_md_links leaves absolute and external links untouched" {
@@ -34,8 +34,8 @@ test "rewrite_md_links leaves absolute and external links untouched" {
 }
 
 test "rewrite_md_links redirects excluded docs to their GitHub source" {
-    let html = `<a href="./CLAUDE.md">idx</a>`;
-    assert rewrite_md_links(&html) == `<a href="https://github.com/wado-lang/wado/blob/main/docs/CLAUDE.md">idx</a>`;
+    let html = `<a href="./AGENTS.md">idx</a>`;
+    assert rewrite_md_links(&html) == `<a href="https://github.com/wado-lang/wado/blob/main/docs/AGENTS.md">idx</a>`;
 }
 
 test "rewrite_md_links sends links that escape docs/ to GitHub source" {
@@ -49,7 +49,7 @@ test "rewrite_md_links leaves non-.md hrefs and stray text alone" {
 }
 
 test "build_doc summarises with the first sentence after the heading" {
-    let doc = build_doc("spec", &"# Wado Spec\n\nWado targets Wasm. It also targets WASI.\n\n## Section");
+    let doc = build_doc("spec-overview", &"# Wado Spec\n\nWado targets Wasm. It also targets WASI.\n\n## Section");
     assert doc.summary == "Wado targets Wasm.";
 }
 
@@ -80,11 +80,30 @@ test "build_doc truncates a long summary on a word boundary" {
 }
 
 test "group_of files a doc by its slug" {
-    assert group_of(&"spec") == DocGroup::Reference;
+    assert group_of(&"cheatsheet") == DocGroup::Reference;
+    assert group_of(&"spec-overview") == DocGroup::Spec;
+    assert group_of(&"spec-types") == DocGroup::Spec;
+    assert group_of(&"README") == DocGroup::Unlisted;
     assert group_of(&"wep-2026-01-10-wasm-import") == DocGroup::Wep;
     assert group_of(&"stdlib-core-json") == DocGroup::Stdlib;
     assert group_of(&"research-wasm-cm") == DocGroup::Research;
     assert group_of(&"compiler") == DocGroup::Other;
+}
+
+test "in_group opens the specification with its overview, then sorts by slug" {
+    let docs: List<Doc> = [
+        build_doc("spec-types", &"# Types\n"),
+        build_doc(SPEC_OVERVIEW, &"# Wado Language Specification\n"),
+        build_doc("spec-attributes", &"# Compiler Attributes\n"),
+        build_doc("cheatsheet", &"# Wado Cheatsheet\n"),
+    ];
+    assert "spec-attributes" < SPEC_OVERVIEW;
+
+    let spec = in_group(&docs, DocGroup::Spec);
+    assert spec.len() == 3;
+    assert spec[0].slug == SPEC_OVERVIEW;
+    assert spec[1].slug == "spec-attributes";
+    assert spec[2].slug == "spec-types";
 }
 
 test "build_doc truncates a long summary without splitting a character" {

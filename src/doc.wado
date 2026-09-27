@@ -5,6 +5,9 @@ use { render } from "./markdown.wado";
 
 internal global SUMMARY_MAX: i32 = 200;
 
+/// The specification's opening chapter: what the rest promises, and a map to it.
+pub global SPEC_OVERVIEW: String = "spec-overview";
+
 pub struct Doc {
     pub slug: String,
     pub title: String,
@@ -16,29 +19,30 @@ pub struct Doc {
 /// How a doc is filed on the index and in `llms.txt`, decided by its slug.
 pub enum DocGroup {
     Reference,
+    Spec,
     Wep,
     Stdlib,
     Research,
     Other,
+    /// Published so links to it resolve, but listed nowhere: upstream's
+    /// `README.md` is its own index of these pages, which `/docs/` replaces.
+    Unlisted,
 }
 
 pub fn group_of(slug: &String) -> DocGroup {
-    if *slug == "spec" || *slug == "cheatsheet" || *slug == "design-philosophy" {
-        return DocGroup::Reference;
-    }
-    if slug.starts_with("wep-") {
-        return DocGroup::Wep;
-    }
-    if slug.starts_with("stdlib-") {
-        return DocGroup::Stdlib;
-    }
-    if slug.starts_with("research-") {
-        return DocGroup::Research;
-    }
-    return DocGroup::Other;
+    return match slug {
+        "README" => DocGroup::Unlisted,
+        "cheatsheet" | "design-philosophy" => DocGroup::Reference,
+        s && s.starts_with("spec-") => DocGroup::Spec,
+        s && s.starts_with("wep-") => DocGroup::Wep,
+        s && s.starts_with("stdlib-") => DocGroup::Stdlib,
+        s && s.starts_with("research-") => DocGroup::Research,
+        _ => DocGroup::Other,
+    };
 }
 
-/// The docs filed under one group, slug-sorted.
+/// The docs filed under one group, slug-sorted, except that the spec overview
+/// opens its group.
 pub fn in_group(docs: &List<Doc>, group: DocGroup) -> List<Doc> {
     let mut out: List<Doc> = [];
     for let d of docs {
@@ -46,7 +50,13 @@ pub fn in_group(docs: &List<Doc>, group: DocGroup) -> List<Doc> {
             out.push(*d);
         }
     }
-    out.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
+    out.sort_by(|a: &Doc, b: &Doc| {
+        let by_overview = (b.slug == SPEC_OVERVIEW).cmp(&(a.slug == SPEC_OVERVIEW));
+        if by_overview != Ordering::Equal {
+            return by_overview;
+        }
+        return a.slug.cmp(&b.slug);
+    });
     return out;
 }
 
@@ -65,15 +75,12 @@ fn extract_summary(source: &String) -> String {
     let shortened = shorten(&first_sentence(&joined));
     let trimmed = shortened.trim_end();
     // A lead-in ending in a colon introduces a list the summary does not carry.
-    return match trimmed.strip_suffix(":") {
-        Some(t) => t.trim_end(),
-        None => trimmed,
-    };
+    return trimmed.strip_suffix(":").unwrap_or(trimmed).trim_end().to_string();
 }
 
 fn lead_paragraph(source: &String) -> String {
     let mut seen_title = false;
-    let mut parts: List<String> = [];
+    let mut parts: List<StrSlice> = [];
     for let line of source.lines() {
         let t = line.trim();
         if !seen_title {
@@ -161,7 +168,7 @@ fn strip_links(s: &String) -> String {
 fn extract_title(source: &String, slug: &String) -> String {
     for let line of source.lines() {
         if let Some(rest) = line.trim().strip_prefix("# ") {
-            return rest.trim();
+            return rest.trim().to_string();
         }
     }
     return *slug;
@@ -220,9 +227,9 @@ fn rewrite_target(url: &String) -> String {
             return *url;
         },
     };
-    // AGENTS.md / CLAUDE.md are excluded, and anything outside docs/ has no
-    // published page; point both at their GitHub source.
-    if path.ends_with("AGENTS.md") || path.ends_with("CLAUDE.md") || escapes_dir(&path) {
+    // AGENTS.md is excluded, and anything outside docs/ has no published page;
+    // point both at their GitHub source.
+    if path.ends_with("AGENTS.md") || escapes_dir(&path) {
         return github_source(&path, &frag);
     }
     return `${base}.html${frag}`;
@@ -231,11 +238,8 @@ fn rewrite_target(url: &String) -> String {
 /// True when the relative target leaves its own directory (any `/` after an
 /// optional leading `./`), i.e. it does not name a sibling doc.
 fn escapes_dir(path: &String) -> bool {
-    let p = match path.strip_prefix("./") {
-        Some(s) => s,
-        None => *path,
-    };
-    return p.contains("/");
+    let p = path.as_str_slice();
+    return p.strip_prefix("./").unwrap_or(p).contains("/");
 }
 
 fn github_source(path: &String, frag: &String) -> String {

@@ -31,8 +31,8 @@ test "ignores external, asset, and fragment links" {
 
 test "maps absolute /docs and /blog links into the generated set" {
     let files: List<SiteFile> = [
-        SiteFile { path: "index.html", content: `<a href="/docs/spec.html">s</a><a href="/blog/">home</a>` },
-        SiteFile { path: "docs/spec.html", content: "ok" },
+        SiteFile { path: "index.html", content: `<a href="/docs/spec-overview.html">s</a><a href="/blog/">home</a>` },
+        SiteFile { path: "docs/spec-overview.html", content: "ok" },
     ];
     assert check_links(&files).is_empty();
 }

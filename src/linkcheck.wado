@@ -51,7 +51,7 @@ fn resolve(dir: &String, url: &String) -> Option<String> {
         return Option::None;
     }
     if let Some(rest) = path.strip_prefix("/") {
-        return map_absolute(&rest);
+        return map_absolute(rest);
     }
     let norm = join_normalize(dir, &path);
     // A directory link resolves to that directory's index page.
@@ -61,17 +61,17 @@ fn resolve(dir: &String, url: &String) -> Option<String> {
     return Option::Some(norm);
 }
 
-fn map_absolute(rest: &String) -> Option<String> {
+fn map_absolute(rest: StrSlice) -> Option<String> {
     if rest.is_empty() || rest.starts_with("assets/") {
         return Option::None;
     }
     if let Some(r) = rest.strip_prefix("blog/") {
-        return Option::Some(if r.is_empty() { "index.html" } else { r });
+        return Option::Some(if r.is_empty() { "index.html" } else { r.to_string() });
     }
     if let Some(r) = rest.strip_prefix("docs/") {
         return Option::Some(if r.is_empty() { "docs/index.html" } else { `docs/${r}` });
     }
-    return Option::Some(*rest);
+    return Option::Some(rest.to_string());
 }
 
 fn strip_suffixes(url: &String) -> String {
