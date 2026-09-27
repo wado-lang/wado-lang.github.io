@@ -13,6 +13,12 @@ Intro *para*.
     assert doc.body_html.contains("<em>para</em>");
 }
 
+test "build_doc escapes a code block in a language other than Wado" {
+    let doc = build_doc("notes", &"```sh\necho <b> & done\n```\n");
+    assert doc.body_html.contains("echo &lt;b&gt; &amp; done");
+    assert !doc.body_html.contains("<b>");
+}
+
 test "build_doc falls back to the slug when there is no heading" {
     let doc = build_doc("notes", &"just a paragraph");
     assert doc.title == "notes";
@@ -72,16 +78,16 @@ test "build_doc leaves the summary empty when a subsection follows the heading" 
 }
 
 test "build_doc truncates a long summary on a word boundary" {
-    let long = "word ".repeat(60);
+    let long = "words ".repeat(60);
+    assert !long.substr_bytes(SUMMARY_MAX - 1, SUMMARY_MAX + 1).contains(" ");
     let doc = build_doc("long", &`# Long\n\n${long}`);
     assert doc.summary.len() <= SUMMARY_MAX + "…".len();
-    assert doc.summary.ends_with("…");
-    assert !doc.summary.contains("wor…");
+    assert doc.summary.ends_with(" words…");
 }
 
 test "group_of files a doc by its slug" {
     assert group_of(&"cheatsheet") == DocGroup::Reference;
-    assert group_of(&"spec-overview") == DocGroup::Spec;
+    assert group_of(&SPEC_OVERVIEW) == DocGroup::Reference;
     assert group_of(&"spec-types") == DocGroup::Spec;
     assert group_of(&"README") == DocGroup::Unlisted;
     assert group_of(&"wep-2026-01-10-wasm-import") == DocGroup::Wep;
@@ -90,20 +96,18 @@ test "group_of files a doc by its slug" {
     assert group_of(&"compiler") == DocGroup::Other;
 }
 
-test "in_group opens the specification with its overview, then sorts by slug" {
+test "in_group keeps one group's docs, sorted by slug" {
     let docs: List<Doc> = [
         build_doc("spec-types", &"# Types\n"),
         build_doc(SPEC_OVERVIEW, &"# Wado Language Specification\n"),
         build_doc("spec-attributes", &"# Compiler Attributes\n"),
-        build_doc("cheatsheet", &"# Wado Cheatsheet\n"),
     ];
-    assert "spec-attributes" < SPEC_OVERVIEW;
+    assert docs[0].slug > docs[2].slug;
 
     let spec = in_group(&docs, DocGroup::Spec);
-    assert spec.len() == 3;
-    assert spec[0].slug == SPEC_OVERVIEW;
-    assert spec[1].slug == "spec-attributes";
-    assert spec[2].slug == "spec-types";
+    assert spec.len() == 2;
+    assert spec[0].slug == "spec-attributes";
+    assert spec[1].slug == "spec-types";
 }
 
 test "build_doc truncates a long summary without splitting a character" {

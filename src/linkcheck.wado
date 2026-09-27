@@ -10,7 +10,7 @@ pub struct BrokenLink {
     pub target: String,
 }
 
-/// Site paths are relative to `_site` (`index.html`, `docs/spec.html`), which is
+/// Site paths are relative to `_site` (`index.html`, `docs/spec-types.html`), which is
 /// deployed with the blog at `/blog/` and the docs at `/docs/`. Absolute links
 /// are mapped back into that namespace before the existence check.
 pub fn check_links(files: &List<SiteFile>) -> List<BrokenLink> {

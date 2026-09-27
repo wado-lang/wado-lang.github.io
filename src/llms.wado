@@ -18,8 +18,8 @@ pub fn render_llms(posts: &List<Post>, docs: &List<Doc>) -> String {
     out.push_str(&`${INTRO}\n\n`);
     out.push_str(&`${CONVENTION}\n`);
     out.push_str(&start_here(docs));
-    out.push_str(&spec_chapters(docs));
-    out.push_str(&stdlib(docs));
+    out.push_str(&doc_section(docs, "Specification", DocGroup::Spec));
+    out.push_str(&doc_section(docs, "Standard library", DocGroup::Stdlib));
     out.push_str(&blog(posts));
     out.push_str(&optional(docs));
     return out;
@@ -56,27 +56,13 @@ fn start_here(docs: &List<Doc>) -> String {
     return out;
 }
 
-/// The specification's chapters. The overview is already under Start here.
-fn spec_chapters(docs: &List<Doc>) -> String {
-    let mut chapters: List<Doc> = [];
-    for let d of in_group(docs, DocGroup::Spec) {
-        if d.slug != SPEC_OVERVIEW {
-            chapters.push(d);
-        }
-    }
-    let entries = doc_entries(&chapters);
+/// One group's docs under a heading, or nothing when none is published.
+fn doc_section(docs: &List<Doc>, heading: String, group: DocGroup) -> String {
+    let entries = doc_entries(&in_group(docs, group));
     if entries.is_empty() {
         return String::new();
     }
-    return `\n## Specification\n\n${entries}`;
-}
-
-fn stdlib(docs: &List<Doc>) -> String {
-    let entries = doc_entries(&in_group(docs, DocGroup::Stdlib));
-    if entries.is_empty() {
-        return String::new();
-    }
-    return `\n## Standard library\n\n${entries}`;
+    return `\n## ${heading}\n\n${entries}`;
 }
 
 fn blog(posts: &List<Post>) -> String {

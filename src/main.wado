@@ -1,6 +1,6 @@
 use { println, eprintln, exit_error, Stdout, Stderr, Exit } from "core:cli";
 use fs from "core:fs";
-use { Preopens } from "wasi:filesystem";
+use { Preopens } from "core:fs";
 use { build, Post } from "./post.wado";
 use { build_doc, Doc } from "./doc.wado";
 use { build_site, build_docs, build_llms, SiteFile } from "./site.wado";
@@ -69,11 +69,13 @@ fn slug_of(name: &String) -> String {
     return slug.to_string();
 }
 
-/// Every `*.md` in `dir` except the excluded names, as `[name, source]`.
+/// Every regular `*.md` file in `dir` except the excluded names, as
+/// `[name, source]`. A symlink is skipped: following one out of the preopened
+/// tree fails the read.
 fn read_markdown(dir: &String, exclude: &List<String>) -> Result<List<[String, String]>, BuildError> with Preopens {
     let mut out: List<[String, String]> = [];
     for let entry of fs::read_dir(dir)? {
-        if !entry.name.ends_with(".md") || exclude.contains(&entry.name) {
+        if !entry.type matches { File } || !entry.name.ends_with(".md") || exclude.contains(&entry.name) {
             continue;
         }
         out.push([entry.name, fs::read_to_string(&`${dir}/${entry.name}`)?]);

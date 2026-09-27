@@ -32,7 +32,7 @@ pub enum DocGroup {
 pub fn group_of(slug: &String) -> DocGroup {
     return match slug {
         "README" => DocGroup::Unlisted,
-        "cheatsheet" | "design-philosophy" => DocGroup::Reference,
+        "cheatsheet" | "design-philosophy" | SPEC_OVERVIEW => DocGroup::Reference,
         s && s.starts_with("spec-") => DocGroup::Spec,
         s && s.starts_with("wep-") => DocGroup::Wep,
         s && s.starts_with("stdlib-") => DocGroup::Stdlib,
@@ -41,8 +41,7 @@ pub fn group_of(slug: &String) -> DocGroup {
     };
 }
 
-/// The docs filed under one group, slug-sorted, except that the spec overview
-/// opens its group.
+/// The docs filed under one group, slug-sorted.
 pub fn in_group(docs: &List<Doc>, group: DocGroup) -> List<Doc> {
     let mut out: List<Doc> = [];
     for let d of docs {
@@ -50,13 +49,7 @@ pub fn in_group(docs: &List<Doc>, group: DocGroup) -> List<Doc> {
             out.push(*d);
         }
     }
-    out.sort_by(|a: &Doc, b: &Doc| {
-        let by_overview = (b.slug == SPEC_OVERVIEW).cmp(&(a.slug == SPEC_OVERVIEW));
-        if by_overview != Ordering::Equal {
-            return by_overview;
-        }
-        return a.slug.cmp(&b.slug);
-    });
+    out.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
     return out;
 }
 

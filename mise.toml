@@ -44,12 +44,12 @@ ls -la assets/
 """
 
 [tasks.fetch-deps]
-description = "Fetch registry component dependencies (wado-lang:marl) into the local cache before a parallel compile fetches them concurrently"
+description = "Fetch registry component dependencies (wado-lang:marl, wado-lang:gale-highlight-wado) into the local cache before a parallel compile fetches them concurrently"
 run = "wado fetch"
 
 [tasks.blog-build]
 depends = ["fetch-wado", "fetch-deps"]
-description = "Generate the blog: content/*.md -> _site/ via Sheaf"
+description = "Generate the blog and docs: content/*.md -> _site/, upstream docs/*.md -> _site/docs/ via Sheaf"
 run = "wado run ."
 
 [tasks.blog-test]

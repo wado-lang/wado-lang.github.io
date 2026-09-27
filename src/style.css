@@ -6,10 +6,11 @@
   --rule: #e4ddd0;
   --code-bg: #f6f3ec;
   --accent: #7a1c1c; /* 朱 — vermillion seal */
+  /* Each --hl-* colour clears 4.5:1 (WCAG AA) against --code-bg. */
   --hl-keyword: #7a1c1c; /* seal vermillion */
   --hl-string: #4f6b34; /* moss */
-  --hl-literal: #9c6410; /* ochre — numbers & builtin constants */
-  --hl-comment: #8c8578; /* faint ink */
+  --hl-literal: #97610f; /* ochre — numbers & builtin constants */
+  --hl-comment: #736c60; /* faint ink */
   --max: 720px;
 }
 

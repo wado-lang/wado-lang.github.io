@@ -20,6 +20,7 @@ Defined in `mise.toml`. The repo must be trusted once per machine
 | -------------- | --------------------------------------------------------------- |
 | `mise run fetch-wado` | Shallow-clones `wado-lang/wado` into `.tmp/wado` if absent. The blog tasks depend on it for the upstream `docs/*.md` source (Marl itself now comes from the registry, not the clone). |
 | `mise run fetch` | Re-clones `wado-lang/wado` into `.tmp/wado`, copies `wado-512.png` / `wado-1024.png` into `assets/`, and runs `scripts/transparentize-logo.py` on them. Re-run when the upstream logo changes. Requires Python with Pillow installed. |
+| `mise run fetch-deps` | Fetches the registry components (`wado-lang:marl`, `wado-lang:gale-highlight-wado`) into the local cache (`wado fetch`), so the parallel compiles of the blog tasks do not fetch them concurrently. |
 | `mise run blog-build` | Generates the blog and docs: `content/*.md` → `_site/` and the upstream `docs/*.md` → `_site/docs/` via Sheaf (`wado run .`). |
 | `mise run blog-test` | Runs Sheaf's Wado tests (`wado test`).                     |
 | `mise run serve` | Serves the site at <http://localhost:8000> via `python3 -m http.server`. Foreground process — Ctrl-C to stop. |
@@ -96,8 +97,10 @@ The specification, briefly:
 ### Docs
 
 Sheaf also renders the upstream Wado docs. Every `.md` under the `.tmp/wado`
-clone's `docs/` (except `AGENTS.md`, the agent-facing one) is rendered through the same Marl + template + stylesheet as the blog, into
-`_site/docs/` and published under `/docs/`.
+clone's `docs/` (except `AGENTS.md`, the agent-facing one) is rendered through
+the same Marl + template + stylesheet as the blog, into `_site/docs/` and
+published under `/docs/`. Only regular files are read: a symlink is skipped,
+since following one out of the preopened tree fails the read.
 
 - No front matter: these are plain Markdown. The page title is the first
   level-1 heading (the slug if there is none), and there is no author/date
@@ -109,13 +112,13 @@ clone's `docs/` (except `AGENTS.md`, the agent-facing one) is rendered through t
   `/docs/spec-types.html` has `/docs/spec-types.md` next to it. Its relative
   `.md` links need no rewriting, since they resolve against the sibling copies.
 - The docs index (`/docs/`) groups pages by slug: a language reference
-  (`cheatsheet`, `design-philosophy`), the specification (`spec-`, one page per
-  area, `spec-overview` first), then WEPs (`wep-`), the standard library
+  (`cheatsheet`, `design-philosophy`, `spec-overview`), the specification's
+  chapters (`spec-`, one page per area), then WEPs (`wep-`), the standard library
   (`stdlib-`), research notes (`research-`), and everything else under "Other".
   Upstream's `README.md` is its own index of the same pages, so it is published
   (docs link to it) but listed nowhere. `src/doc.wado` owns the classifier
-  (`group_of`) and the collector (`in_group`, slug-sorted with `spec-overview`
-  first), which `llms.txt` shares. Marl emits GFM heading
+  (`group_of`) and the slug-sorted collector (`in_group`), which `llms.txt`
+  shares. Marl emits GFM heading
   `id`s, so in-page `#anchor` links resolve. `render` also returns the heading
   outline (`RenderResult.headings`), unused for now, but available if a
   per-page table of contents is wanted.
@@ -134,7 +137,7 @@ What goes where:
 - `## Start here` — cheatsheet, spec overview, design philosophy, playground.
   Curated, with hand-written descriptions, and an entry is dropped when its doc
   is not published, so the index never names a missing page.
-- `## Specification` — every other `spec-` chapter.
+- `## Specification` — every `spec-` chapter.
 - `## Standard library` — every `stdlib-` doc.
 - `## Blog` — listed posts, newest first, described by their front matter.
 - `## Optional` — the docs index plus the toolchain docs (compiler, optimizer,
