@@ -29,3 +29,19 @@ jobs:
 
       - name: Build the blog
         run: mise run blog-build
+
+  gpt2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up mise and install tools
+        uses: jdx/mise-action@v4.3.0
+
+      - name: Build the GPT-2 page's component
+        run: |
+          mise trust
+          mise run gpt2-build

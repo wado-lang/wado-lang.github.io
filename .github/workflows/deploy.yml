@@ -40,6 +40,9 @@ jobs:
       - name: Build the playground
         uses: ./.github/actions/build-playground
 
+      - name: Build the GPT-2 page
+        run: mise run gpt2-build
+
       - name: Assemble the published site
         run: |
           set -euo pipefail
@@ -59,6 +62,10 @@ jobs:
           # doesn't abort the whole-site deploy under `set -e`.
           find playground -maxdepth 1 -name '*.ttf' -exec cp {} dist/playground/ \;
           cp -r playground/runtime dist/playground/runtime
+          # The GPT-2 page imports the playground runtime from /playground/.
+          mkdir -p dist/gpt2
+          cp gpt2/index.html gpt2/app.js gpt2/worker.js gpt2/gpt2web.wasm \
+             gpt2/hf2loam.mjs gpt2/gpt2-header.safetensors dist/gpt2/
           touch dist/.nojekyll
 
       - name: Upload Pages artifact

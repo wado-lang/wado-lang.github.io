@@ -33,7 +33,9 @@ Defined in `mise.toml`. The repo must be trusted once per machine
 | `mise run playground-runtime` | Alternative to `fetch-playground` for local dev **against an unreleased wado**: stages the runtime from a locally built wado checkout (`WADO_DIR`, default `.tmp/wado`; run `mise run playground-web-build` there first). |
 | `mise run playground-build` | Bundles the playground page JS (`playground/src/` + Monaco) into `playground/app.js` etc. with esbuild (`npm ci` + `node build.mjs`). |
 | `mise run playground-test` | E2E smoke test for the built playground page: LSP ready → run → diagnostics → hover in a real Chromium (137+; `CHROME_PATH` overrides autodetection). |
-| `mise run clean` | Removes `.tmp/`, `_site/`, and the playground build outputs.    |
+| `mise run fetch-wado-release` | Sparse-clones Loam and its sibling packages from the wado tag matching the installed CLI (`v$(wado --version)`) into `.tmp/wado-release`, re-cloning when the tag changes. |
+| `mise run gpt2-build` | Builds the GPT-2 page's component (`gpt2/gpt2web.wasm`) against `.tmp/wado-release`, and copies upstream's `hf2loam.mjs` and `gpt2-header.safetensors` beside it. |
+| `mise run clean` | Removes `.tmp/`, `_site/`, and the playground and GPT-2 build outputs. |
 
 `.tmp/` and `_site/` are gitignored; `assets/` is committed (the site must
 work without running `fetch`). The `wado` CLI itself is a mise tool (a
@@ -219,6 +221,45 @@ same fetch + build plus `playground/test-e2e.mjs` against the runner's Chrome
 on pull requests and `claude/**` pushes that touch the playground. Deploys
 track the latest wado release by default; set `WADO_PLAYGROUND_VERSION` to a
 tag to freeze or roll back the runtime.
+
+## GPT-2
+
+`/gpt2/` runs GPT-2 (124M) in the browser: upstream's
+`package-loam/example/gpt2-124m`, built into a component. Nothing links to it
+yet. It needs JSPI (Chrome/Chromium 137+), like the playground.
+
+Nothing loads until the reader presses the download button. Then
+`gpt2/worker.js` does all the work off the main thread:
+
+1. It downloads Hugging Face's `model.safetensors` (548 MB, at a pinned
+   revision) with progress, and checks the SHA-256.
+2. It converts the checkpoint to the graph's layout with upstream's
+   `hf2loam.mjs` (`convert`).
+3. It transpiles `gpt2web.wasm` with the playground runtime's
+   `transpileToModule` (jco in the browser), and loads the weights into it.
+
+The weights are never hosted here. The converted file is 652 MB, over what
+Pages and LFS serve comfortably, and compresses by only 7%.
+
+Committed here: `gpt2/index.html`, `gpt2/app.js` (the page), `gpt2/worker.js`,
+and the component's package (`gpt2/wado.toml`, `gpt2/gpt2web.wado`), a thin
+export layer over upstream's `model.wado`. The model, its tokenizer and the
+converter all live upstream. The component imports them from
+`.tmp/wado-release`, the checkout of the tag the pinned CLI was released from,
+since a generated model only builds with the compiler it was written for.
+The root `wado.toml` excludes `gpt2/**` from `wado test`.
+
+Local dev, after the playground's `fetch-playground`:
+
+```sh
+mise run gpt2-build
+mise run serve              # → http://localhost:8000/gpt2/
+```
+
+Deployment: `deploy.yml` runs `mise run gpt2-build` and copies the page, the
+component and the converter files into `dist/gpt2/`. `ci.yml` runs the same
+build on pull requests, so a component that no longer compiles fails there
+rather than in the deploy.
 
 ## Writing Sheaf
 
