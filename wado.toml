@@ -9,6 +9,10 @@ authors = ["FUJI Goro <g.psy.va@gmail.com>"]
 [world]
 "wasi:cli/command" = "src/main.wado"
 
+[test]
+# The GPT-2 page's component is its own package, built by `mise run gpt2-build`.
+exclude = ["gpt2/**"]
+
 [registries]
 default = "oci://ghcr.io"
 

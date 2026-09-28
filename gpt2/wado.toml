@@ -1,0 +1,9 @@
+[package]
+namespace = "wado-lang"
+name = "gpt2web"
+version = "0.1.0"
+description = "The library the GPT-2 page runs in the browser"
+repository = "https://github.com/wado-lang/wado-lang.github.io"
+license = "MIT"
+authors = ["FUJI Goro <g.psy.va@gmail.com>"]
+lib = "gpt2web.wado"

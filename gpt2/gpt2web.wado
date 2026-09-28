@@ -1,0 +1,50 @@
+//! What the GPT-2 page calls: load a checkpoint once, then turn text into
+//! tokens, pick the next one, and turn tokens back into text. The model itself
+//! is upstream's example, from the wado release `mise run fetch-wado-release`
+//! checks out.
+
+use { gpt2_tokenizer, Model, Tokenizer } from "../.tmp/wado-release/package-loam/example/gpt2-124m/model.wado";
+
+global mut MODEL: Option<Model> = null;
+global mut TOKENIZER: Option<Tokenizer> = null;
+
+fn model() -> &Model {
+    let Some(loaded) = &MODEL else {
+        panic("the page called the model before `load`");
+    };
+    return loaded;
+}
+
+fn tokenizer() -> &Tokenizer {
+    if TOKENIZER matches { None } {
+        TOKENIZER = Option::Some(gpt2_tokenizer());
+    }
+    let Some(loaded) = &TOKENIZER else {
+        unreachable();
+    };
+    return loaded;
+}
+
+/// Loads the weights from a checkpoint in the layout `hf2loam.mjs` writes.
+export fn load(checkpoint: ByteList) -> Result<(), String> {
+    MODEL = Option::Some(Model::load(&checkpoint).map_err(|e| `${e}`)?);
+    return Ok(());
+}
+
+/// How many tokens the model reads at most.
+export fn positions() -> i32 {
+    return model().positions();
+}
+
+export fn encode(text: String) -> List<i32> {
+    return tokenizer().encode(&text);
+}
+
+export fn decode(ids: List<i32>) -> String {
+    return tokenizer().decode(&ids);
+}
+
+/// The token the model ranks first after `ids`.
+export fn next_token(ids: List<i32>) -> i32 {
+    return model().next_token(&ids);
+}

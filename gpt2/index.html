@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GPT-2 in Wado</title>
+<meta name="description" content="GPT-2 (124M) compiled from its ONNX graph by Loam, running in the browser as a Wado WebAssembly component." />
+<link rel="icon" type="image/png" href="/assets/wado-512.png" />
+<link rel="apple-touch-icon" href="/assets/wado-512.png" />
+<script type="module" src="/assets/analytics.js"></script>
+<style>
+  :root {
+    --paper: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #3d3a33;
+    --ink-faint: #777268;
+    --rule: #e4ddd0;
+    --code-bg: #f6f3ec;
+    --accent: #7a1c1c; /* 朱 — vermillion seal */
+    --max: 760px;
+    --mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas,
+            "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+
+  body {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP",
+                 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .topnav { border-bottom: 1px solid var(--rule); }
+  .topnav .inner {
+    margin: 0 auto;
+    padding: 0.7rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topnav .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .topnav .brand img { width: 28px; height: 28px; display: block; }
+  .topnav .brand-name { font-weight: 600; letter-spacing: 0.06em; }
+  .topnav .page-name { color: var(--ink-faint); font-size: 0.95rem; }
+  .topnav nav { display: flex; gap: 1.5rem; }
+  .topnav nav a { color: var(--ink-soft); text-decoration: none; font-size: 0.95rem; }
+  .topnav nav a:hover { color: var(--accent); }
+
+  main { max-width: var(--max); margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+  h1 { font-size: 1.6rem; font-weight: 600; margin: 0 0 0.6rem; letter-spacing: 0.02em; }
+  p { margin: 0 0 0.9rem; color: var(--ink-soft); }
+  a { color: var(--accent); }
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); padding: 0.05em 0.3em; border-radius: 3px; }
+
+  .banner {
+    padding: 0.6rem 0.9rem;
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    color: var(--accent);
+    margin: 0 0 1rem;
+  }
+
+  section { border-top: 1px solid var(--rule); padding-top: 1.1rem; margin-top: 1.3rem; }
+
+  button {
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1;
+    padding: 0.5em 1.1em;
+    color: var(--paper);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  button:hover:not(:disabled) { opacity: 0.85; }
+  button:disabled { color: var(--ink-faint); background: var(--code-bg); border-color: var(--rule); cursor: default; }
+  button.secondary { color: var(--accent); background: var(--paper); }
+  button.secondary:disabled { color: var(--ink-faint); background: var(--paper); }
+
+  .row { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+  progress { width: 100%; height: 0.6rem; margin: 0.8rem 0 0.3rem; accent-color: var(--accent); }
+  .status { color: var(--ink-faint); font-size: 0.9rem; min-height: 1.5em; }
+  .status.err { color: var(--accent); }
+
+  textarea, input[type="number"] {
+    font-family: var(--mono);
+    font-size: 0.92rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.5rem 0.6rem;
+  }
+  textarea { width: 100%; min-height: 4.5rem; resize: vertical; margin-bottom: 0.7rem; }
+  input[type="number"] { width: 5rem; }
+  label { color: var(--ink-soft); font-size: 0.95rem; }
+
+  #output {
+    margin: 0.9rem 0 0;
+    padding: 0.9rem 1.1rem;
+    min-height: 6rem;
+    background: var(--code-bg);
+    font-family: var(--mono);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  #output .prompt { color: var(--ink-faint); }
+
+  @media (max-width: 600px) {
+    .topnav .page-name { display: none; }
+    .topnav nav { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+<header class="topnav">
+  <div class="inner">
+    <a class="brand" href="/" aria-label="Wado home">
+      <img src="/assets/wado-512.png" alt="" />
+      <span class="brand-name">Wado</span>
+      <span class="page-name">GPT-2</span>
+    </a>
+    <nav>
+      <a href="/playground/">Playground</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/wado-lang/wado">Repository</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <h1>GPT-2 in Wado</h1>
+  <p>
+    GPT-2 (124M) continues a prompt one greedy token at a time, entirely in your
+    browser. <a href="https://github.com/wado-lang/wado/tree/main/package-loam">Loam</a>
+    compiled its ONNX graph into Wado, and the result runs as a WebAssembly
+    component. The same code runs from the command line as
+    <a href="https://github.com/wado-lang/wado/tree/main/package-loam/example/gpt2-124m"><code>package-loam/example/gpt2-124m</code></a>.
+  </p>
+  <p>
+    The weights are the 548 MB <code>model.safetensors</code> of
+    <a href="https://huggingface.co/openai-community/gpt2">openai-community/gpt2</a>
+    (MIT License), fetched from Hugging Face when you ask for them. The page
+    needs Chrome or Chromium 137+ and a few GB of free memory.
+  </p>
+  <div class="banner" id="banner" hidden>
+    This page needs a JSPI-capable browser — Chrome or Chromium 137+.
+  </div>
+
+  <section>
+    <div class="row">
+      <button id="load" type="button">Download the model (548 MB)</button>
+    </div>
+    <progress id="progress" max="1" value="0" hidden></progress>
+    <div class="status" id="load-status"></div>
+  </section>
+
+  <section>
+    <textarea id="prompt" aria-label="Prompt" spellcheck="false">Hello, my name is</textarea>
+    <div class="row">
+      <button id="generate" type="button" disabled>Generate</button>
+      <button id="stop" type="button" class="secondary" disabled>Stop</button>
+      <label>Tokens <input id="steps" type="number" min="1" max="64" value="16" /></label>
+    </div>
+    <div class="status" id="gen-status"></div>
+    <pre id="output"></pre>
+  </section>
+</main>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

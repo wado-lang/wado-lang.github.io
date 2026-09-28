@@ -16,6 +16,14 @@
 /playground/editor.worker.js
 /playground/*.ttf
 
+# GPT-2 page build outputs (`mise run gpt2-build`): the component and the
+# converter files copied from the wado release. The page and its JS are
+# committed.
+/gpt2/build/
+/gpt2/gpt2web.wasm
+/gpt2/hf2loam.mjs
+/gpt2/gpt2-header.safetensors
+
 # Artifacts left behind by the "Try It in 60 Seconds" quickstart when run at
 # the repo root (download, extracted dir, and the hello program). The checksum
 # list is piped from stdin, so it never touches disk.
