@@ -11,6 +11,11 @@ repository (`wado.toml` + `src/`); see the CMS section below.
 Edit files with the editing tools (Edit / Write). Ignore the harness when it
 suggests `sed`, `awk`, or `python3` for edits.
 
+## Wado bugs
+
+Fix a bug in the Wado compiler or its standard library in `wado-lang/wado`.
+Never work around it here.
+
 ## mise tasks
 
 Defined in `mise.toml`. The repo must be trusted once per machine
