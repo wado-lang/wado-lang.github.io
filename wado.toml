@@ -17,5 +17,5 @@ exclude = ["gpt2/**"]
 default = "oci://ghcr.io"
 
 [dependencies]
-"wado-lang:marl" = { version = "^0.0.31" }
-"wado-lang:gale-highlight-wado" = { version = "^0.0.31" }
+"wado-lang:marl" = { version = "^0.0.32" }
+"wado-lang:gale-highlight-wado" = { version = "^0.0.32" }
