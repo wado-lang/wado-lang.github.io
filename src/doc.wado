@@ -18,7 +18,7 @@ pub struct Doc {
 
 /// How a doc is filed on the index and in `llms.txt`, decided by its slug.
 pub enum DocGroup {
-    Reference,
+    StartHere,
     Spec,
     Wep,
     Stdlib,
@@ -32,7 +32,7 @@ pub enum DocGroup {
 pub fn group_of(slug: &String) -> DocGroup {
     return match slug {
         "README" => DocGroup::Unlisted,
-        "cheatsheet" | "design-philosophy" | SPEC_OVERVIEW => DocGroup::Reference,
+        "cheatsheet" | "design-philosophy" => DocGroup::StartHere,
         s && s.starts_with("spec-") => DocGroup::Spec,
         s && s.starts_with("wep-") => DocGroup::Wep,
         s && s.starts_with("stdlib-") => DocGroup::Stdlib,
@@ -41,7 +41,8 @@ pub fn group_of(slug: &String) -> DocGroup {
     };
 }
 
-/// The docs filed under one group, slug-sorted.
+/// The docs filed under one group: the spec overview ahead of its chapters,
+/// the rest slug-sorted.
 pub fn in_group(docs: &List<Doc>, group: DocGroup) -> List<Doc> {
     let mut out: List<Doc> = [];
     for let d of docs {
@@ -49,7 +50,14 @@ pub fn in_group(docs: &List<Doc>, group: DocGroup) -> List<Doc> {
             out.push(*d);
         }
     }
-    out.sort_by(|a: &Doc, b: &Doc| a.slug.cmp(&b.slug));
+    out.sort_by(|a: &Doc, b: &Doc| {
+        let a_leads = a.slug == SPEC_OVERVIEW;
+        let b_leads = b.slug == SPEC_OVERVIEW;
+        if a_leads != b_leads {
+            return if a_leads { Ordering::Less } else { Ordering::Greater };
+        }
+        return a.slug.cmp(&b.slug);
+    });
     return out;
 }
 

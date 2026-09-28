@@ -86,8 +86,8 @@ test "build_doc truncates a long summary on a word boundary" {
 }
 
 test "group_of files a doc by its slug" {
-    assert group_of(&"cheatsheet") == DocGroup::Reference;
-    assert group_of(&SPEC_OVERVIEW) == DocGroup::Reference;
+    assert group_of(&"cheatsheet") == DocGroup::StartHere;
+    assert group_of(&SPEC_OVERVIEW) == DocGroup::Spec;
     assert group_of(&"spec-types") == DocGroup::Spec;
     assert group_of(&"README") == DocGroup::Unlisted;
     assert group_of(&"wep-2026-01-10-wasm-import") == DocGroup::Wep;
@@ -96,18 +96,20 @@ test "group_of files a doc by its slug" {
     assert group_of(&"compiler") == DocGroup::Other;
 }
 
-test "in_group keeps one group's docs, sorted by slug" {
+test "in_group keeps one group's docs, the spec overview first and the rest sorted by slug" {
     let docs: List<Doc> = [
         build_doc("spec-types", &"# Types\n"),
         build_doc(SPEC_OVERVIEW, &"# Wado Language Specification\n"),
         build_doc("spec-attributes", &"# Compiler Attributes\n"),
+        build_doc("cheatsheet", &"# Wado Cheatsheet\n"),
     ];
-    assert docs[0].slug > docs[2].slug;
+    assert docs[0].slug > docs[1].slug > docs[2].slug;
 
     let spec = in_group(&docs, DocGroup::Spec);
-    assert spec.len() == 2;
-    assert spec[0].slug == "spec-attributes";
-    assert spec[1].slug == "spec-types";
+    assert spec.len() == 3;
+    assert spec[0].slug == SPEC_OVERVIEW;
+    assert spec[1].slug == "spec-attributes";
+    assert spec[2].slug == "spec-types";
 }
 
 test "build_doc truncates a long summary without splitting a character" {

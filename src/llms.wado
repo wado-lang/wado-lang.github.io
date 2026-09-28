@@ -18,8 +18,8 @@ pub fn render_llms(posts: &List<Post>, docs: &List<Doc>) -> String {
     out.push_str(&`${INTRO}\n\n`);
     out.push_str(&`${CONVENTION}\n`);
     out.push_str(&start_here(docs));
-    out.push_str(&doc_section(docs, "Specification", DocGroup::Spec));
-    out.push_str(&doc_section(docs, "Standard library", DocGroup::Stdlib));
+    out.push_str(&section("Specification", &spec_chapters(docs)));
+    out.push_str(&section("Standard library", &in_group(docs, DocGroup::Stdlib)));
     out.push_str(&blog(posts));
     out.push_str(&optional(docs));
     return out;
@@ -56,9 +56,14 @@ fn start_here(docs: &List<Doc>) -> String {
     return out;
 }
 
-/// One group's docs under a heading, or nothing when none is published.
-fn doc_section(docs: &List<Doc>, heading: String, group: DocGroup) -> String {
-    let entries = doc_entries(&in_group(docs, group));
+/// The specification without its overview, which Start here already links.
+fn spec_chapters(docs: &List<Doc>) -> List<Doc> {
+    return in_group(docs, DocGroup::Spec).into_iter().filter(|d| d.slug != SPEC_OVERVIEW).collect();
+}
+
+/// Docs under a heading, or nothing when none is published.
+fn section(heading: String, docs: &List<Doc>) -> String {
+    let entries = doc_entries(docs);
     if entries.is_empty() {
         return String::new();
     }
