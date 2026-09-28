@@ -122,7 +122,7 @@ TAG="v$(wado --version | cut -d' ' -f2)"
 DIR=.tmp/wado-release
 if [ "$(git -C "$DIR" describe --tags --exact-match 2>/dev/null)" != "$TAG" ]; then
   rm -rf "$DIR"
-  git clone --depth 1 --branch "$TAG" --filter=blob:none --sparse https://github.com/wado-lang/wado.git "$DIR"
+  git -c advice.detachedHead=false clone --depth 1 --branch "$TAG" --filter=blob:none --sparse https://github.com/wado-lang/wado.git "$DIR"
   git -C "$DIR" sparse-checkout set package-loam package-gale package-grog package-wadopoet
 fi
 """

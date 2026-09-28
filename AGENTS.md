@@ -257,7 +257,9 @@ mise run serve              # → http://localhost:8000/gpt2/
 ```
 
 Deployment: `deploy.yml` runs `mise run gpt2-build` and copies the page, the
-component and the converter files into `dist/gpt2/`.
+component and the converter files into `dist/gpt2/`. `ci.yml` runs the same
+build on pull requests, so a component that no longer compiles fails there
+rather than in the deploy.
 
 ## Writing Sheaf
 
