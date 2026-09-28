@@ -60,26 +60,27 @@ test "render_index lists published posts newest-first and omits unlisted" {
     assert !html.contains("Draft");
 }
 
-test "render_docs_index files the spec overview under reference, its chapters under their own heading, and leaves out README" {
+test "render_docs_index files the spec overview ahead of its chapters, and leaves out README" {
     let html = render_docs_index(
         &[
             build_doc("README", &"# Wado Documentation\n"),
-            build_doc("spec-types", &"# Types\n"),
+            build_doc("cheatsheet", &"# Wado Cheatsheet\n"),
+            build_doc("spec-attributes", &"# Compiler Attributes\n"),
             build_doc("spec-overview", &"# Wado Language Specification\n"),
         ],
     );
     let Some(reference) = html.find(">Language reference</h2>") else {
         panic("the docs index has no language reference group");
     };
-    let Some(overview) = html.find(`href="spec-overview.html"`) else {
-        panic("the docs index does not link the spec overview");
-    };
     let Some(spec) = html.find(">Specification</h2>") else {
         panic("the docs index has no specification group");
     };
-    let Some(chapter) = html.find(`href="spec-types.html"`) else {
+    let Some(overview) = html.find(`href="spec-overview.html"`) else {
+        panic("the docs index does not link the spec overview");
+    };
+    let Some(chapter) = html.find(`href="spec-attributes.html"`) else {
         panic("the docs index does not link a spec chapter");
     };
-    assert reference < overview < spec < chapter;
+    assert reference < spec < overview < chapter;
     assert !html.contains("README.html");
 }
