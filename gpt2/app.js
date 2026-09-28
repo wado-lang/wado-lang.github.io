@@ -67,7 +67,7 @@ worker.onmessage = (e) => {
       stopButton.disabled = true;
       break;
     case "error":
-      if (generateButton.disabled && stopButton.disabled) {
+      if (msg.op === "load") {
         progress.hidden = true;
         setStatus(loadStatus, msg.text, true);
         loadButton.disabled = false;
@@ -90,6 +90,7 @@ loadButton.addEventListener("click", () => {
 });
 
 generateButton.addEventListener("click", () => {
+  if (!stepsBox.reportValidity()) return;
   prompt = promptBox.value;
   generateButton.disabled = true;
   stopButton.disabled = false;

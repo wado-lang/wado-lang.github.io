@@ -5,7 +5,7 @@
 // Inbound: `{type:"load"}`, `{type:"generate", prompt, steps}`, `{type:"stop"}`.
 // Outbound: `{type:"progress", stage, done?, total?}`, `{type:"ready",
 // positions}`, `{type:"text", text, tokens, ms}`, `{type:"done"}`,
-// `{type:"error", text}`.
+// `{type:"error", op, text}`, where `op` is the inbound type that failed.
 
 import { transpileToModule } from "/playground/runtime/playground.js";
 import { convert } from "./hf2loam.mjs";
@@ -112,6 +112,6 @@ self.onmessage = async (e) => {
     if (msg.type === "load") await load();
     else if (msg.type === "generate") await generate(msg.prompt, msg.steps);
   } catch (err) {
-    post({ type: "error", text: String(err?.payload ?? err?.message ?? err) });
+    post({ type: "error", op: msg.type, text: String(err?.payload ?? err?.message ?? err) });
   }
 };
