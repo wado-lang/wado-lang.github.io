@@ -78,7 +78,8 @@ const hidden = {
 Each entry of the shape is an _axis_, and each axis means something. Here the
 first is the batch (how many prompts at once: 1), the second is the sequence
 (how many tokens: 5), and the third is the embedding (how many numbers describe
-one token: 768). To find token 3's numbers, you skip `3 * 768` floats.
+one token: 768). The first token's numbers are `data[0]` to `data[767]`, the
+second's start at `data[768]`, and so on.
 
 The shape is where the bugs live. Suppose two axes happen to have the same
 length and the code mixes them up. Nothing crashes. The code reads the right
@@ -101,22 +102,23 @@ hidden                                 [Seq, 768]
   │ │   ones, in 12 heads of 64 numbers each           │
   │ │ MLP: each token on its own, 768 → 3,072 → 768    │
   │ └──────────────────────────────────────────────────┘
-  │ score against every token           768 × 50,257
+  │ normalize, then score against every token
+  │                                     768 × 50,257
   ▼
 scores                                 [Seq, 50,257]
 ```
 
-The page reads the last row of `scores`: the scores for the token after the
+`nextToken` reads the last row of `scores`: the scores for the token after the
 prompt.
 
 Attention is the step where tokens see each other, and it only looks backward.
 Token 3 can see tokens 1 to 3 and never token 4, since token 4 isn't written
 yet when it's predicted. GPT-2 enforces that with a mask, a precomputed
-1,024 × 1,024 table of which position may see which. That table is also why
-GPT-2 reads at most 1,024 tokens.
+1,024 × 1,024 table of which position may see which. The mask and the position
+table `wpe` both stop at 1,024, which is why GPT-2 reads at most 1,024 tokens.
 
 The 124 million parameters are the numbers in those tables (`wte`, `wpe`, and
-the weights inside each of the 12 blocks), 149 tensors in all. Training chose
+the weights inside each of the 12 blocks), 148 tensors in all. Training chose
 them. The code that uses them is just the recipe above.
 
 ## ONNX: the model as a file
@@ -127,7 +129,7 @@ ONNX file holds a _graph_: a list of steps, each an _operator_ such as `MatMul`
 (matrix multiply), `Add`, or `Softmax`, each reading the outputs of earlier
 steps. Think of a spreadsheet where every cell is a formula over other cells.
 
-Here is the first line of GPT-2's graph, in ONNX's text format:
+Here is how GPT-2's graph begins, in ONNX's text format:
 
 ```text
 torch_jit (int64[batch_size, sequence_length] input_ids, …) => (float[batch_size, sequence_length, 50257] logits, …)
@@ -145,14 +147,14 @@ model runs, and model code asks for sizes all the time, as in
 
 The weights travel in a separate file. Hugging Face ships GPT-2's as
 [safetensors](https://huggingface.co/docs/safetensors/): a JSON header, then
-raw bytes. One header entry:
+raw bytes. One entry from the header of the file the demo loads:
 
 ```json
 "transformer.wte.weight": { "dtype": "F32", "shape": [50257, 768], "data_offsets": [0, 154389504] }
 ```
 
 In JavaScript terms: `JSON.parse` the header, then for each entry make a
-`new Float32Array(buffer, offset, length)`.
+`Float32Array` over its bytes. The offsets count from the end of the header.
 
 ## Two ways to run a model
 
@@ -217,8 +219,10 @@ multiplying consumes it. `[Seq, Embed]` times `[Embed, Inner]` gives
 `[Seq, Inner]`. `[Seq, Embed]` times `[Inner, Embed]` doesn't compile, the same
 way passing a `string` where a `number` goes doesn't.
 
-Every step Loam writes for GPT-2 is a call like that, so the Wado compiler checks
-all of them. Here is the function Loam writes for the whole model:
+Most steps Loam writes for GPT-2 are calls like that, so the Wado compiler
+checks them. A few, such as reshaping, can't state the relation in a signature,
+so they take the axis names Loam worked out and trust them. Here is the
+function Loam writes for the whole model:
 
 ```wado
 pub fn forward(
@@ -229,7 +233,7 @@ pub fn forward(
 ```
 
 Token ids in, one score per vocabulary entry for every position out. The body
-is one line per step, and it reads like the diagram. Here's "add a row for each
+is one line per remaining step, and it reads like the diagram. Here's "add a row for each
 position":
 
 ```wado
@@ -278,8 +282,8 @@ it:
 refuse(unmet(-dim_sequence_length + 1024, "/transformer/h.0/attn/Slice_3_output_0 = Slice: sequence_length must be at most 1024"));
 ```
 
-GPT-2's `forward` starts with five of these checks, and they're the only shape
-checks it makes at run time.
+GPT-2's `forward` starts with five of these checks, all before the first
+kernel runs.
 
 ## Checking the weights twice
 
@@ -298,7 +302,7 @@ transformer.wte.weight: axis Embed is 64 in the checkpoint and 32 in the graph
 
 Loam itself runs inside a sandbox. It's a Kiln generator, the way Wado runs code
 at build time, and Kiln runs every generator as Wasm with no access to your
-files or the network beyond the inputs it names. A build script in most
+files or the network beyond the inputs the import names. A build script in most
 ecosystems runs with all of your permissions. That matters when the input is a
 model file downloaded from the internet.
 
@@ -349,12 +353,12 @@ Loam, picks the same tokens onnxruntime picks for the same prompt.
 
 ## Where it stands
 
-The demo is a proof that the design holds up on a real model, not a fast one.
+The demo shows the design working on a real model. It doesn't show speed.
 
 - It runs on the CPU only.
-- It has no _KV cache_ yet. To write the 9th token, the model redoes the
-  attention work for tokens 1 to 8, which it already did for the 8th.
-  Generation gets slower as the text grows, and you'll feel it.
+- It has no _KV cache_ yet. To write the 9th token, the model reruns over
+  tokens 1 to 8 from scratch, though it already did most of that work for the
+  8th. Generation gets slower as the text grows, and you'll feel it.
 - It downloads 548 MB and needs a few GB of memory, and Chrome or Chromium 137+
   for JavaScript Promise Integration (JSPI).
 
@@ -364,12 +368,13 @@ about it.
 
 ## What's next
 
-- **A KV cache.** GPT-2's graph already returns the attention work it did, so a
-  step can hand it back instead of redoing it.
+- **A KV cache.** GPT-2's graph already returns what its attention computed for
+  each token, and ONNX exports a second graph that takes it back, so each step
+  computes only the new token.
 - **WebGPU.** A second backend that runs the kernels on the GPU, and the first
   point where performance is worth measuring.
-- **int4 weights.** 4 bits per weight instead of 32, which brings the download
-  close to an eighth of today's.
+- **int4 weights.** 4 bits per weight instead of 32, which shrinks the weights
+  toward an eighth of today's download.
 - **More models.** Built-in axis names for common architectures such as Llama,
   so an import needs no `layout`.
 
