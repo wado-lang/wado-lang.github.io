@@ -2,7 +2,7 @@
 //! then annotated links to the Markdown copy of each page.
 
 use { Post, listed } from "./post.wado";
-use { Doc, DocGroup, in_group } from "./doc.wado";
+use { Doc, DocGroup, in_group, SPEC_OVERVIEW } from "./doc.wado";
 use { SITE_URL } from "./template.wado";
 
 global TAGLINE: String = "Type-safe like Rust, familiar like TypeScript, compiled to clean Wasm.";
@@ -18,7 +18,8 @@ pub fn render_llms(posts: &List<Post>, docs: &List<Doc>) -> String {
     out.push_str(&`${INTRO}\n\n`);
     out.push_str(&`${CONVENTION}\n`);
     out.push_str(&start_here(docs));
-    out.push_str(&stdlib(docs));
+    out.push_str(&doc_section(docs, "Specification", DocGroup::Spec));
+    out.push_str(&doc_section(docs, "Standard library", DocGroup::Stdlib));
     out.push_str(&blog(posts));
     out.push_str(&optional(docs));
     return out;
@@ -39,9 +40,9 @@ fn start_here(docs: &List<Doc>) -> String {
     out.push_str(
         &curated(
             docs,
-            "spec",
+            SPEC_OVERVIEW,
             "Language specification",
-            "the normative reference for types, traits, effects, modules, and how each maps to Wasm",
+            "the normative reference, one page per area of the language; this overview says what it promises, and the chapters follow under Specification",
         ),
     );
     out.push_str(&curated(docs, "design-philosophy", "Design philosophy", "why Wado is shaped the way it is"));
@@ -55,12 +56,13 @@ fn start_here(docs: &List<Doc>) -> String {
     return out;
 }
 
-fn stdlib(docs: &List<Doc>) -> String {
-    let entries = doc_entries(&in_group(docs, DocGroup::Stdlib));
+/// One group's docs under a heading, or nothing when none is published.
+fn doc_section(docs: &List<Doc>, heading: String, group: DocGroup) -> String {
+    let entries = doc_entries(&in_group(docs, group));
     if entries.is_empty() {
         return String::new();
     }
-    return `\n## Standard library\n\n${entries}`;
+    return `\n## ${heading}\n\n${entries}`;
 }
 
 fn blog(posts: &List<Post>) -> String {

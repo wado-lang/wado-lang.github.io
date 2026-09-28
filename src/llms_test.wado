@@ -6,11 +6,22 @@ use { post } from "./fixture.wado";
 fn docs() -> List<Doc> {
     return [
         build_doc("cheatsheet", &"# Wado Cheatsheet\n\nQuick reference for Wado syntax.\n"),
+        build_doc("spec-types", &"# Types\n\nEvery value has a type.\n"),
+        build_doc("spec-overview", &"# Wado Language Specification\n\nWado targets Wasm.\n"),
         build_doc("stdlib-core-json", &"# core:json\n\nJSON serialization.\n"),
         build_doc("wep-2026-01-10-wasm-import", &"# WEP: Wasm Module Import\n\nImporting a core module.\n"),
         build_doc("research-wasm-cm", &"# Research: CM\n\nNotes.\n"),
         build_doc("compiler", &"# Wado Compiler\n\nThe compiler translates source to Wasm.\n"),
     ];
+}
+
+fn has_doc(docs: &List<Doc>, slug: String) -> bool {
+    for let d of docs {
+        if d.slug == slug {
+            return true;
+        }
+    }
+    return false;
 }
 
 fn posts() -> List<Post> {
@@ -24,6 +35,7 @@ test "render_llms opens with the llms.txt header and summary" {
     let out = render_llms(&posts(), &docs());
     assert out.starts_with("# Wado\n\n> ");
     assert out.contains("\n## Start here\n");
+    assert out.contains("\n## Specification\n");
     assert out.contains("\n## Standard library\n");
     assert out.contains("\n## Blog\n");
     assert out.contains("\n## Optional\n");
@@ -37,6 +49,7 @@ test "render_llms links the Markdown copy of each page" {
 }
 
 test "render_llms files toolchain docs under Optional and leaves out WEPs and research notes" {
+    assert has_doc(&docs(), "wep-2026-01-10-wasm-import") && has_doc(&docs(), "research-wasm-cm");
     let out = render_llms(&posts(), &docs());
     assert out.contains("- [Wado Compiler](https://wado-lang.org/docs/compiler.md): ");
     assert !out.contains("wep-2026-01-10-wasm-import.md");
@@ -44,9 +57,24 @@ test "render_llms files toolchain docs under Optional and leaves out WEPs and re
 }
 
 test "render_llms omits unlisted posts and a curated page that is not published" {
+    assert posts()[1].slug == "draft" && !posts()[1].index;
+    assert !has_doc(&docs(), "design-philosophy");
     let out = render_llms(&posts(), &docs());
     assert !out.contains("draft.md");
-    assert !out.contains("/docs/spec.md");
+    assert !out.contains("/docs/design-philosophy.md");
+}
+
+test "render_llms links the spec overview once, under Start here, ahead of the chapters" {
+    let out = render_llms(&posts(), &docs());
+    let overview = "- [Language specification](https://wado-lang.org/docs/spec-overview.md): ";
+    let Some(start) = out.find(overview) else {
+        panic("Start here does not link the spec overview");
+    };
+    let Some(chapter) = out.find("- [Types](https://wado-lang.org/docs/spec-types.md): Every value has a type.\n") else {
+        panic("the Specification section does not list spec-types");
+    };
+    assert start < chapter;
+    assert out.split("spec-overview.md").count() == 2;
 }
 
 test "render_llms drops the description when a page has no summary" {

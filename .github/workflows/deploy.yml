@@ -22,6 +22,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       # mise hits the GitHub Releases API to install the `wado` CLI.
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

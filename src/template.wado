@@ -94,7 +94,7 @@ fn render_title_inline(title: &String) -> String {
     let html = render(*title);
     if let Some(rest) = html.trim().strip_prefix("<p>") {
         if let Some(inner) = rest.strip_suffix("</p>") {
-            return inner;
+            return inner.to_string();
         }
     }
     return escape_text(*title);
@@ -177,6 +177,7 @@ pub fn render_docs_index(docs: &List<Doc>) -> String {
     out.push_str(&`<h1 class="page-title">Documentation</h1>\n`);
     out.push_str(&`<p class="section-nav"><a href="/blog/">← Blog</a></p>\n`);
     out.push_str(&doc_group("Language reference", &in_group(docs, DocGroup::Reference)));
+    out.push_str(&doc_group("Specification", &in_group(docs, DocGroup::Spec)));
     out.push_str(&doc_group("Wado Evolution Proposals", &in_group(docs, DocGroup::Wep)));
     out.push_str(&doc_group("Standard library", &in_group(docs, DocGroup::Stdlib)));
     out.push_str(&doc_group("Research notes", &in_group(docs, DocGroup::Research)));

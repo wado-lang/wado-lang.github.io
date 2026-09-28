@@ -106,7 +106,7 @@ Briefly, since this is a tour and not a manual: Wado has effect *handlers* (you
 can handle those effects, not just declare them), power-assert-style assertions
 that can't be disabled, exhaustive pattern matching via `match`, `if let`, and
 a `matches` operator, and template strings with typed formatting. The
-`docs/spec.md` in the main repo has the full story.
+[language specification](/docs/spec-overview.html) has the full story.
 
 ## This blog runs on Wado
 

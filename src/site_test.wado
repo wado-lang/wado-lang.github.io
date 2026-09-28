@@ -30,10 +30,10 @@ test "the Markdown copy of a post carries the heading and byline in place of fro
 
 test "build_docs emits a Markdown copy of the upstream source verbatim" {
     let source = "# Spec\n\nIntro.\n";
-    let files = build_docs(&[build_doc("spec", &source)]);
+    let files = build_docs(&[build_doc("spec-overview", &source)]);
     assert files.len() == 3;
-    assert files[0].path == "docs/spec.html";
-    assert files[1].path == "docs/spec.md";
+    assert files[0].path == "docs/spec-overview.html";
+    assert files[1].path == "docs/spec-overview.md";
     assert files[1].content == source;
     assert files[2].path == "docs/index.html";
 }
