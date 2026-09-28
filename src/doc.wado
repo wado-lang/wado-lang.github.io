@@ -18,7 +18,7 @@ pub struct Doc {
 
 /// How a doc is filed on the index and in `llms.txt`, decided by its slug.
 pub enum DocGroup {
-    Reference,
+    StartHere,
     Spec,
     Wep,
     Stdlib,
@@ -32,7 +32,7 @@ pub enum DocGroup {
 pub fn group_of(slug: &String) -> DocGroup {
     return match slug {
         "README" => DocGroup::Unlisted,
-        "cheatsheet" | "design-philosophy" => DocGroup::Reference,
+        "cheatsheet" | "design-philosophy" => DocGroup::StartHere,
         s && s.starts_with("spec-") => DocGroup::Spec,
         s && s.starts_with("wep-") => DocGroup::Wep,
         s && s.starts_with("stdlib-") => DocGroup::Stdlib,

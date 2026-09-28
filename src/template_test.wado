@@ -69,8 +69,8 @@ test "render_docs_index files the spec overview ahead of its chapters, and leave
             build_doc("spec-overview", &"# Wado Language Specification\n"),
         ],
     );
-    let Some(reference) = html.find(">Language reference</h2>") else {
-        panic("the docs index has no language reference group");
+    let Some(start) = html.find(">Start here</h2>") else {
+        panic("the docs index has no Start here group");
     };
     let Some(spec) = html.find(">Specification</h2>") else {
         panic("the docs index has no specification group");
@@ -81,6 +81,6 @@ test "render_docs_index files the spec overview ahead of its chapters, and leave
     let Some(chapter) = html.find(`href="spec-attributes.html"`) else {
         panic("the docs index does not link a spec chapter");
     };
-    assert reference < spec < overview < chapter;
+    assert start < spec < overview < chapter;
     assert !html.contains("README.html");
 }
