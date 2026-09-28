@@ -5,7 +5,7 @@
     "author": "FUJI Goro",
     "description": "Loam turns an ONNX model into ordinary Wado source at build time, with tensor shapes checked like TypeScript types. GPT-2 now runs that way in the browser. An introduction for programmers who have never touched machine learning or Wado.",
     "tags": [],
-    "index": false
+    "index": true
 }
 ---
 
