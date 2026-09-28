@@ -142,6 +142,21 @@ ONNX file holds a _graph_: a list of steps, each an _operator_ such as `MatMul`
 (matrix multiply), `Add`, or `Softmax`, each reading the outputs of earlier
 steps. Think of a spreadsheet where every cell is a formula over other cells.
 
+So an ONNX file is the model's code, not just its numbers. The whole recipe
+from the diagram is in there, written out down to each multiply and add. Here
+are three lines from the attention of GPT-2's first block, with the names
+shortened:
+
+```text
+"MatMul_output_0"  = MatMul ("Transpose_output_0", "Transpose_3_output_0")
+"Div_output_0"     = Div ("MatMul_output_0", "Add_output_0")
+"Softmax_output_0" = Softmax <axis = -1> ("Add_1_output_0")
+```
+
+Each line names its output, the operator, and the outputs it reads. What each
+operator computes is fixed by the ONNX specification, so any program that
+implements the operators can run the model, with no Python and no PyTorch.
+
 Here is how GPT-2's graph begins, in ONNX's text format:
 
 ```text
@@ -158,7 +173,10 @@ is the prompt?" "Take that, times 12." PyTorch records the code a model runs,
 and model code asks for sizes all the time, as in `x.view(x.size(0), -1)`. Keep
 this in mind; it comes back later.
 
-The checkpoint travels in a separate file. Hugging Face ships GPT-2's as
+An ONNX file can carry the weights too, and Hugging Face's export of GPT-2
+does. Loam keeps the two apart. It reads the graph, 3.5 MB of text once the
+weights are taken out, at build time, and the page downloads only the
+checkpoint. Hugging Face ships GPT-2's checkpoint as
 [safetensors](https://huggingface.co/docs/safetensors/): a JSON header, then
 raw bytes. One entry from the header of the file the demo loads:
 
