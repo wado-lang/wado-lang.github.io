@@ -111,13 +111,13 @@ scores                                 [Seq, 50,257]
 
 In words:
 
-- **Attention** is the step where tokens see each other. The 768 numbers of a
+- _Attention_ is the step where tokens see each other. The 768 numbers of a
   token are split into 12 _heads_ of 64, and each head looks for a different
   kind of connection between tokens.
-- **MLP** is a small neural network applied to each token alone: it widens the
+- _MLP_ is a small neural network applied to each token alone. It widens the
   768 numbers to 3,072, then narrows them back.
-- **Normalize** rescales each token's numbers to a steady range before the
-  next step reads them. It happens inside every block too; the diagram shows
+- _Normalize_ rescales each token's numbers to a steady range before the next
+  step reads them. It happens inside every block too, and the diagram shows
   only the last one.
 
 `nextToken` reads the last row of `scores`: the scores for the token after the
@@ -129,10 +129,9 @@ mask, a precomputed 1,024 × 1,024 table of which position may see which. The
 mask and the position table `wpe` both stop at 1,024, which is why GPT-2 reads
 at most 1,024 tokens.
 
-The 124 million weights are the numbers in those tables (`wte`, `wpe`, and the
-ones inside each of the 12 blocks), 148 tensors in all. The file that holds
-them is called a _checkpoint_. Training chose the numbers. The code that uses
-them is just the recipe above.
+The 124 million weights fill those tables: `wte`, `wpe`, and the ones inside
+each of the 12 blocks, 148 tensors in all. The file that holds them is called a
+_checkpoint_. The weights are the data; the recipe above is the code.
 
 ## ONNX: the model as a file
 
@@ -232,9 +231,8 @@ y = np.ones(5)
 
 If `y` was meant to line up with `x`'s rows, you wanted 5 numbers and got 25,
 without a word. Broadcasting is still a feature: it's how you add one bias
-vector to every row without writing a loop. That's the flexibility a dynamic
-library gives you, and it cuts both ways, much like JavaScript letting
-`"1" + 1` through.
+vector to every row without writing a loop. It's the flexibility of a dynamic
+library, much like JavaScript letting `"1" + 1` through.
 
 Loam gives each axis a name and puts the names into the type. A tensor of
 hidden states is a `Tensor<f32, [Batch, Seq, Embed]>`: `f32` numbers, three
@@ -290,9 +288,8 @@ Token ids in, one score per vocabulary entry for every position out.
 `attention_mask` marks which tokens are real; the page passes all ones.
 
 The body is one line per step that survives the build (more on that below), and
-it reads like the diagram. Each name comes
-straight from the step's name in the ONNX graph. Here's "add a row for each
-position":
+it reads like the diagram. Each name comes straight from the step's name in the
+ONNX graph. Here's "add a row for each position":
 
 ```wado
 let _transformer_Add_output_0 = zip(
@@ -319,9 +316,9 @@ about 750 are left in the Wado that Loam writes.
 
 The prompt's length is the one size the build can't know. Loam carries it as a
 name, `sequence_length`, through every step that uses it. Sometimes a step needs
-a fact about it that the build can't prove. The attention mask is a 1,024-row
-table, so slicing it to the prompt only works if `sequence_length` is at most
-1,024. Loam turns each such fact into a check at the top of `forward`:
+a fact about it that the build can't prove. The attention mask has 1,024 rows,
+so slicing it to the prompt only works if `sequence_length` is at most 1,024.
+Loam turns each such fact into a check at the top of `forward`:
 
 ```wado
 refuse(unmet(
@@ -336,7 +333,7 @@ starts with five of these checks, all before the first kernel runs.
 
 ## Checking the weights twice
 
-The checkpoint gets the same treatment, at two moments:
+Loam checks the checkpoint against the graph too, at two moments:
 
 - At build time, Loam reads the safetensors header, only the header, and checks
   every tensor's shape against the graph.
@@ -349,11 +346,13 @@ A mismatch names the tensor and the axis. From Loam's tests on a small GPT-2:
 transformer.wte.weight: axis Embed is 64 in the checkpoint and 32 in the graph
 ```
 
-Loam itself runs inside a sandbox. It's a _Kiln generator_: Kiln is how Wado
-runs code at build time. Kiln runs every generator as Wasm, with no access to
-your files or the network beyond the inputs the import names. A build script in
-most ecosystems runs with all of your permissions. That matters when the input
-is a model file downloaded from the internet.
+## The build runs in a sandbox
+
+Loam is a _Kiln generator_. Kiln is how Wado runs code at build time, and it
+runs every generator as Wasm, with no access to your files or the network
+beyond the inputs the import names. A build script in most ecosystems runs with
+all of your permissions. That matters when the input is a model file downloaded
+from the internet.
 
 ## Running it in the browser
 
@@ -386,9 +385,9 @@ The worker does the rest, off the main thread:
 ## How we know the numbers are right
 
 A model that returns wrong numbers still returns numbers, so Loam is tested
-against a reference answer: onnxruntime, run for its outputs. Every operator
-Loam supports has small test models, each built through Loam and run, with the
-result compared to onnxruntime's. ONNX's own test models, which ship with their
+against onnxruntime's answers. Every operator Loam supports has small test
+models, each built through Loam and run, with the result compared to
+onnxruntime's. ONNX's own test models, which ship with their
 expected outputs, run the same way. And GPT-2, built through Loam, picks the
 same tokens onnxruntime picks for the same prompt.
 
@@ -403,21 +402,19 @@ The demo shows the design working on a real model. It doesn't show speed.
 - It downloads 548 MB and needs a few GB of memory, and Chrome or Chromium 137+
   for JavaScript Promise Integration (JSPI).
 
-So there are no speed numbers here. The CPU path exists to get the answers
-right. Speed is a question for the WebGPU backend, and that's when we'll talk
-about it.
+The CPU path exists to get the answers right. Speed is a question for the
+WebGPU backend, and that's when we'll measure it.
 
 ## What's next
 
-- **A KV cache.** GPT-2's graph already returns what its attention computed for
+- A KV cache: GPT-2's graph already returns what its attention computed for
   each token, and ONNX exports a second graph that takes it back, so each step
   computes only the new token.
-- **WebGPU.** A second backend that runs the kernels on the GPU, and the first
-  point where performance is worth measuring.
-- **int4 weights.** 4 bits per weight instead of 32, which shrinks the weights
+- WebGPU: a second backend that runs the kernels on the GPU.
+- int4 weights: 4 bits per weight instead of 32, which shrinks the weights
   toward an eighth of today's download.
-- **More models.** Built-in axis names for common model families such as Llama,
-  so an import no longer lists them by hand.
+- More models: built-in axis names for common model families such as Llama, so
+  an import no longer lists them by hand.
 
 Try the [demo](https://wado-lang.org/gpt2/), read
 [`package-loam`](https://github.com/wado-lang/wado/tree/main/package-loam), or
