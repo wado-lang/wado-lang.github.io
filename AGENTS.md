@@ -225,8 +225,8 @@ tag to freeze or roll back the runtime.
 ## GPT-2
 
 `/gpt2/` runs GPT-2 (124M) in the browser: upstream's
-`package-loam/example/gpt2-124m`, built into a component. Nothing links to it
-yet. It needs JSPI (Chrome/Chromium 137+), like the playground.
+`package-loam/example/gpt2-124m`, built into a component. It needs JSPI
+(Chrome/Chromium 137+), like the playground.
 
 Nothing loads until the reader presses the download button. Then
 `gpt2/worker.js` does all the work off the main thread:
