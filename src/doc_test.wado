@@ -118,6 +118,8 @@ Each chapter builds on the ones before it.
         build_doc("spec-types", &"# Types\n"),
         build_doc("cheatsheet", &"# Wado Cheatsheet\n"),
     ];
+    assert docs[0].slug == "spec-attributes" && docs[4].slug == "spec-types";
+    assert docs[1].slug > docs[2].slug;
 
     let spec = in_group(&docs, DocGroup::Spec);
     assert spec.len() == 5;

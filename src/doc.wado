@@ -62,7 +62,6 @@ pub fn in_group(docs: &List<Doc>, group: DocGroup) -> List<Doc> {
     return out;
 }
 
-/// The overview first, a chapter at its place in the list, anything else after.
 fn reading_rank(chapters: &List<String>, slug: &String) -> i32 {
     if *slug == SPEC_OVERVIEW {
         return -1;
