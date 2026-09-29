@@ -83,7 +83,10 @@ fn read_markdown(dir: &String, exclude: &List<String>) -> Result<List<[String, S
     return Result::Ok(out);
 }
 
+/// Replace the output tree, so a page an earlier run wrote and this one does not
+/// is gone rather than published.
 fn write_site(files: &List<SiteFile>) -> Result<(), BuildError> with Preopens {
+    fs::remove_dir_all(&OUT_DIR)?;
     fs::create_dir_all(&`${OUT_DIR}/docs`)?;
     for let f of files {
         fs::write(&`${OUT_DIR}/${f.path}`, &f.content)?;
