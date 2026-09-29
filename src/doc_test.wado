@@ -96,6 +96,38 @@ test "group_of files a doc by its slug" {
     assert group_of(&"compiler") == DocGroup::Other;
 }
 
+test "in_group orders the spec by the overview's chapter list, unlisted chapters last by slug" {
+    let overview = "# Wado Language Specification
+
+## Chapters
+
+Each chapter builds on the ones before it.
+
+1. [Types](./spec-types.md): types.
+2. [Compiler Attributes](./spec-attributes.md): attributes.
+
+## Appendix
+
+- [Grammar](./spec-grammar.md)
+";
+    let docs: List<Doc> = [
+        build_doc("spec-attributes", &"# Compiler Attributes\n"),
+        build_doc("spec-grammar", &"# Grammar\n"),
+        build_doc("spec-extra", &"# Extra\n"),
+        build_doc(SPEC_OVERVIEW, &overview),
+        build_doc("spec-types", &"# Types\n"),
+        build_doc("cheatsheet", &"# Wado Cheatsheet\n"),
+    ];
+
+    let spec = in_group(&docs, DocGroup::Spec);
+    assert spec.len() == 5;
+    assert spec[0].slug == SPEC_OVERVIEW;
+    assert spec[1].slug == "spec-types";
+    assert spec[2].slug == "spec-attributes";
+    assert spec[3].slug == "spec-extra";
+    assert spec[4].slug == "spec-grammar";
+}
+
 test "in_group keeps one group's docs, the spec overview first and the rest sorted by slug" {
     let docs: List<Doc> = [
         build_doc("spec-types", &"# Types\n"),

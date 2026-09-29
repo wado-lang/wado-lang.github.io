@@ -118,14 +118,15 @@ since following one out of the preopened tree fails the read.
 - The upstream source is also copied verbatim beside each page, so
   `/docs/spec-types.html` has `/docs/spec-types.md` next to it. Its relative
   `.md` links need no rewriting, since they resolve against the sibling copies.
-- The docs index (`/docs/`) groups pages by slug: a language reference
-  (`cheatsheet`, `design-philosophy`, `spec-overview`), the specification's
-  chapters (`spec-`, one page per area), then WEPs (`wep-`), the standard library
-  (`stdlib-`), research notes (`research-`), and everything else under "Other".
-  Upstream's `README.md` is its own index of the same pages, so it is published
-  (docs link to it) but listed nowhere. `src/doc.wado` owns the classifier
-  (`group_of`) and the slug-sorted collector (`in_group`), which `llms.txt`
-  shares. Marl emits GFM heading
+- The docs index (`/docs/`) groups pages by slug: "Start here" (`cheatsheet`,
+  `design-philosophy`), the specification (`spec-`), then WEPs (`wep-`), the
+  standard library (`stdlib-`), research notes (`research-`), and everything
+  else under "Other". The specification is in reading order: `spec-overview`,
+  then the chapters in the order its `## Chapters` list gives, then any it does
+  not list. Every other group is slug-sorted. Upstream's `README.md` is its own
+  index of the same pages, so it is published (docs link to it) but listed
+  nowhere. `src/doc.wado` owns the classifier (`group_of`) and the collector
+  (`in_group`), which `llms.txt` shares. Marl emits GFM heading
   `id`s, so in-page `#anchor` links resolve. `render` also returns the heading
   outline (`RenderResult.headings`), unused for now, but available if a
   per-page table of contents is wanted.
@@ -144,7 +145,7 @@ What goes where:
 - `## Start here` — cheatsheet, spec overview, design philosophy, playground.
   Curated, with hand-written descriptions, and an entry is dropped when its doc
   is not published, so the index never names a missing page.
-- `## Specification` — every `spec-` chapter.
+- `## Specification` — every `spec-` chapter, in reading order.
 - `## Standard library` — every `stdlib-` doc.
 - `## Blog` — listed posts, newest first, described by their front matter.
 - `## Optional` — the docs index plus the toolchain docs (compiler, optimizer,

@@ -41,8 +41,9 @@ pub fn group_of(slug: &String) -> DocGroup {
     };
 }
 
-/// The docs filed under one group: the spec overview ahead of its chapters,
-/// the rest slug-sorted.
+/// The docs filed under one group, in reading order: the spec overview, then
+/// the chapters its `## Chapters` list links, in that order, then the rest
+/// slug-sorted.
 pub fn in_group(docs: &List<Doc>, group: DocGroup) -> List<Doc> {
     let mut out: List<Doc> = [];
     for let d of docs {
@@ -50,15 +51,65 @@ pub fn in_group(docs: &List<Doc>, group: DocGroup) -> List<Doc> {
             out.push(*d);
         }
     }
+    let chapters = chapter_slugs(docs);
     out.sort_by(|a: &Doc, b: &Doc| {
-        let a_leads = a.slug == SPEC_OVERVIEW;
-        let b_leads = b.slug == SPEC_OVERVIEW;
-        if a_leads != b_leads {
-            return if a_leads { Ordering::Less } else { Ordering::Greater };
+        let by_rank = reading_rank(&chapters, &a.slug).cmp(&reading_rank(&chapters, &b.slug));
+        if by_rank != Ordering::Equal {
+            return by_rank;
         }
         return a.slug.cmp(&b.slug);
     });
     return out;
+}
+
+/// The overview first, a chapter at its place in the list, anything else after.
+fn reading_rank(chapters: &List<String>, slug: &String) -> i32 {
+    if *slug == SPEC_OVERVIEW {
+        return -1;
+    }
+    for let mut i = 0; i < chapters.len(); i += 1 {
+        if chapters[i] == *slug {
+            return i;
+        }
+    }
+    return chapters.len();
+}
+
+/// The slugs the spec overview's `## Chapters` section links, in order; none
+/// when the overview is not published.
+fn chapter_slugs(docs: &List<Doc>) -> List<String> {
+    let mut out: List<String> = [];
+    for let d of docs {
+        if d.slug != SPEC_OVERVIEW {
+            continue;
+        }
+        let mut in_chapters = false;
+        for let line of d.source.lines() {
+            let t = line.trim().to_string();
+            if t.starts_with("## ") {
+                in_chapters = t == "## Chapters";
+            } else if in_chapters {
+                if let Some(slug) = linked_slug(&t) {
+                    out.push(slug);
+                }
+            }
+        }
+    }
+    return out;
+}
+
+/// The slug of the first sibling doc a line links, `spec-types` in
+/// `1. [Types](./spec-types.md): …`.
+fn linked_slug(line: &String) -> Option<String> {
+    let marker = "](./";
+    let Some(open) = line.find(marker) else {
+        return null;
+    };
+    let target = line.substr_bytes(open + marker.len(), line.len());
+    let Some(close) = target.find(".md)") else {
+        return null;
+    };
+    return Some(target.substr_bytes(0, close));
 }
 
 pub fn build_doc(slug: String, source: &String) -> Doc {
