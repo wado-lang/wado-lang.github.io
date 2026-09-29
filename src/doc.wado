@@ -74,8 +74,7 @@ fn reading_rank(chapters: &List<String>, slug: &String) -> i32 {
     return chapters.len();
 }
 
-/// The slugs the spec overview's `## Chapters` section links, in order; none
-/// when the overview is not published.
+/// The slugs the spec overview's `## Chapters` section links, in order.
 fn chapter_slugs(docs: &List<Doc>) -> List<String> {
     let mut out: List<String> = [];
     for let d of docs {
