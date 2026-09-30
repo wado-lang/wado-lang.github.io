@@ -1,7 +1,6 @@
-//! The single Marl import site: binds Marl's `RenderHook` to
-//! `highlight_provider.wado`.
+//! The single Marl import site.
 
-use { Marl } from "wado-lang:marl" with { provider: "./highlight_provider.wado" };
+use { Marl } from "wado-lang:marl" with { provider: "./render_hook.wado" };
 
 /// Render Markdown to HTML, syntax-highlighting fenced code blocks and keeping
 /// comments.

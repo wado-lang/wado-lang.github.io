@@ -1,9 +1,5 @@
-//! Satisfies marl's `RenderHook`. Marl inserts each result verbatim, so the
-//! provider owns output safety.
-//!
-//! - Fenced code: Wado goes through gale's highlighter, other languages are
-//!   escaped.
-//! - Comments stay in the page as HTML comments, since they hold no secrets.
+//! Marl's `RenderHook`. Marl inserts each result verbatim, so this file owns
+//! its safety. Comments stay in the page, since they hold no secrets.
 
 use { highlight as highlight_wado } from "wado-lang:gale-highlight-wado";
 use { escape_text } from "./escape.wado";
