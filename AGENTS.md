@@ -37,7 +37,9 @@ Sheaf generates the blog and the docs. It is the Wado package rooted here
 `mise run blog-test` runs its tests. Markdown goes through Marl
 (`wado-lang:marl`), with fenced code highlighted by
 `wado-lang:gale-highlight-wado`. Marl escapes raw HTML and filters link schemes,
-so the output is safe by construction.
+so the output is safe by construction. The exception is what Marl hands to
+`src/render_hook.wado`, fenced code and HTML comments: it inserts the result
+verbatim, so that file keeps it safe. Comments stay in the page.
 
 All I/O is in `src/main.wado`, through `core:fs`. The rest is pure and tested
 without I/O. Each run replaces `_site/`. An unreadable input, an unparseable

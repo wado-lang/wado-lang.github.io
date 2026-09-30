@@ -1,0 +1,13 @@
+use { render } from "./markdown.wado";
+
+test "render keeps a comment block as an HTML comment" {
+    assert render("<!-- note -->\n\ntext") == "<!-- note -->\n<p>text</p>";
+}
+
+test "render keeps an inline comment as an HTML comment" {
+    assert render("a <!-- note --> b") == "<p>a <!-- note --> b</p>";
+}
+
+test "render breaks a `--!>` that would end the comment early" {
+    assert render("<!-- a --!><b>x</b> -->") == "<!-- a --!&gt;<b>x</b> -->";
+}
