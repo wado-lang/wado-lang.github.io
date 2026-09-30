@@ -1,6 +1,9 @@
-//! Satisfies marl's `Highlight`: Wado goes through gale's highlighter, other
-//! languages are escaped. Marl inserts the result verbatim, so the provider
-//! owns output safety — hence the escape on the non-Wado path.
+//! Satisfies marl's `RenderHook`. Marl inserts each result verbatim, so the
+//! provider owns output safety.
+//!
+//! - Fenced code: Wado goes through gale's highlighter, other languages are
+//!   escaped.
+//! - Comments stay in the page as HTML comments, since they hold no secrets.
 
 use { highlight as highlight_wado } from "wado-lang:gale-highlight-wado";
 use { escape_text } from "./escape.wado";
@@ -10,4 +13,10 @@ export fn highlight(code: String, lang: String) -> String {
         return highlight_wado(code);
     }
     return escape_text(code);
+}
+
+/// Marl ends a comment at its first `-->`, but a browser also ends one at
+/// `--!>`, which would render what follows as markup.
+export fn comment(text: String) -> String {
+    return `<!--${text.replace("--!>", "--!&gt;")}-->`;
 }
