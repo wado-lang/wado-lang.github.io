@@ -3,31 +3,21 @@
 //! is upstream's example, from the wado release `mise run fetch-wado-release`
 //! checks out.
 
-use { gpt2_tokenizer, Model, Tokenizer } from "../.tmp/wado-release/package-loam/example/gpt2-124m/model.wado";
+use { Cpu } from "../.tmp/wado-release/package-loam/src/lib.wado";
+use { Model, Tokenizer } from "../.tmp/wado-release/package-loam/example/gpt2-124m/model.wado";
 
-global mut MODEL: Option<Model> = null;
-global mut TOKENIZER: Option<Tokenizer> = null;
+global mut MODEL: Option<Model<Cpu>> = null;
 
-fn model() -> &Model {
-    let Some(loaded) = &MODEL else {
+fn model() -> &mut Model<Cpu> {
+    let Some(loaded) = &mut MODEL else {
         panic("the page called the model before `load`");
-    };
-    return loaded;
-}
-
-fn tokenizer() -> &Tokenizer {
-    if TOKENIZER matches { None } {
-        TOKENIZER = Option::Some(gpt2_tokenizer());
-    }
-    let Some(loaded) = &TOKENIZER else {
-        unreachable();
     };
     return loaded;
 }
 
 /// Loads the weights from a checkpoint in the layout `hf2loam.mjs` writes.
 export fn load(checkpoint: ByteList) -> Result<(), String> {
-    MODEL = Option::Some(Model::load(&checkpoint).map_err(|e| `${e}`)?);
+    MODEL = Option::Some(Model::load(Cpu {}, &checkpoint).map_err(|e| `${e}`)?);
     return Ok(());
 }
 
@@ -37,11 +27,11 @@ export fn positions() -> i32 {
 }
 
 export fn encode(text: String) -> List<i32> {
-    return tokenizer().encode(&text);
+    return Tokenizer::encode(&text);
 }
 
 export fn decode(ids: List<i32>) -> String {
-    return tokenizer().decode(&ids);
+    return Tokenizer::decode(&ids);
 }
 
 /// The token the model ranks first after `ids`.
