@@ -71,7 +71,7 @@ Instead of testing cases one at a time, the approach here has three steps:
    what the compiler did with what the model says.
 
 When the two disagree, something is wrong: the compiler, the rules, or the
-model and the driver themselves. Reading the disagreement says which, and each
+comparison itself. Reading the disagreement says which, and each
 is worth knowing.
 
 The model needs to be easy to read and check against the spec. It is written in
@@ -273,11 +273,11 @@ and treats an inherent method on the base differently from `x.m()`.
 
 The spec lists "two traits declaring the method name" as one kind of tie that
 rule 4 reports. Its reason is that two traits share no contract, so the call
-must name one. That reason holds whatever the ranks say, yet the rule covers
-only what the ranks leave tied. The compiler reads it the second way: an exact
-impl of `Alpha` beats a head impl of `Beta`, and the call compiles. The model
-had to pick one reading. It
-follows the compiler for now, and the spec's wording is an open question.
+must name one. Read by that reason, every such call is an error. Read by its
+place under rule 4, the ranks come first, so an exact impl of `Alpha` beats a
+head impl of `Beta`. The compiler takes the second reading. The model had to
+pick one. It follows the compiler for now, and the spec's wording is an open
+question.
 
 ## A smaller rule first
 
