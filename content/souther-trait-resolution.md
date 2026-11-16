@@ -3,15 +3,16 @@
     "title": "Checking Wado's Trait Resolution Against a Souther Model",
     "date": "2026-11-16",
     "author": "FUJI Goro",
-    "description": "I wrote Wado's method resolution rules as a small executable model in Souther, compiled it to a Wasm component, and compared it with the real compiler on 888 generated programs. Two compiler bugs came out of the first run.",
+    "description": "Which impl runs when you call x.m()? Wado's rules for that, written as a small executable model and run against the compiler on 888 generated programs, turned up two compiler bugs on the first run.",
     "tags": [],
     "index": true
 }
 ---
 
-I wrote the rules of Wado's trait resolution as a small executable model, and
-compared that model with the real compiler on 888 generated programs. The first
-run found two compiler bugs. This post shows how that works, step by step.
+Which impl runs when you call `x.m()`? Wado's specification answers that in four
+short rules. Turned into a small executable model and run against the compiler
+on 888 generated programs, those rules exposed two compiler bugs on the first
+run. This post shows how that works, step by step.
 
 ## The problem: which impl runs?
 
@@ -59,7 +60,7 @@ of.
 
 ## The idea: write the rules as a program
 
-Instead of testing cases one at a time, I did this:
+Instead of testing cases one at a time, the approach here has three steps:
 
 1. Write the rules as a small program, separate from the compiler. Call it the
    _model_. It takes a description of a situation (which impls exist, how the
@@ -71,7 +72,7 @@ Instead of testing cases one at a time, I did this:
 When the two disagree, either the compiler has a bug or the rules are unclear.
 Both are worth knowing.
 
-The model needs to be easy to read and check against the spec. I wrote it in
+The model needs to be easy to read and check against the spec. It is written in
 [Souther](https://github.com/souther-lang/souther), a language for writing down
 rules. It has two properties that matter here. Its examples are checked when
 the model compiles, and it can compile the model to a WebAssembly component,
@@ -271,7 +272,7 @@ follows the compiler for now, and the spec's wording is an open question.
 
 ## A smaller rule first
 
-Before trait resolution, I tried the same method on a smaller rule: when a call
+Before trait resolution, the same method went over a smaller rule: when a call
 marked `unchecked` still has its contract checked. The answer depends on the
 command (`wado run`, `wado test`, …), the optimization level, and the `-f`
 flags. Where the spec gives no answer, that model answers `SpecSilent` instead
