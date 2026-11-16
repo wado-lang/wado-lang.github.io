@@ -24,10 +24,10 @@ trait Alpha with () {
     fn m(&self) -> String;
 }
 
-struct Pair_<A, B> { a: A, b: B }
-type N = Pair_<i32, i32>;             // a newtype: a distinct type over Pair_<i32, i32>
+struct Pair<A, B> { a: A, b: B }
+type N = Pair<i32, i32>;             // a newtype: a distinct type over Pair<i32, i32>
 
-impl<X> Alpha for Pair_<X, i32> { … }  // a "head" impl: any Pair_ whose second argument is i32
+impl<X> Alpha for Pair<X, i32> { … }  // a "head" impl: any Pair whose second argument is i32
 impl Alpha for N { … }                 // an "exact" impl: written for N itself
 
 let x: N = { a: 1, b: 2 };
@@ -40,7 +40,7 @@ rules as an order:
 
 1. An inherent method (`impl N { fn m … }`) wins over every trait method.
 2. The newtype before its base: an impl for `N` wins over one for
-   `Pair_<i32, i32>`.
+   `Pair<i32, i32>`.
 3. The more specific impl wins: one for the exact type, then one for its head,
    then a _blanket_ impl (`impl<T: Bound> Alpha for T`), which applies to any
    type meeting a bound.
@@ -52,7 +52,8 @@ Each rule is simple. The trouble is how many ways they combine. Which impls
 exist, at which level, whether a blanket's bound holds, which traits are
 imported: every combination has one right answer. And there are several ways to
 write a call: `x.m()`, `N::m(&x)`, `Alpha::m(&x)`, or a call inside a generic
-function. All of them should give the same answer.
+function. The last two name the trait, so they never pick an inherent method or
+another trait's impl. Beyond that, every form should give the same answer.
 
 Trait resolution has a long history of bugs in Wado. The tests in the repository
 are programs someone wrote by hand. They check the combinations someone thought
@@ -69,8 +70,9 @@ Instead of testing cases one at a time, the approach here has three steps:
 3. For each one, write the real Wado program, compile and run it, and compare
    what the compiler did with what the model says.
 
-When the two disagree, either the compiler has a bug or the rules are unclear.
-Both are worth knowing.
+When the two disagree, something is wrong: the compiler, the rules, or the
+model and the driver themselves. Reading the disagreement says which, and each
+is worth knowing.
 
 The model needs to be easy to read and check against the spec. It is written in
 [Souther](https://github.com/souther-lang/souther), a language for writing down
@@ -207,9 +209,13 @@ cannot drift apart.
 
 The driver tries every combination within these bounds:
 
-- zero, one or two candidate impls, each one of twelve shapes (trait × target ×
-  level × whether the bound holds)
-- an inherent method on the newtype, on the base, or none
+- zero, one or two candidate impls, each one of twelve shapes, six per trait:
+  an exact impl for `N` or for `Pair<i32, i32>`, a head impl for `Pair`, a
+  blanket whose bound holds at `N` or at `Pair<i32, i32>`, or a blanket whose
+  bound fails. A pair never holds two exact impls of one trait at one level,
+  since the compiler rejects that where it is written.
+- an inherent method on the newtype, on the base, or none, tried beside one
+  candidate only
 - both traits imported, or only `Alpha`
 - four ways to write the call: `x.m()`, `N::m(&x)`, `Alpha::m(&x)`, and
   `go(&x)` where `fn go<T: Alpha>(t: &T)` calls `t.m()`
@@ -233,21 +239,21 @@ A method call on a newtype misses an impl written for one instantiation of its
 base, and the error message contradicts the code:
 
 ```wado
-struct Pair_<A, B> { a: A, b: B }
-type N = Pair_<i32, i32>;
-impl Alpha for Pair_<i32, i32> { fn m(&self) -> i32 { return 1; } }
+struct Pair<A, B> { a: A, b: B }
+type N = Pair<i32, i32>;
+impl Alpha for Pair<i32, i32> { fn m(&self) -> i32 { return 1; } }
 
 test {
     let x: N = { a: 1, b: 2 };
-    assert x.m() == 1;   // error: type `Pair_<i32, i32>` does not implement trait `Alpha`
+    assert x.m() == 1;   // error: type `Pair<i32, i32>` does not implement trait `Alpha`
 }
 ```
 
-A head impl (`impl<X> Alpha for Pair_<X, i32>`) works, and so does a base that
+A head impl (`impl<X> Alpha for Pair<X, i32>`) works, and so does a base that
 is not generic.
 
 The second bug is close by. When a program calls that same impl on a
-`Pair_<i32, i32>` value and on an `N` value, the compiler generates the impl
+`Pair<i32, i32>` value and on an `N` value, the compiler generates the impl
 twice under two names and crashes.
 
 Both are filed as
@@ -265,9 +271,12 @@ and treats an inherent method on the base differently from `x.m()`.
 
 ### One unclear rule in the spec
 
-The spec says that when two traits declare the same method name, the call is
-ambiguous. The compiler ranks them by rules 2 and 3 anyway: an exact impl of
-`Alpha` beats a head impl of `Beta`. The model had to pick one reading. It
+The spec lists "two traits declaring the method name" as one kind of tie that
+rule 4 reports. Its reason is that two traits share no contract, so the call
+must name one. That reason holds whatever the ranks say, yet the rule covers
+only what the ranks leave tied. The compiler reads it the second way: an exact
+impl of `Alpha` beats a head impl of `Beta`, and the call compiles. The model
+had to pick one reading. It
 follows the compiler for now, and the spec's wording is an open question.
 
 ## A smaller rule first
