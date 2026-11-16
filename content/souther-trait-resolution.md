@@ -3,16 +3,16 @@
     "title": "Checking Wado's Trait Resolution Against a Souther Model",
     "date": "2026-11-16",
     "author": "FUJI Goro",
-    "description": "Which impl runs when you call x.m()? Wado's rules for that, written as a small executable model and run against the compiler on 888 generated programs, turned up two compiler bugs on the first run.",
+    "description": "Two compiler bugs, found by checking Wado's trait resolution against an executable model of its spec on 888 generated programs.",
     "tags": [],
     "index": true
 }
 ---
 
-Which impl runs when you call `x.m()`? Wado's specification answers that in four
-short rules. Turned into a small executable model and run against the compiler
-on 888 generated programs, those rules exposed two compiler bugs on the first
-run. This post shows how that works, step by step.
+Which impl runs when you call `x.m()`? Wado's specification answers in four
+short rules. Those rules fit in a small program, and that program can check the
+compiler. Run against 888 generated cases, it found two compiler bugs on the
+first try. This post shows how that works, step by step.
 
 ## The problem: which impl runs?
 
